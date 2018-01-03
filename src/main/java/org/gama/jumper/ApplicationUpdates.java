@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A container of updates (to be executed or not)
+ * 
  * @author Guillaume Mary
  */
 public class ApplicationUpdates {
