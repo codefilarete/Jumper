@@ -26,28 +26,9 @@ public class ApplicationUpdateProcessor {
 	}
 	
 	public void runUpdates() throws ExecutionException {
-		for (Update update : giveUpdatesToRun()) {
-			executionListener.beforeRun(update);
-			run(update);
-			executionListener.afterRun(update);
-			persistState(update);
-		}
-	}
-	
-	private void run(Update update) throws ExecutionException {
-		try {
-			update.run();
-		} catch (RuntimeException | OutOfMemoryError e) {
-			throw new ExecutionException(e);
-		}
-	}
-	
-	private void persistState(Update update) throws ExecutionException {
-		try {
-			applicationUpdatesStorage.persist(update);
-		} catch (RuntimeException | OutOfMemoryError e) {
-			throw new ExecutionException("State of update " + update.getIdentifier() + " couldn't be stored", e);
-		}
+		ApplicationUpdatesRunner applicationUpdatesRunner = new ApplicationUpdatesRunner(applicationUpdatesStorage);
+		applicationUpdatesRunner.setExecutionListener(executionListener);
+		applicationUpdatesRunner.run(giveUpdatesToRun());
 	}
 	
 	private List<Update> giveUpdatesToRun() {
