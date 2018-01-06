@@ -26,6 +26,7 @@ public class UpdateId {
 	
 	@Override
 	public int hashCode() {
+		// implementation is based on same fields as equals() to satisfy hashCode() contract
 		return Objects.hash(identifier);
 	}
 	

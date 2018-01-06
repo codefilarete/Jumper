@@ -25,8 +25,8 @@ public class DatabaseUpdateTest {
 		Connection connectionMock = mock(Connection.class);
 		when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 		
-		Statement mock = mock(Statement.class);
-		when(connectionMock.createStatement()).thenReturn(mock);
+		Statement statementMock = mock(Statement.class);
+		when(connectionMock.createStatement()).thenReturn(statementMock);
 		
 		DatabaseUpdate testInstance = new DatabaseUpdate("dummyChangeId", true, dataSourceMock, new String[] {
 				"insert into X(a, b, c) values (1, 2, 3)",
@@ -38,9 +38,9 @@ public class DatabaseUpdateTest {
 		testInstance.run();
 		
 		verify(connectionMock, times(5)).createStatement();
-		verify(mock, times(3)).executeUpdate(anyString());
-		verify(mock, times(1)).executeQuery(anyString());
-		verify(mock, times(1)).execute(anyString());
+		verify(statementMock, times(3)).executeUpdate(anyString());
+		verify(statementMock, times(1)).executeQuery(anyString());
+		verify(statementMock, times(1)).execute(anyString());
 	}
 	
 }

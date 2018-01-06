@@ -1,7 +1,5 @@
 package org.gama.jumper;
 
-import java.util.concurrent.ExecutionException;
-
 /**
  * A class dedicated to {@link Update} execution.
  * 
@@ -9,12 +7,12 @@ import java.util.concurrent.ExecutionException;
  */
 public class ApplicationUpdatesRunner {
 	
-	private final ApplicationUpdatesStorage applicationUpdatesStorage;
+	private final ApplicationUpdateStorage applicationUpdateStorage;
 	
 	private ExecutionListener executionListener = new NoopExecutionListener();
 	
-	public ApplicationUpdatesRunner(ApplicationUpdatesStorage applicationUpdatesStorage) {
-		this.applicationUpdatesStorage = applicationUpdatesStorage;
+	public ApplicationUpdatesRunner(ApplicationUpdateStorage applicationUpdateStorage) {
+		this.applicationUpdateStorage = applicationUpdateStorage;
 	}
 	
 	public void setExecutionListener(ExecutionListener executionListener) {
@@ -40,7 +38,7 @@ public class ApplicationUpdatesRunner {
 	
 	private void persistState(Update update) throws ExecutionException {
 		try {
-			applicationUpdatesStorage.persist(update);
+			applicationUpdateStorage.persist(update);
 		} catch (RuntimeException | OutOfMemoryError e) {
 			throw new ExecutionException("State of update " + update.getIdentifier() + " couldn't be stored", e);
 		}

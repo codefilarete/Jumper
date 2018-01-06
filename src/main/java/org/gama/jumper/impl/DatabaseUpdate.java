@@ -4,15 +4,18 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.ExecutionException;
 
 import org.gama.jumper.AbstractUpdate;
+import org.gama.jumper.Checksum;
+import org.gama.jumper.ExecutionException;
 import org.gama.jumper.UpdateId;
 import org.gama.lang.sql.TransactionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * An update dedicated to SQL execution
+ * 
  * @author Guillaume Mary
  */
 public class DatabaseUpdate extends AbstractUpdate {
@@ -30,6 +33,20 @@ public class DatabaseUpdate extends AbstractUpdate {
 	
 	public DatabaseUpdate(String identifier, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
 		this(new UpdateId(identifier), shouldAlwaysRun, dataSource, sqlOrders);
+	}
+	
+	/**
+	 * Implemented to compute the Checksum from SQL orders.
+	 * 
+	 * @return a {@link Checksum} of SQL orders
+	 */
+	@Override
+	public Checksum computeChecksum() {
+		StringBuilder allSQL = new StringBuilder(200);
+		for (String sqlOrder : sqlOrders) {
+			allSQL.append(sqlOrder);
+		}
+		return StringChecksumer.INSTANCE.checksum(allSQL.toString());
 	}
 	
 	@Override

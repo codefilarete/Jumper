@@ -1,0 +1,41 @@
+package org.gama.jumper.impl;
+
+import org.gama.jumper.AbstractUpdate;
+import org.gama.jumper.Checksum;
+import org.gama.jumper.UpdateId;
+
+/**
+ * An update dedicated to Java code execution.
+ * Be aware that by default its Checksum depends of the class bytecode. So every code change will make it change too, hence it will considered
+ * non-compliant (error will be raised) when re-applied onto an system. See {@link #computeChecksum()} for more details. 
+ * 
+ * @author Guillaume Mary
+ */
+public abstract class AbstractJavaUpdate extends AbstractUpdate {
+	
+	public AbstractJavaUpdate(UpdateId updateId, boolean shouldAlwaysRun) {
+		super(updateId, shouldAlwaysRun);
+	}
+	
+	public AbstractJavaUpdate(String identifier, boolean shouldAlwaysRun) {
+		this(new UpdateId(identifier), shouldAlwaysRun);
+	}
+	
+	/**
+	 * Implemented to compute the Checksum from this class.
+	 * Hence it depends on this class bytecode. This makes it depends of every code modification (except comments, some spaces, etc).
+	 * This principle has some caveat :
+	 * - it doesn't take dependency into account
+	 * - even code modification on non business logic (outside execute method) alters it
+	 * - compiler and Java version will also alters it
+	 * 
+	 * So it must be considered as a best effort / minimal behavior and is far from perfect.  
+	 * 
+	 * @return a {@link Checksum} of SQL orders
+	 */
+	@Override
+	public Checksum computeChecksum() {
+		return ClassChecksumer.INSTANCE.checksum(this.getClass());
+	}
+	
+}
