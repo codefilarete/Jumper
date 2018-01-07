@@ -1,5 +1,6 @@
 package org.gama.jumper;
 
+import org.gama.jumper.impl.AbstractJavaUpdate;
 import org.gama.jumper.impl.InMemoryApplicationUpdateStorage;
 import org.gama.lang.collection.Arrays;
 import org.gama.lang.trace.IncrementableInt;
@@ -52,7 +53,7 @@ public class ApplicationUpdateProcessorTest {
 		IncrementableInt executionCounter = new IncrementableInt();
 		
 		InMemoryApplicationUpdateStorage applicationUpdateStorage = new InMemoryApplicationUpdateStorage();
-		AbstractUpdate dummyUpdate = new AbstractUpdate("dummyId", true) {
+		AbstractUpdate dummyUpdate = new AbstractJavaUpdate("dummyId", true) {
 			@Override
 			public void run() throws ExecutionException {
 				executionCounter.increment();
@@ -85,7 +86,7 @@ public class ApplicationUpdateProcessorTest {
 		IncrementableInt executionCounter = new IncrementableInt();
 		
 		InMemoryApplicationUpdateStorage applicationUpdateStorage = new InMemoryApplicationUpdateStorage();
-		AbstractUpdate dummyUpdate = new AbstractUpdate("dummyId", true) {
+		AbstractUpdate dummyUpdate = new AbstractJavaUpdate("dummyId", true) {
 			@Override
 			public void run() throws ExecutionException {
 				executionCounter.increment();
@@ -104,7 +105,7 @@ public class ApplicationUpdateProcessorTest {
 		// id must be stored
 		assertEquals(Arrays.asSet(new UpdateId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
 		
-		dummyUpdate = new AbstractUpdate("dummyId", true) {
+		dummyUpdate = new AbstractJavaUpdate("dummyId", true) {
 			@Override
 			public void run() throws ExecutionException {
 				executionCounter.increment();

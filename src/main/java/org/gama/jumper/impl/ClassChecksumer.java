@@ -35,7 +35,8 @@ public class ClassChecksumer implements Checksumer<Class> {
 	}
 	
 	public byte[] buildChecksum(Class c) {
-		try (InputStream resourceAsStream = c.getResourceAsStream(c.getSimpleName().replace('.', '/') + ".class")) {
+		String classFilePath = c.getName().replace('.', '/') + ".class";
+		try (InputStream resourceAsStream = c.getClassLoader().getResourceAsStream(classFilePath)) {
 			return buildChecksum(resourceAsStream, getMessageDigest());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
