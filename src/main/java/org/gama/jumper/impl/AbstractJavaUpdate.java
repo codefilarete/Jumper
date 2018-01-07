@@ -22,12 +22,12 @@ public abstract class AbstractJavaUpdate extends AbstractUpdate {
 	}
 	
 	/**
-	 * Implemented to compute the Checksum from this class.
-	 * Hence it depends on this class bytecode. This makes it depends of every code modification (except comments, some spaces, etc).
-	 * This principle has some caveat :
-	 * - it doesn't take dependency into account
-	 * - even code modification on non business logic (outside execute method) alters it
-	 * - compiler and Java version will also alters it
+	 * Implemented to compute the Checksum of this class.
+	 * Therefore it depends on this class bytecode. This makes it depends of every code modification (except comments, some spaces, line breaks, etc).
+	 * Thus this principle has some drawbacks :
+	 * - it doesn't take dependency to other classes into account
+	 * - even code modification of non business logic (outside execute method) alters it
+	 * - compiler and Java version may also alters it
 	 * 
 	 * So it must be considered as a best effort / minimal behavior and is far from perfect.  
 	 * 
