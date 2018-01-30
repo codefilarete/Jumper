@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.gama.jumper.Statistics;
-import org.gama.jumper.UpdateId;
+import org.gama.jumper.ChangeId;
 
 /**
  * @author Guillaume Mary
@@ -12,10 +12,10 @@ import org.gama.jumper.UpdateId;
 public class ApplicationUpdateStatistics {
 	
 	/** {@link LinkedHashMap} to keep execution order */
-	private final Map<UpdateId, Statistics> executionStatistics = new LinkedHashMap<>();
+	private final Map<ChangeId, Statistics> executionStatistics = new LinkedHashMap<>();
 	
-	public void setExecutionStatistics(UpdateId updateId, Statistics statistics) {
-		executionStatistics.put(updateId, statistics);
+	public void setExecutionStatistics(ChangeId changeId, Statistics statistics) {
+		executionStatistics.put(changeId, statistics);
 	}
 	
 	public long getTotalTime() {

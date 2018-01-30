@@ -2,7 +2,7 @@ package org.gama.jumper.impl;
 
 import org.gama.jumper.AbstractChange;
 import org.gama.jumper.Checksum;
-import org.gama.jumper.UpdateId;
+import org.gama.jumper.ChangeId;
 
 /**
  * An update dedicated to Java code execution.
@@ -13,12 +13,12 @@ import org.gama.jumper.UpdateId;
  */
 public abstract class AbstractJavaChange extends AbstractChange {
 	
-	public AbstractJavaChange(UpdateId updateId, boolean shouldAlwaysRun) {
-		super(updateId, shouldAlwaysRun);
+	public AbstractJavaChange(ChangeId changeId, boolean shouldAlwaysRun) {
+		super(changeId, shouldAlwaysRun);
 	}
 	
 	public AbstractJavaChange(String identifier, boolean shouldAlwaysRun) {
-		this(new UpdateId(identifier), shouldAlwaysRun);
+		this(new ChangeId(identifier), shouldAlwaysRun);
 	}
 	
 	/**

@@ -39,7 +39,7 @@ public class ApplicationUpdateProcessor {
 	private void assertNonCompliantUpdates(List<Change> changes) {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
 		Map<Change, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
-		Map<UpdateId, Checksum> currentlyStoredChecksums = applicationUpdateStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
+		Map<ChangeId, Checksum> currentlyStoredChecksums = applicationUpdateStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
 		changes.forEach(u -> {
 			Checksum currentlyStoredChecksum = currentlyStoredChecksums.get(u.getIdentifier());
 			if (currentlyStoredChecksum != null) {
@@ -57,7 +57,7 @@ public class ApplicationUpdateProcessor {
 	}
 	
 	private List<Change> filterUpdatesToRun(List<Change> changes, Context context) {
-		Set<UpdateId> ranIdentifiers = applicationUpdateStorage.giveRanIdentifiers();
+		Set<ChangeId> ranIdentifiers = applicationUpdateStorage.giveRanIdentifiers();
 		return changes.stream()
 				.filter(u -> shouldRun(u, ranIdentifiers, context))
 				.collect(Collectors.toList());
@@ -70,7 +70,7 @@ public class ApplicationUpdateProcessor {
 	 * @param ranIdentifiers the already ran identifiers
 	 * @return true to plan it for running
 	 */
-	protected boolean shouldRun(Change u, Set<UpdateId> ranIdentifiers, Context context) {
+	protected boolean shouldRun(Change u, Set<ChangeId> ranIdentifiers, Context context) {
 		boolean isAuthorizedToRun = !ranIdentifiers.contains(u.getIdentifier()) || u.shouldAlwaysRun();
 		return isAuthorizedToRun && u.shouldRun(context);
 	}

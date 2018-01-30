@@ -5,23 +5,23 @@ package org.gama.jumper;
  */
 public abstract class AbstractChange implements Change {
 	
-	private final UpdateId updateId;
+	private final ChangeId changeId;
 	private final boolean shouldAlwaysRun;
 	private final Statistics executionStatistics;
 	
-	public AbstractChange(UpdateId updateId, boolean shouldAlwaysRun) {
-		this.updateId = updateId;
+	public AbstractChange(ChangeId changeId, boolean shouldAlwaysRun) {
+		this.changeId = changeId;
 		this.shouldAlwaysRun = shouldAlwaysRun;
 		executionStatistics = new Statistics();
 	}
 	
 	public AbstractChange(String identifier, boolean shouldAlwaysRun) {
-		this(new UpdateId(identifier), shouldAlwaysRun);
+		this(new ChangeId(identifier), shouldAlwaysRun);
 	}
 	
 	@Override
-	public UpdateId getIdentifier() {
-		return updateId;
+	public ChangeId getIdentifier() {
+		return changeId;
 	}
 	
 	@Override

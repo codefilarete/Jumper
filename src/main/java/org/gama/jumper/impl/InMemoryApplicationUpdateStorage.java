@@ -9,14 +9,14 @@ import java.util.stream.Collectors;
 import org.gama.jumper.ApplicationUpdateStorage;
 import org.gama.jumper.Checksum;
 import org.gama.jumper.Change;
-import org.gama.jumper.UpdateId;
+import org.gama.jumper.ChangeId;
 
 /**
  * @author Guillaume Mary
  */
 public class InMemoryApplicationUpdateStorage implements ApplicationUpdateStorage {
 	
-	private final Map<UpdateId, StoredUpdate> storage = new HashMap<>();
+	private final Map<ChangeId, StoredUpdate> storage = new HashMap<>();
 	
 	@Override
 	public void persist(Change change) {
@@ -24,12 +24,12 @@ public class InMemoryApplicationUpdateStorage implements ApplicationUpdateStorag
 	}
 	
 	@Override
-	public Set<UpdateId> giveRanIdentifiers() {
+	public Set<ChangeId> giveRanIdentifiers() {
 		return storage.keySet();
 	}
 	
 	@Override
-	public Map<UpdateId, Checksum> giveChecksum(Iterable<UpdateId> updates) {
+	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> updates) {
 		return storage.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getChecksum()));
 	}
 	

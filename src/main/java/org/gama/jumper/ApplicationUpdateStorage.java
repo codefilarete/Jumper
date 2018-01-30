@@ -10,7 +10,7 @@ public interface ApplicationUpdateStorage {
 	
 	void persist(Change change);
 	
-	Set<UpdateId> giveRanIdentifiers();
+	Set<ChangeId> giveRanIdentifiers();
 	
-	Map<UpdateId, Checksum> giveChecksum(Iterable<UpdateId> updates);
+	Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> updates);
 }

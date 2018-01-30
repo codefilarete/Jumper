@@ -8,11 +8,11 @@ import java.util.Objects;
  * 
  * @author Guillaume Mary
  */
-public class UpdateId {
+public class ChangeId {
 	
 	private final String identifier;
 	
-	public UpdateId(String identifier) {
+	public ChangeId(String identifier) {
 		this.identifier = identifier;
 	}
 	
@@ -20,8 +20,8 @@ public class UpdateId {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		UpdateId updateId = (UpdateId) o;
-		return Objects.equals(identifier, updateId.identifier);
+		ChangeId changeId = (ChangeId) o;
+		return Objects.equals(identifier, changeId.identifier);
 	}
 	
 	@Override

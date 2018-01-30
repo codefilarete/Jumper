@@ -8,7 +8,7 @@ import java.sql.Statement;
 import org.gama.jumper.AbstractChange;
 import org.gama.jumper.Checksum;
 import org.gama.jumper.ExecutionException;
-import org.gama.jumper.UpdateId;
+import org.gama.jumper.ChangeId;
 import org.gama.lang.sql.TransactionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,14 +25,14 @@ public class DatabaseChange extends AbstractChange {
 	private final DataSource dataSource;
 	private final String[] sqlOrders;
 	
-	public DatabaseChange(UpdateId updateId, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
-		super(updateId, shouldAlwaysRun);
+	public DatabaseChange(ChangeId changeId, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
+		super(changeId, shouldAlwaysRun);
 		this.dataSource = dataSource;
 		this.sqlOrders = sqlOrders;
 	}
 	
 	public DatabaseChange(String identifier, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
-		this(new UpdateId(identifier), shouldAlwaysRun, dataSource, sqlOrders);
+		this(new ChangeId(identifier), shouldAlwaysRun, dataSource, sqlOrders);
 	}
 	
 	/**

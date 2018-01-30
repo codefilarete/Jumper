@@ -37,7 +37,7 @@ public class ApplicationChangeProcessorTest {
 		// Change must be ran
 		assertEquals(1, executionCounter.getValue());
 		// id must be stored
-		assertEquals(Arrays.asSet(new UpdateId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
+		assertEquals(Arrays.asSet(new ChangeId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
 		
 		// second execution
 		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
@@ -70,7 +70,7 @@ public class ApplicationChangeProcessorTest {
 		// Change must be ran
 		assertEquals(1, executionCounter.getValue());
 		// id must be stored
-		assertEquals(Arrays.asSet(new UpdateId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
+		assertEquals(Arrays.asSet(new ChangeId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
 		
 		// second execution
 		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
@@ -103,7 +103,7 @@ public class ApplicationChangeProcessorTest {
 		// Change must be ran
 		assertEquals(1, executionCounter.getValue());
 		// id must be stored
-		assertEquals(Arrays.asSet(new UpdateId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
+		assertEquals(Arrays.asSet(new ChangeId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
 		
 		dummyUpdate = new AbstractJavaChange("dummyId", true) {
 			@Override

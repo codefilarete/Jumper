@@ -8,7 +8,7 @@ import java.util.Set;
  */
 public interface Change {
 	
-	UpdateId getIdentifier();
+	ChangeId getIdentifier();
 	
 	/**
 	 * Indicates if this {@link Change} must be executed even if it was already ran. Default is no (false).
