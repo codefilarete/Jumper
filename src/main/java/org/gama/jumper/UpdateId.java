@@ -3,7 +3,7 @@ package org.gama.jumper;
 import java.util.Objects;
 
 /**
- * An identifier of an {@link Update}.
+ * An identifier of an {@link Change}.
  * For instance a date, a ticket number, ... or a combination of them.
  * 
  * @author Guillaume Mary

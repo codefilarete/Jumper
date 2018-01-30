@@ -5,7 +5,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.gama.jumper.AbstractUpdate;
+import org.gama.jumper.AbstractChange;
 import org.gama.jumper.Checksum;
 import org.gama.jumper.ExecutionException;
 import org.gama.jumper.UpdateId;
@@ -18,20 +18,20 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Guillaume Mary
  */
-public class DatabaseUpdate extends AbstractUpdate {
+public class DatabaseChange extends AbstractChange {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseUpdate.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseChange.class);
 	
 	private final DataSource dataSource;
 	private final String[] sqlOrders;
 	
-	public DatabaseUpdate(UpdateId updateId, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
+	public DatabaseChange(UpdateId updateId, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
 		super(updateId, shouldAlwaysRun);
 		this.dataSource = dataSource;
 		this.sqlOrders = sqlOrders;
 	}
 	
-	public DatabaseUpdate(String identifier, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
+	public DatabaseChange(String identifier, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
 		this(new UpdateId(identifier), shouldAlwaysRun, dataSource, sqlOrders);
 	}
 	

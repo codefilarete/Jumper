@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import org.gama.jumper.ApplicationUpdateStorage;
 import org.gama.jumper.Checksum;
-import org.gama.jumper.Update;
+import org.gama.jumper.Change;
 import org.gama.jumper.UpdateId;
 
 /**
@@ -19,8 +19,8 @@ public class InMemoryApplicationUpdateStorage implements ApplicationUpdateStorag
 	private final Map<UpdateId, StoredUpdate> storage = new HashMap<>();
 	
 	@Override
-	public void persist(Update update) {
-		storage.put(update.getIdentifier(), new StoredUpdate(update.computeChecksum(), OffsetDateTime.now()));
+	public void persist(Change change) {
+		storage.put(change.getIdentifier(), new StoredUpdate(change.computeChecksum(), OffsetDateTime.now()));
 	}
 	
 	@Override

@@ -2,7 +2,7 @@ package org.gama.jumper.impl;
 
 import org.gama.jumper.NoopExecutionListener;
 import org.gama.jumper.Statistics;
-import org.gama.jumper.Update;
+import org.gama.jumper.Change;
 import org.gama.lang.trace.Chrono;
 
 /**
@@ -21,15 +21,15 @@ public class StatisicsExecutionListener extends NoopExecutionListener {
 	}
 	
 	@Override
-	public void beforeRun(Update update) {
+	public void beforeRun(Change change) {
 		chrono.start();
 	}
 	
 	@Override
-	public void afterRun(Update update) {
+	public void afterRun(Change change) {
 		long elapsedTime = chrono.getElapsedTime();
 		Statistics statistics = new Statistics();
 		statistics.setExecutionTime(elapsedTime);
-		applicationUpdateStatistics.setExecutionStatistics(update.getIdentifier(), statistics);
+		applicationUpdateStatistics.setExecutionStatistics(change.getIdentifier(), statistics);
 	}
 }

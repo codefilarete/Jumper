@@ -24,23 +24,23 @@ public class ApplicationUpdateProcessor {
 		this.executionListener = executionListener;
 	}
 	
-	public void processUpdates(List<Update> updates, Context context, ApplicationUpdateStorage applicationUpdateStorage) throws 
+	public void processUpdates(List<Change> changes, Context context, ApplicationUpdateStorage applicationUpdateStorage) throws 
 			ExecutionException {
 		this.applicationUpdateStorage = applicationUpdateStorage;
 		
-		assertNonCompliantUpdates(updates);
+		assertNonCompliantUpdates(changes);
 		
-		List<Update> updatesToRun = filterUpdatesToRun(updates, context);
+		List<Change> updatesToRun = filterUpdatesToRun(changes, context);
 		ApplicationUpdatesRunner applicationUpdatesRunner = new ApplicationUpdatesRunner(applicationUpdateStorage);
 		applicationUpdatesRunner.setExecutionListener(executionListener);
 		applicationUpdatesRunner.run(updatesToRun);
 	}
 	
-	private void assertNonCompliantUpdates(List<Update> updates) {
+	private void assertNonCompliantUpdates(List<Change> changes) {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
-		Map<Update, Checksum> nonCompliantUpdates = new LinkedHashMap<>(updates.size());
-		Map<UpdateId, Checksum> currentlyStoredChecksums = applicationUpdateStorage.giveChecksum(Iterables.collectToList(updates, Update::getIdentifier));
-		updates.forEach(u -> {
+		Map<Change, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
+		Map<UpdateId, Checksum> currentlyStoredChecksums = applicationUpdateStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
+		changes.forEach(u -> {
 			Checksum currentlyStoredChecksum = currentlyStoredChecksums.get(u.getIdentifier());
 			if (currentlyStoredChecksum != null) {
 				Checksum currentChecksum = u.computeChecksum();
@@ -51,26 +51,26 @@ public class ApplicationUpdateProcessor {
 			}
 		});
 		if (!nonCompliantUpdates.isEmpty()) {
-			throw new NonCompliantUpdateException("Some updates have changed since last run. Add a compatible signature or review conflict", 
+			throw new NonCompliantUpdateException("Some changes have changed since last run. Add a compatible signature or review conflict", 
 					nonCompliantUpdates);
 		}
 	}
 	
-	private List<Update> filterUpdatesToRun(List<Update> updates, Context context) {
+	private List<Change> filterUpdatesToRun(List<Change> changes, Context context) {
 		Set<UpdateId> ranIdentifiers = applicationUpdateStorage.giveRanIdentifiers();
-		return updates.stream()
+		return changes.stream()
 				.filter(u -> shouldRun(u, ranIdentifiers, context))
 				.collect(Collectors.toList());
 	}
 	
 	/**
-	 * Decides whether or not an Update must be run
+	 * Decides whether or not an Change must be run
 	 *
-	 * @param u the {@link Update} to be checked
+	 * @param u the {@link Change} to be checked
 	 * @param ranIdentifiers the already ran identifiers
 	 * @return true to plan it for running
 	 */
-	protected boolean shouldRun(Update u, Set<UpdateId> ranIdentifiers, Context context) {
+	protected boolean shouldRun(Change u, Set<UpdateId> ranIdentifiers, Context context) {
 		boolean isAuthorizedToRun = !ranIdentifiers.contains(u.getIdentifier()) || u.shouldAlwaysRun();
 		return isAuthorizedToRun && u.shouldRun(context);
 	}

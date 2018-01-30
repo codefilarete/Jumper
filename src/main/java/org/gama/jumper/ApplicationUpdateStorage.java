@@ -8,7 +8,7 @@ import java.util.Set;
  */
 public interface ApplicationUpdateStorage {
 	
-	void persist(Update update);
+	void persist(Change change);
 	
 	Set<UpdateId> giveRanIdentifiers();
 	

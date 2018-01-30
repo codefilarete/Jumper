@@ -8,12 +8,12 @@ package org.gama.jumper;
 public class NoopExecutionListener implements ExecutionListener {
 	
 	@Override
-	public void beforeRun(Update update) {
+	public void beforeRun(Change change) {
 		
 	}
 	
 	@Override
-	public void afterRun(Update update) {
+	public void afterRun(Change change) {
 		
 	}
 }

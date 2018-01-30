@@ -1,7 +1,7 @@
 package org.gama.jumper;
 
 /**
- * A class dedicated to {@link Update} execution.
+ * A class dedicated to {@link Change} execution.
  * 
  * @author Guillaume Mary
  */
@@ -19,28 +19,28 @@ public class ApplicationUpdatesRunner {
 		this.executionListener = executionListener;
 	}
 	
-	public void run(Iterable<Update> updatesToRun) throws ExecutionException {
-		for (Update update : updatesToRun) {
-			executionListener.beforeRun(update);
-			run(update);
-			executionListener.afterRun(update);
-			persistState(update);
+	public void run(Iterable<Change> updatesToRun) throws ExecutionException {
+		for (Change change : updatesToRun) {
+			executionListener.beforeRun(change);
+			run(change);
+			executionListener.afterRun(change);
+			persistState(change);
 		}
 	}
 	
-	private void run(Update update) throws ExecutionException {
+	private void run(Change change) throws ExecutionException {
 		try {
-			update.run();
+			change.run();
 		} catch (RuntimeException | OutOfMemoryError e) {
 			throw new ExecutionException(e);
 		}
 	}
 	
-	private void persistState(Update update) throws ExecutionException {
+	private void persistState(Change change) throws ExecutionException {
 		try {
-			applicationUpdateStorage.persist(update);
+			applicationUpdateStorage.persist(change);
 		} catch (RuntimeException | OutOfMemoryError e) {
-			throw new ExecutionException("State of update " + update.getIdentifier() + " couldn't be stored", e);
+			throw new ExecutionException("State of change " + change.getIdentifier() + " couldn't be stored", e);
 		}
 	}
 }

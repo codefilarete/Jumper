@@ -17,7 +17,7 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 /**
  * @author Guillaume Mary
  */
-public class DatabaseUpdateTest {
+public class DatabaseChangeTest {
 	
 	@Test
 	public void testRun() throws ExecutionException, SQLException {
@@ -28,7 +28,7 @@ public class DatabaseUpdateTest {
 		Statement statementMock = mock(Statement.class);
 		when(connectionMock.createStatement()).thenReturn(statementMock);
 		
-		DatabaseUpdate testInstance = new DatabaseUpdate("dummyChangeId", true, dataSourceMock, new String[] {
+		DatabaseChange testInstance = new DatabaseChange("dummyChangeId", true, dataSourceMock, new String[] {
 				"insert into X(a, b, c) values (1, 2, 3)",
 				"update X set a = 4",
 				"delete X where a = 1",

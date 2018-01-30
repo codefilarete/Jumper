@@ -8,14 +8,14 @@ package org.gama.jumper;
 public interface ExecutionListener {
 	
 	/**
-	 * Is called before the execution of the given update
-	 * @param update the update that's going to be executed
+	 * Is called before the execution of the given change
+	 * @param change the change that's going to be executed
 	 */
-	void beforeRun(Update update);
+	void beforeRun(Change change);
 	
 	/**
-	 * Is called after the execution of the given update
-	 * @param update the executed update
+	 * Is called after the execution of the given change
+	 * @param change the executed change
 	 */
-	void afterRun(Update update);
+	void afterRun(Change change);
 }
