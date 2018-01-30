@@ -7,12 +7,12 @@ package org.gama.jumper;
  */
 public class ApplicationUpdatesRunner {
 	
-	private final ApplicationUpdateStorage applicationUpdateStorage;
+	private final ApplicationChangeStorage applicationChangeStorage;
 	
 	private ExecutionListener executionListener = new NoopExecutionListener();
 	
-	public ApplicationUpdatesRunner(ApplicationUpdateStorage applicationUpdateStorage) {
-		this.applicationUpdateStorage = applicationUpdateStorage;
+	public ApplicationUpdatesRunner(ApplicationChangeStorage applicationChangeStorage) {
+		this.applicationChangeStorage = applicationChangeStorage;
 	}
 	
 	public void setExecutionListener(ExecutionListener executionListener) {
@@ -38,7 +38,7 @@ public class ApplicationUpdatesRunner {
 	
 	private void persistState(Change change) throws ExecutionException {
 		try {
-			applicationUpdateStorage.persist(change);
+			applicationChangeStorage.persist(change);
 		} catch (RuntimeException | OutOfMemoryError e) {
 			throw new ExecutionException("State of change " + change.getIdentifier() + " couldn't be stored", e);
 		}

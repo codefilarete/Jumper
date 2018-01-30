@@ -1,7 +1,7 @@
 package org.gama.jumper;
 
 import org.gama.jumper.impl.AbstractJavaChange;
-import org.gama.jumper.impl.InMemoryApplicationUpdateStorage;
+import org.gama.jumper.impl.InMemoryApplicationChangeStorage;
 import org.gama.lang.collection.Arrays;
 import org.gama.lang.trace.IncrementableInt;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class ApplicationChangeProcessorTest {
 		
 		IncrementableInt executionCounter = new IncrementableInt();
 		
-		InMemoryApplicationUpdateStorage applicationUpdateStorage = new InMemoryApplicationUpdateStorage();
+		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractChange("dummyId", false) {
 			@Override
 			public void run() throws ExecutionException {
@@ -52,7 +52,7 @@ public class ApplicationChangeProcessorTest {
 		
 		IncrementableInt executionCounter = new IncrementableInt();
 		
-		InMemoryApplicationUpdateStorage applicationUpdateStorage = new InMemoryApplicationUpdateStorage();
+		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
 			@Override
 			public void run() throws ExecutionException {
@@ -85,7 +85,7 @@ public class ApplicationChangeProcessorTest {
 		
 		IncrementableInt executionCounter = new IncrementableInt();
 		
-		InMemoryApplicationUpdateStorage applicationUpdateStorage = new InMemoryApplicationUpdateStorage();
+		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
 			@Override
 			public void run() throws ExecutionException {

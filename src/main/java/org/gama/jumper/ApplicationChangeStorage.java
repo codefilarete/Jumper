@@ -6,7 +6,7 @@ import java.util.Set;
 /**
  * @author Guillaume Mary
  */
-public interface ApplicationUpdateStorage {
+public interface ApplicationChangeStorage {
 	
 	void persist(Change change);
 	

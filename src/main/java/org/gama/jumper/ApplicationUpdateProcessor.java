@@ -13,7 +13,7 @@ import org.gama.lang.collection.Iterables;
  */
 public class ApplicationUpdateProcessor {
 	
-	private ApplicationUpdateStorage applicationUpdateStorage;
+	private ApplicationChangeStorage applicationChangeStorage;
 	
 	private ExecutionListener executionListener = new NoopExecutionListener();
 	
@@ -24,14 +24,14 @@ public class ApplicationUpdateProcessor {
 		this.executionListener = executionListener;
 	}
 	
-	public void processUpdates(List<Change> changes, Context context, ApplicationUpdateStorage applicationUpdateStorage) throws 
+	public void processUpdates(List<Change> changes, Context context, ApplicationChangeStorage applicationChangeStorage) throws 
 			ExecutionException {
-		this.applicationUpdateStorage = applicationUpdateStorage;
+		this.applicationChangeStorage = applicationChangeStorage;
 		
 		assertNonCompliantUpdates(changes);
 		
 		List<Change> updatesToRun = filterUpdatesToRun(changes, context);
-		ApplicationUpdatesRunner applicationUpdatesRunner = new ApplicationUpdatesRunner(applicationUpdateStorage);
+		ApplicationUpdatesRunner applicationUpdatesRunner = new ApplicationUpdatesRunner(applicationChangeStorage);
 		applicationUpdatesRunner.setExecutionListener(executionListener);
 		applicationUpdatesRunner.run(updatesToRun);
 	}
@@ -39,7 +39,7 @@ public class ApplicationUpdateProcessor {
 	private void assertNonCompliantUpdates(List<Change> changes) {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
 		Map<Change, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
-		Map<ChangeId, Checksum> currentlyStoredChecksums = applicationUpdateStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
+		Map<ChangeId, Checksum> currentlyStoredChecksums = applicationChangeStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
 		changes.forEach(u -> {
 			Checksum currentlyStoredChecksum = currentlyStoredChecksums.get(u.getIdentifier());
 			if (currentlyStoredChecksum != null) {
@@ -57,7 +57,7 @@ public class ApplicationUpdateProcessor {
 	}
 	
 	private List<Change> filterUpdatesToRun(List<Change> changes, Context context) {
-		Set<ChangeId> ranIdentifiers = applicationUpdateStorage.giveRanIdentifiers();
+		Set<ChangeId> ranIdentifiers = applicationChangeStorage.giveRanIdentifiers();
 		return changes.stream()
 				.filter(u -> shouldRun(u, ranIdentifiers, context))
 				.collect(Collectors.toList());

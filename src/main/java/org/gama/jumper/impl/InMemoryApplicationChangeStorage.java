@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.gama.jumper.ApplicationUpdateStorage;
+import org.gama.jumper.ApplicationChangeStorage;
 import org.gama.jumper.Checksum;
 import org.gama.jumper.Change;
 import org.gama.jumper.ChangeId;
@@ -14,7 +14,7 @@ import org.gama.jumper.ChangeId;
 /**
  * @author Guillaume Mary
  */
-public class InMemoryApplicationUpdateStorage implements ApplicationUpdateStorage {
+public class InMemoryApplicationChangeStorage implements ApplicationChangeStorage {
 	
 	private final Map<ChangeId, StoredUpdate> storage = new HashMap<>();
 	
