@@ -16,6 +16,7 @@
 		<hsqldb.version>2.3.2</hsqldb.version>
 		<mockito.version>2.7.13</mockito.version>
 		<tools.version>1.0-SNAPSHOT</tools.version>
+		<stalactite-core.version>1.0-SNAPSHOT</stalactite-core.version>
 	</properties>
 	
 	<dependencies>
@@ -52,6 +53,18 @@
 			<groupId>org.gama</groupId>
 			<artifactId>tools</artifactId>
 			<version>${tools.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.gama.stalactite</groupId>
+			<artifactId>core</artifactId>
+			<version>${stalactite-core.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.gama.stalactite</groupId>
+			<artifactId>sql</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+			<version>${stalactite-core.version}</version>
 		</dependency>
 	</dependencies>
 	
