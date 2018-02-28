@@ -31,9 +31,8 @@ public class JdbcApplicationChangeStorageTest {
 		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
 		
 		// declaring mapping of Checksum simple type
-		hsqldbDialect.getColumnBinderRegistry().register(JdbcApplicationChangeStorage.checksum, new LambdaParameterBinder<>(
-				(resultSet, columnName) -> new Checksum(resultSet.getString(columnName)),
-				(preparedStatement, valueIndex, value) -> preparedStatement.setString(valueIndex, value.toString())));
+		hsqldbDialect.getColumnBinderRegistry().register(JdbcApplicationChangeStorage.checksum,
+				new LambdaParameterBinder<>(DefaultParameterBinders.STRING_BINDER, Checksum::new, Checksum::toString));
 		hsqldbDialect.getJavaTypeToSqlTypeMapping().put(JdbcApplicationChangeStorage.checksum, "VARCHAR(255)");
 		
 		// deploying table to database
