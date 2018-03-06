@@ -19,17 +19,23 @@ import org.gama.stalactite.persistence.structure.Table;
  */
 public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	
-	static final Table TABLE_STORAGE = new Table("JumpsHistory");
-	static final Column<String> id = TABLE_STORAGE.addColumn("id", String.class);
-	static final Column<LocalDateTime> createdAt = TABLE_STORAGE.addColumn("createdAt", LocalDateTime.class);
-	static final Column<Checksum> checksum = TABLE_STORAGE.addColumn("checksum", Checksum.class);
+	public static final JumpsTable DEFAULT_STORAGE_TABLE = new JumpsTable();
 	
 	private final ConnectionProvider connectionProvider;
+	
+	private JumpsTable storageTable = DEFAULT_STORAGE_TABLE;
 	
 	public JdbcApplicationChangeStorage(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
 	}
 	
+	public JumpsTable getStorageTable() {
+		return storageTable;
+	}
+	
+	public void setStorageTable(JumpsTable storageTable) {
+		this.storageTable = storageTable;
+	}
 	
 	@Override
 	public void persist(Change change) {
@@ -39,13 +45,13 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 			transactionSupport.runAtomically(c -> {
 				PersistenceContext persistenceContext = new PersistenceContext(connectionProvider, dialect);
 				
-				dialect.getColumnBinderRegistry().register(checksum, new LambdaParameterBinder<>(
+				dialect.getColumnBinderRegistry().register(storageTable.checksum, new LambdaParameterBinder<>(
 						(resultSet, columnName) -> new Checksum(resultSet.getString(columnName)),
 						(preparedStatement, valueIndex, value) -> preparedStatement.setString(valueIndex, value.toString())));
-				persistenceContext.insert(TABLE_STORAGE)
-						.set(id, change.getIdentifier().toString())
-						.set(createdAt, LocalDateTime.now())
-						.set(checksum, change.computeChecksum())
+				persistenceContext.insert(storageTable)
+						.set(storageTable.id, change.getIdentifier().toString())
+						.set(storageTable.createdAt, LocalDateTime.now())
+						.set(storageTable.checksum, change.computeChecksum())
 						.execute();
 			});
 		} catch (SQLException e) {
@@ -61,5 +67,25 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	@Override
 	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> updates) {
 		return null;
+	}
+	
+	/**
+	 * Definition of the target table
+	 */
+	public static class JumpsTable extends Table {
+		
+		public static final String DEFAULT_TABLE_NAME = "JumpsHistory";
+		
+		public final Column<String> id = this.addColumn("id", String.class);
+		public final Column<LocalDateTime> createdAt = this.addColumn("createdAt", LocalDateTime.class);
+		public final Column<Checksum> checksum = this.addColumn("checksum", Checksum.class);
+		
+		public JumpsTable() {
+			this(DEFAULT_TABLE_NAME);
+		}
+		
+		public JumpsTable(String tableName) {
+			super(tableName);
+		}
 	}
 }
