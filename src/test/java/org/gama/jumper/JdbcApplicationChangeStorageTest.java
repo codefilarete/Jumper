@@ -16,11 +16,11 @@ import org.gama.sql.test.HSQLDBInMemoryDataSource;
 import org.gama.stalactite.persistence.engine.DDLDeployer;
 import org.gama.stalactite.persistence.sql.HSQLDBDialect;
 import org.gama.stalactite.persistence.sql.ddl.DDLSchemaGenerator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.gama.jumper.JdbcApplicationChangeStorage.DEFAULT_STORAGE_TABLE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Guillaume Mary

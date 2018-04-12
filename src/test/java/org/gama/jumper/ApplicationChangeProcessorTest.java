@@ -4,9 +4,10 @@ import org.gama.jumper.impl.AbstractJavaChange;
 import org.gama.jumper.impl.InMemoryApplicationChangeStorage;
 import org.gama.lang.collection.Arrays;
 import org.gama.lang.trace.IncrementableInt;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Guillaume Mary
@@ -79,7 +80,7 @@ public class ApplicationChangeProcessorTest {
 		assertEquals(2, executionCounter.getValue());
 	}
 	
-	@Test(expected = NonCompliantUpdateException.class)
+	@Test
 	public void testProcessUpdates_checksumMismatch() {
 		ApplicationUpdateProcessor testInstance = new ApplicationUpdateProcessor();
 		
@@ -105,7 +106,7 @@ public class ApplicationChangeProcessorTest {
 		// id must be stored
 		assertEquals(Arrays.asSet(new ChangeId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
 		
-		dummyUpdate = new AbstractJavaChange("dummyId", true) {
+		AbstractChange dummyUpdate2 = new AbstractJavaChange("dummyId", true) {
 			@Override
 			public void run() throws ExecutionException {
 				executionCounter.increment();
@@ -118,7 +119,7 @@ public class ApplicationChangeProcessorTest {
 		};
 		
 		// second execution
-		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
+		assertThrows(NonCompliantUpdateException.class, () -> testInstance.processUpdates(Arrays.asList(dummyUpdate2), new Context(), applicationUpdateStorage));
 	}
 	
 }
