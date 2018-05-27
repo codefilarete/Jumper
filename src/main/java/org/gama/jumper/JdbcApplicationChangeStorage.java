@@ -3,6 +3,7 @@ package org.gama.jumper;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,7 +62,7 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	
 	@Override
 	public Set<ChangeId> giveRanIdentifiers() {
-		return null;
+		return Collections.emptySet();
 	}
 	
 	@Override
@@ -72,13 +73,13 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	/**
 	 * Definition of the target table
 	 */
-	public static class JumpsTable extends Table {
+	public static class JumpsTable extends Table<JumpsTable> {
 		
 		public static final String DEFAULT_TABLE_NAME = "JumpsHistory";
 		
-		public final Column<String> id = this.addColumn("id", String.class);
-		public final Column<LocalDateTime> createdAt = this.addColumn("createdAt", LocalDateTime.class);
-		public final Column<Checksum> checksum = this.addColumn("checksum", Checksum.class);
+		public final Column<JumpsTable, String> id = this.addColumn("id", String.class);
+		public final Column<JumpsTable, LocalDateTime> createdAt = this.addColumn("createdAt", LocalDateTime.class);
+		public final Column<JumpsTable, Checksum> checksum = this.addColumn("checksum", Checksum.class);
 		
 		public JumpsTable() {
 			this(DEFAULT_TABLE_NAME);
