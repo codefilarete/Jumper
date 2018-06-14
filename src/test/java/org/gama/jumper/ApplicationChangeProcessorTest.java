@@ -3,7 +3,7 @@ package org.gama.jumper;
 import org.gama.jumper.impl.AbstractJavaChange;
 import org.gama.jumper.impl.InMemoryApplicationChangeStorage;
 import org.gama.lang.collection.Arrays;
-import org.gama.lang.trace.IncrementableInt;
+import org.gama.lang.trace.ModifiableInt;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +18,7 @@ public class ApplicationChangeProcessorTest {
 	public void testProcessUpdates_runNonRanUpdates() {
 		ApplicationUpdateProcessor testInstance = new ApplicationUpdateProcessor();
 		
-		IncrementableInt executionCounter = new IncrementableInt();
+		ModifiableInt executionCounter = new ModifiableInt();
 		
 		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractChange("dummyId", false) {
@@ -51,7 +51,7 @@ public class ApplicationChangeProcessorTest {
 	public void testProcessUpdates_alwaysRun() {
 		ApplicationUpdateProcessor testInstance = new ApplicationUpdateProcessor();
 		
-		IncrementableInt executionCounter = new IncrementableInt();
+		ModifiableInt executionCounter = new ModifiableInt();
 		
 		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
@@ -84,7 +84,7 @@ public class ApplicationChangeProcessorTest {
 	public void testProcessUpdates_checksumMismatch() {
 		ApplicationUpdateProcessor testInstance = new ApplicationUpdateProcessor();
 		
-		IncrementableInt executionCounter = new IncrementableInt();
+		ModifiableInt executionCounter = new ModifiableInt();
 		
 		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
