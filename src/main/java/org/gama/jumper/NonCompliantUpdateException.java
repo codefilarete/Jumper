@@ -3,7 +3,7 @@ package org.gama.jumper;
 import java.util.Map;
 
 /**
- * Exception dedicated to updates whose checksum differs from already ran ones.
+ * Exception dedicated to updates which checksum differs from already ran ones.
  * 
  * @author Guillaume Mary
  */
