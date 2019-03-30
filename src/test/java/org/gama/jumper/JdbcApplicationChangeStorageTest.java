@@ -15,7 +15,6 @@ import org.gama.sql.result.RowIterator;
 import org.gama.sql.test.HSQLDBInMemoryDataSource;
 import org.gama.stalactite.persistence.engine.DDLDeployer;
 import org.gama.stalactite.persistence.sql.HSQLDBDialect;
-import org.gama.stalactite.persistence.sql.ddl.DDLSchemaGenerator;
 import org.junit.jupiter.api.Test;
 
 import static org.gama.jumper.JdbcApplicationChangeStorage.DEFAULT_STORAGE_TABLE;
@@ -40,9 +39,8 @@ public class JdbcApplicationChangeStorageTest {
 		hsqldbDialect.getJavaTypeToSqlTypeMapping().put(DEFAULT_STORAGE_TABLE.checksum, "VARCHAR(255)");
 		
 		// deploying table to database
-		DDLSchemaGenerator ddlSchemaGenerator = new DDLSchemaGenerator(hsqldbDialect.getJavaTypeToSqlTypeMapping());
-		ddlSchemaGenerator.addTables(DEFAULT_STORAGE_TABLE);
-		DDLDeployer ddlDeployer = new DDLDeployer(ddlSchemaGenerator, connectionProvider);
+		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getJavaTypeToSqlTypeMapping(), connectionProvider);
+		ddlDeployer.getDdlGenerator().addTables(DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
 		// test
