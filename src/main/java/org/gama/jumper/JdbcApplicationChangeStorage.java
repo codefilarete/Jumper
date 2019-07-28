@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gama.lang.sql.TransactionSupport;
-import org.gama.sql.ConnectionProvider;
-import org.gama.sql.binder.LambdaParameterBinder;
+import org.gama.stalactite.sql.ConnectionProvider;
+import org.gama.stalactite.sql.binder.LambdaParameterBinder;
 import org.gama.stalactite.persistence.engine.PersistenceContext;
 import org.gama.stalactite.persistence.sql.HSQLDBDialect;
 import org.gama.stalactite.persistence.structure.Column;
