@@ -4,8 +4,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.ExecutionException;
 
+import org.gama.jumper.Context;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -20,7 +20,7 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 public class DatabaseChangeTest {
 	
 	@Test
-	public void testRun() throws ExecutionException, SQLException {
+	void run() throws SQLException {
 		DataSource dataSourceMock = mock(DataSource.class);
 		Connection connectionMock = mock(Connection.class);
 		when(dataSourceMock.getConnection()).thenReturn(connectionMock);
@@ -28,14 +28,14 @@ public class DatabaseChangeTest {
 		Statement statementMock = mock(Statement.class);
 		when(connectionMock.createStatement()).thenReturn(statementMock);
 		
-		DatabaseChange testInstance = new DatabaseChange("dummyChangeId", true, dataSourceMock, new String[] {
+		SQLChange testInstance = new SQLChange("dummyChangeId", true, new String[] {
 				"insert into X(a, b, c) values (1, 2, 3)",
 				"update X set a = 4",
 				"delete X where a = 1",
 				"select * from X",
 				"create table X()"
 		});
-		testInstance.run();
+		testInstance.run(new Context(null, dataSourceMock.getConnection()));
 		
 		verify(connectionMock, times(5)).createStatement();
 		verify(statementMock, times(3)).executeUpdate(anyString());

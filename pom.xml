@@ -16,6 +16,7 @@
 		<mockito.version>2.22.0</mockito.version>
 		<tools.version>1.0-SNAPSHOT</tools.version>
 		<stalactite-core.version>1.0-SNAPSHOT</stalactite-core.version>
+		<reflection.version>1.0-SNAPSHOT</reflection.version>
 	</properties>
 	
 	<dependencies>
@@ -52,6 +53,11 @@
 			<groupId>org.gama</groupId>
 			<artifactId>tools</artifactId>
 			<version>${tools.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.gama</groupId>
+			<artifactId>reflection</artifactId>
+			<version>${reflection.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.gama.stalactite</groupId>

@@ -3,7 +3,7 @@ package org.gama.jumper;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
-import org.gama.jumper.impl.DatabaseChange;
+import org.gama.jumper.impl.SQLChange;
 import org.gama.lang.collection.Maps;
 import org.gama.stalactite.sql.DataSourceConnectionProvider;
 import org.gama.stalactite.sql.binder.DefaultParameterBinders;
@@ -45,10 +45,10 @@ public class JdbcApplicationChangeStorageTest {
 		
 		// test
 		JdbcApplicationChangeStorage testInstance = new JdbcApplicationChangeStorage(connectionProvider);
-		DatabaseChange databaseChange = new DatabaseChange("dummyId", false, hsqldbInMemoryDataSource, new String[] {
+		SQLChange SQLChange = new SQLChange("dummyId", false, new String[] {
 				"select 1 from dual"
 		});
-		testInstance.persist(databaseChange);
+		testInstance.persist(SQLChange);
 		
 		// verifications
 		RowIterator rowIterator = new RowIterator(
@@ -58,8 +58,8 @@ public class JdbcApplicationChangeStorageTest {
 				.add(DEFAULT_STORAGE_TABLE.checksum.getName(), DefaultResultSetReaders.STRING_READER));
 		assertTrue(rowIterator.hasNext());
 		Row row = rowIterator.next();
-		assertEquals(databaseChange.getIdentifier().toString(), row.get(DEFAULT_STORAGE_TABLE.id.getName()));
-		assertEquals(databaseChange.computeChecksum().toString(), row.get(DEFAULT_STORAGE_TABLE.checksum.getName()));
+		assertEquals(SQLChange.getIdentifier().toString(), row.get(DEFAULT_STORAGE_TABLE.id.getName()));
+		assertEquals(SQLChange.computeChecksum().toString(), row.get(DEFAULT_STORAGE_TABLE.checksum.getName()));
 		assertEquals(LocalDateTime.now().withNano(0), ((LocalDateTime) row.get(DEFAULT_STORAGE_TABLE.createdAt.getName())).withNano(0));
 	}
 	

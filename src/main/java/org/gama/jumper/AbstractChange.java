@@ -12,7 +12,7 @@ public abstract class AbstractChange implements Change {
 	public AbstractChange(ChangeId changeId, boolean shouldAlwaysRun) {
 		this.changeId = changeId;
 		this.shouldAlwaysRun = shouldAlwaysRun;
-		executionStatistics = new Statistics();
+		this.executionStatistics = new Statistics();
 	}
 	
 	public AbstractChange(String identifier, boolean shouldAlwaysRun) {

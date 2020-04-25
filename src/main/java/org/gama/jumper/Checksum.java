@@ -3,7 +3,7 @@ package org.gama.jumper;
 import java.util.Objects;
 
 /**
- * A container for a MD5, SHA1, version, ... whatever that can represent a "signature" of an {@link Change}.
+ * A container for a MD5, SHA1, version, ... whatever that can represent a "signature" of a {@link Change}.
  * 
  * This will help to warn user about conflicting signature between two updates of same id : on one hand the already executed one, on the other hand
  * the one planed to be executed. Conflicts can result of:
@@ -16,6 +16,11 @@ public class Checksum {
 	
 	private final String checksum;
 	
+	/**
+	 * Default single constructor with mandatory argument.
+	 * 
+	 * @param checksum expected to be a footprint af a {@link Change}, see {@link org.gama.jumper.impl.StringChecksumer#checksum} for a basic implementation
+	 */
 	public Checksum(String checksum) {
 		this.checksum = checksum;
 	}

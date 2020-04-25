@@ -1,12 +1,12 @@
 package org.gama.jumper.impl;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.gama.jumper.AbstractChange;
 import org.gama.jumper.Checksum;
+import org.gama.jumper.Context;
 import org.gama.jumper.ExecutionException;
 import org.gama.jumper.ChangeId;
 import org.gama.lang.sql.TransactionSupport;
@@ -18,21 +18,19 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Guillaume Mary
  */
-public class DatabaseChange extends AbstractChange {
+public class SQLChange extends AbstractChange {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseChange.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SQLChange.class);
 	
-	private final DataSource dataSource;
 	private final String[] sqlOrders;
 	
-	public DatabaseChange(ChangeId changeId, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
+	public SQLChange(ChangeId changeId, boolean shouldAlwaysRun, String[] sqlOrders) {
 		super(changeId, shouldAlwaysRun);
-		this.dataSource = dataSource;
 		this.sqlOrders = sqlOrders;
 	}
 	
-	public DatabaseChange(String identifier, boolean shouldAlwaysRun, DataSource dataSource, String[] sqlOrders) {
-		this(new ChangeId(identifier), shouldAlwaysRun, dataSource, sqlOrders);
+	public SQLChange(String identifier, boolean shouldAlwaysRun, String[] sqlOrders) {
+		this(new ChangeId(identifier), shouldAlwaysRun, sqlOrders);
 	}
 	
 	/**
@@ -50,15 +48,9 @@ public class DatabaseChange extends AbstractChange {
 	}
 	
 	@Override
-	public void run() throws ExecutionException {
-		Connection connection;
+	public void run(Context context) throws ExecutionException {
 		try {
-			connection = dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new ExecutionException("Can't get connection from datasource", e);
-		}
-		try {
-			TransactionSupport.runAtomically(c -> runAtomatically(sqlOrders, c), connection);
+			TransactionSupport.runAtomically(c -> runAtomatically(sqlOrders, c), context.getConnection());
 		} catch (SQLException e) {
 			throw new ExecutionException(e);
 		}

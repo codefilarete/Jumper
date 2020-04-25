@@ -26,7 +26,7 @@ public interface Change {
 		return true;
 	}
 	
-	void run() throws ExecutionException;
+	void run(Context context) throws ExecutionException;
 	
 	/**
 	 * Computes the checksum of the execution. Checksum must be considered as a signature of the business logic of the update.

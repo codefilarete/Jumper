@@ -23,7 +23,7 @@ public class ApplicationChangeProcessorTest {
 		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractChange("dummyId", false) {
 			@Override
-			public void run() throws ExecutionException {
+			public void run(Context context) throws ExecutionException {
 				executionCounter.increment();
 			}
 			
@@ -33,7 +33,7 @@ public class ApplicationChangeProcessorTest {
 			}
 		};
 		
-		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
+		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(null, null), applicationUpdateStorage);
 		
 		// Change must be ran
 		assertEquals(1, executionCounter.getValue());
@@ -41,7 +41,7 @@ public class ApplicationChangeProcessorTest {
 		assertEquals(Arrays.asSet(new ChangeId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
 		
 		// second execution
-		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
+		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(null, null), applicationUpdateStorage);
 		
 		// Change mustn't be run again because it is marked as not always run
 		assertEquals(1, executionCounter.getValue());
@@ -56,7 +56,7 @@ public class ApplicationChangeProcessorTest {
 		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
 			@Override
-			public void run() throws ExecutionException {
+			public void run(Context context) throws ExecutionException {
 				executionCounter.increment();
 			}
 			
@@ -66,7 +66,7 @@ public class ApplicationChangeProcessorTest {
 			}
 		};
 		
-		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
+		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(null, null), applicationUpdateStorage);
 		
 		// Change must be ran
 		assertEquals(1, executionCounter.getValue());
@@ -74,7 +74,7 @@ public class ApplicationChangeProcessorTest {
 		assertEquals(Arrays.asSet(new ChangeId("dummyId")), applicationUpdateStorage.giveRanIdentifiers());
 		
 		// second execution
-		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
+		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(null, null), applicationUpdateStorage);
 		
 		// Change must be run again because it is marked as always run
 		assertEquals(2, executionCounter.getValue());
@@ -89,7 +89,7 @@ public class ApplicationChangeProcessorTest {
 		InMemoryApplicationChangeStorage applicationUpdateStorage = new InMemoryApplicationChangeStorage();
 		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
 			@Override
-			public void run() throws ExecutionException {
+			public void run(Context context) throws ExecutionException {
 				executionCounter.increment();
 			}
 			
@@ -99,7 +99,7 @@ public class ApplicationChangeProcessorTest {
 			}
 		};
 		
-		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(), applicationUpdateStorage);
+		testInstance.processUpdates(Arrays.asList(dummyUpdate), new Context(null, null), applicationUpdateStorage);
 		
 		// Change must be ran
 		assertEquals(1, executionCounter.getValue());
@@ -108,7 +108,7 @@ public class ApplicationChangeProcessorTest {
 		
 		AbstractChange dummyUpdate2 = new AbstractJavaChange("dummyId", true) {
 			@Override
-			public void run() throws ExecutionException {
+			public void run(Context context) throws ExecutionException {
 				executionCounter.increment();
 			}
 			
@@ -119,7 +119,7 @@ public class ApplicationChangeProcessorTest {
 		};
 		
 		// second execution
-		assertThrows(NonCompliantUpdateException.class, () -> testInstance.processUpdates(Arrays.asList(dummyUpdate2), new Context(), applicationUpdateStorage));
+		assertThrows(NonCompliantUpdateException.class, () -> testInstance.processUpdates(Arrays.asList(dummyUpdate2), new Context(null, null), applicationUpdateStorage));
 	}
 	
 }

@@ -33,7 +33,7 @@ public class ApplicationUpdateProcessor {
 		List<Change> updatesToRun = filterUpdatesToRun(changes, context);
 		ApplicationUpdatesRunner applicationUpdatesRunner = new ApplicationUpdatesRunner(applicationChangeStorage);
 		applicationUpdatesRunner.setExecutionListener(executionListener);
-		applicationUpdatesRunner.run(updatesToRun);
+		applicationUpdatesRunner.run(updatesToRun, context);
 	}
 	
 	private void assertNonCompliantUpdates(List<Change> changes) {

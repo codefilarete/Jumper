@@ -19,18 +19,18 @@ public class ApplicationUpdatesRunner {
 		this.executionListener = executionListener;
 	}
 	
-	public void run(Iterable<Change> updatesToRun) throws ExecutionException {
+	public void run(Iterable<Change> updatesToRun, Context context) throws ExecutionException {
 		for (Change change : updatesToRun) {
 			executionListener.beforeRun(change);
-			run(change);
+			run(change, context);
 			executionListener.afterRun(change);
 			persistState(change);
 		}
 	}
 	
-	private void run(Change change) throws ExecutionException {
+	private void run(Change change, Context context) throws ExecutionException {
 		try {
-			change.run();
+			change.run(context);
 		} catch (RuntimeException | OutOfMemoryError e) {
 			throw new ExecutionException(e);
 		}

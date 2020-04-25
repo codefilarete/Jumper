@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -12,16 +13,20 @@ import org.gama.jumper.Checksum;
 import org.gama.jumper.Checksumer;
 
 /**
- * A class aimed at creating a checksum from a String
+ * A class aimed at creating a checksum from a String, based on a MD5 algorithm.
+ * Thought for basic, general usage.
  * 
  * @author Guillaume Mary
  */
 public class StringChecksumer implements Checksumer<String> {
 	
+	/**
+	 * Singleton to be used for simple case
+	 */
 	public static final StringChecksumer INSTANCE = new StringChecksumer();
 	
 	/** Charset of String bytes. Fixed to prevent from being dependent of JVM default's */
-	private static final Charset CHARSET_FOR_BYTES = Charset.forName("UTF-8");
+	private static final Charset CHARSET_FOR_BYTES = StandardCharsets.UTF_8;
 	
 	private static final MessageDigest MD5_ALGORITHM;
 	
