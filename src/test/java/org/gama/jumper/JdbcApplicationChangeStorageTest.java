@@ -36,10 +36,10 @@ public class JdbcApplicationChangeStorageTest {
 		// declaring mapping of Checksum simple type
 		hsqldbDialect.getColumnBinderRegistry().register(DEFAULT_STORAGE_TABLE.checksum,
 				new LambdaParameterBinder<>(DefaultParameterBinders.STRING_BINDER, Checksum::new, Checksum::toString));
-		hsqldbDialect.getJavaTypeToSqlTypeMapping().put(DEFAULT_STORAGE_TABLE.checksum, "VARCHAR(255)");
+		hsqldbDialect.getSqlTypeRegistry().put(DEFAULT_STORAGE_TABLE.checksum, "VARCHAR(255)");
 		
 		// deploying table to database
-		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getJavaTypeToSqlTypeMapping(), connectionProvider);
+		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
 		ddlDeployer.getDdlGenerator().addTables(DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
