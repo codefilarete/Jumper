@@ -52,7 +52,7 @@ public class JdbcApplicationChangeStorageTest {
 		
 		// verifications
 		RowIterator rowIterator = new RowIterator(
-				connectionProvider.getCurrentConnection().prepareStatement("select * from " + DEFAULT_STORAGE_TABLE.getAbsoluteName()).executeQuery(),
+				connectionProvider.giveConnection().prepareStatement("select * from " + DEFAULT_STORAGE_TABLE.getAbsoluteName()).executeQuery(),
 				Maps.asMap("id", (ResultSetReader) DefaultResultSetReaders.STRING_READER)
 				.add(DEFAULT_STORAGE_TABLE.createdAt.getName(), DefaultResultSetReaders.LOCALDATETIME_READER)
 				.add(DEFAULT_STORAGE_TABLE.checksum.getName(), DefaultResultSetReaders.STRING_READER));

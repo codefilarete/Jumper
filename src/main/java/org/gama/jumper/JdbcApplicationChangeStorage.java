@@ -41,7 +41,7 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	@Override
 	public void persist(Change change) {
 		HSQLDBDialect dialect = new HSQLDBDialect();
-		try (Connection currentConnection = connectionProvider.getCurrentConnection()) {
+		try (Connection currentConnection = connectionProvider.giveConnection()) {
 			TransactionSupport transactionSupport = new TransactionSupport(currentConnection);
 			transactionSupport.runAtomically(c -> {
 				PersistenceContext persistenceContext = new PersistenceContext(connectionProvider, dialect);
