@@ -1,4 +1,4 @@
-package org.gama.jumper;
+package org.codefilarete.jumper;
 
 /**
  * A basic statistics container to help to monitor an update

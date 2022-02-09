@@ -1,4 +1,4 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
 import org.junit.jupiter.api.Test;
 

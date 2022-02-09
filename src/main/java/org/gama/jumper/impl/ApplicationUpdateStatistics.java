@@ -1,10 +1,10 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.gama.jumper.Statistics;
-import org.gama.jumper.ChangeId;
+import org.codefilarete.jumper.Statistics;
+import org.codefilarete.jumper.ChangeId;
 
 /**
  * @author Guillaume Mary

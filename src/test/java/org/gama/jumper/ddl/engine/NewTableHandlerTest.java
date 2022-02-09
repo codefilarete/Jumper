@@ -1,7 +1,7 @@
-package org.gama.jumper.ddl.engine;
+package org.codefilarete.jumper.ddl.engine;
 
-import org.gama.jumper.ddl.dsl.DDLEase;
-import org.gama.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.jumper.ddl.dsl.DDLEase;
+import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

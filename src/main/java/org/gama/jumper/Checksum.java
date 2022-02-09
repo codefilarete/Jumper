@@ -1,4 +1,4 @@
-package org.gama.jumper;
+package org.codefilarete.jumper;
 
 import java.util.Objects;
 
@@ -19,7 +19,7 @@ public class Checksum {
 	/**
 	 * Default single constructor with mandatory argument.
 	 * 
-	 * @param checksum expected to be a footprint af a {@link Change}, see {@link org.gama.jumper.impl.StringChecksumer#checksum} for a basic implementation
+	 * @param checksum expected to be a footprint af a {@link Change}, see {@link org.codefilarete.jumper.impl.StringChecksumer#checksum} for a basic implementation
 	 */
 	public Checksum(String checksum) {
 		this.checksum = checksum;

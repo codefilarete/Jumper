@@ -1,4 +1,4 @@
-package org.gama.jumper;
+package org.codefilarete.jumper;
 
 /**
  * @author Guillaume Mary

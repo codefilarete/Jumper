@@ -1,4 +1,4 @@
-package org.gama.jumper;
+package org.codefilarete.jumper;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -7,13 +7,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.gama.lang.sql.TransactionSupport;
-import org.gama.stalactite.persistence.engine.PersistenceContext;
-import org.gama.stalactite.persistence.sql.HSQLDBDialect;
-import org.gama.stalactite.persistence.structure.Column;
-import org.gama.stalactite.persistence.structure.Table;
-import org.gama.stalactite.sql.ConnectionProvider;
-import org.gama.stalactite.sql.binder.LambdaParameterBinder;
+import org.codefilarete.tool.sql.TransactionSupport;
+import org.codefilarete.stalactite.persistence.engine.PersistenceContext;
+import org.codefilarete.stalactite.persistence.sql.HSQLDBDialect;
+import org.codefilarete.stalactite.persistence.structure.Column;
+import org.codefilarete.stalactite.persistence.structure.Table;
+import org.codefilarete.stalactite.sql.ConnectionProvider;
+import org.codefilarete.stalactite.sql.binder.LambdaParameterBinder;
 
 /**
  * @author Guillaume Mary

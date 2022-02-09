@@ -1,4 +1,4 @@
-package org.gama.jumper.ddl.dsl;
+package org.codefilarete.jumper.ddl.dsl;
 
 /**
  * @author Guillaume Mary

@@ -50,29 +50,29 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.gama</groupId>
-			<artifactId>tools</artifactId>
+			<groupId>org.codefilarete</groupId>
+			<artifactId>tool</artifactId>
 			<version>${tools.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.gama</groupId>
+			<groupId>org.codefilarete</groupId>
 			<artifactId>reflection</artifactId>
 			<version>${reflection.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.gama.stalactite</groupId>
+			<groupId>org.codefilarete.stalactite</groupId>
 			<artifactId>core-hsqldb-adapter</artifactId>
 			<version>${stalactite.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.gama.stalactite</groupId>
+			<groupId>org.codefilarete.stalactite</groupId>
 			<artifactId>sql-hsqldb-adapter</artifactId>
 			<version>${stalactite.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.gama.stalactite</groupId>
+			<groupId>org.codefilarete.stalactite</groupId>
 			<artifactId>sql</artifactId>
 			<version>${stalactite.version}</version>
 			<type>test-jar</type>

@@ -1,8 +1,8 @@
-package org.gama.jumper.ddl.dsl;
+package org.codefilarete.jumper.ddl.dsl;
 
-import org.gama.jumper.ddl.dsl.support.ForeignKeyCreationSupport;
-import org.gama.jumper.ddl.dsl.support.IndexCreationSupport;
-import org.gama.jumper.ddl.dsl.support.TableCreationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.ForeignKeyCreationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.IndexCreationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.TableCreationSupport;
 
 /**
  * @author Guillaume Mary

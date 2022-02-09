@@ -1,15 +1,15 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
 import java.sql.SQLException;
 
-import org.gama.jumper.AbstractChange;
-import org.gama.jumper.Checksum;
-import org.gama.jumper.Context;
-import org.gama.jumper.ExecutionException;
-import org.gama.jumper.ddl.dsl.support.NewTable;
-import org.gama.jumper.ddl.dsl.support.StructureDefinition;
-import org.gama.jumper.ddl.engine.Dialect;
-import org.gama.lang.exception.NotImplementedException;
+import org.codefilarete.jumper.AbstractChange;
+import org.codefilarete.jumper.Checksum;
+import org.codefilarete.jumper.Context;
+import org.codefilarete.jumper.ExecutionException;
+import org.codefilarete.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.jumper.ddl.dsl.support.StructureDefinition;
+import org.codefilarete.jumper.ddl.engine.Dialect;
+import org.codefilarete.tool.exception.NotImplementedException;
 
 /**
  * A change for any {@link StructureDefinition}

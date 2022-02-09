@@ -1,8 +1,8 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
-import org.gama.jumper.AbstractChange;
-import org.gama.jumper.Checksum;
-import org.gama.jumper.ChangeId;
+import org.codefilarete.jumper.AbstractChange;
+import org.codefilarete.jumper.Checksum;
+import org.codefilarete.jumper.ChangeId;
 
 /**
  * An update dedicated to Java code execution.

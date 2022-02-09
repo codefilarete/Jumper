@@ -1,4 +1,4 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -6,8 +6,8 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.gama.jumper.Checksum;
-import org.gama.jumper.Checksumer;
+import org.codefilarete.jumper.Checksum;
+import org.codefilarete.jumper.Checksumer;
 
 /**
  * A class aimed at creating a checksum from a class bytecode.

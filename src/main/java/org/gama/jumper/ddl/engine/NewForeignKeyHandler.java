@@ -1,10 +1,10 @@
-package org.gama.jumper.ddl.engine;
+package org.codefilarete.jumper.ddl.engine;
 
-import org.gama.jumper.ddl.dsl.support.Column;
-import org.gama.jumper.ddl.dsl.support.NewForeignKey;
-import org.gama.jumper.ddl.dsl.support.Table;
-import org.gama.lang.StringAppender;
-import org.gama.lang.Strings;
+import org.codefilarete.jumper.ddl.dsl.support.Column;
+import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
+import org.codefilarete.jumper.ddl.dsl.support.Table;
+import org.codefilarete.tool.StringAppender;
+import org.codefilarete.tool.Strings;
 
 /**
  * @author Guillaume Mary
@@ -29,7 +29,7 @@ public class NewForeignKeyHandler implements NewForeignKeyGenerator {
 	}
 	
 	/**
-	 * A {@link StringAppender} that automatically appends {@link Column} and {@link org.gama.jumper.ddl.dsl.support.Table}
+	 * A {@link StringAppender} that automatically appends {@link Column} and {@link org.codefilarete.jumper.ddl.dsl.support.Table}
 	 */
 	private static class DDLAppender extends StringAppender {
 		
@@ -51,8 +51,8 @@ public class NewForeignKeyHandler implements NewForeignKeyGenerator {
 				catIf(!Strings.isEmpty(column.getCatalogName()), column.getCatalogName(), ".");
 				catIf(!Strings.isEmpty(column.getSchemaName()), column.getSchemaName(), ".");
 				return super.cat(column.getName());
-			} else if (o instanceof org.gama.jumper.ddl.dsl.support.Table) {
-				org.gama.jumper.ddl.dsl.support.Table table = ((org.gama.jumper.ddl.dsl.support.Table) o);
+			} else if (o instanceof org.codefilarete.jumper.ddl.dsl.support.Table) {
+				org.codefilarete.jumper.ddl.dsl.support.Table table = ((org.codefilarete.jumper.ddl.dsl.support.Table) o);
 				catIf(!Strings.isEmpty(table.getCatalogName()), table.getCatalogName(), ".");
 				catIf(!Strings.isEmpty(table.getSchemaName()), table.getSchemaName(), ".");
 				return super.cat(table.getName());

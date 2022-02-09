@@ -1,8 +1,8 @@
-package org.gama.jumper.ddl.dsl.support;
+package org.codefilarete.jumper.ddl.dsl.support;
 
-import org.gama.jumper.ddl.dsl.ColumnOption;
-import org.gama.jumper.ddl.dsl.TableCreation;
-import org.gama.reflection.MethodReferenceDispatcher;
+import org.codefilarete.jumper.ddl.dsl.ColumnOption;
+import org.codefilarete.jumper.ddl.dsl.TableCreation;
+import org.codefilarete.reflection.MethodReferenceDispatcher;
 
 /**
  * @author Guillaume Mary

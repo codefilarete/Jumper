@@ -1,10 +1,10 @@
-package org.gama.jumper.ddl.engine;
+package org.codefilarete.jumper.ddl.engine;
 
-import org.gama.jumper.ddl.dsl.support.Column;
-import org.gama.jumper.ddl.dsl.support.NewIndex;
-import org.gama.jumper.ddl.dsl.support.Table;
-import org.gama.lang.StringAppender;
-import org.gama.lang.Strings;
+import org.codefilarete.jumper.ddl.dsl.support.Column;
+import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
+import org.codefilarete.jumper.ddl.dsl.support.Table;
+import org.codefilarete.tool.StringAppender;
+import org.codefilarete.tool.Strings;
 
 /**
  * @author Guillaume Mary

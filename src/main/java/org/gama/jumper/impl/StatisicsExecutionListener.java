@@ -1,12 +1,12 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
-import org.gama.jumper.NoopExecutionListener;
-import org.gama.jumper.Statistics;
-import org.gama.jumper.Change;
-import org.gama.lang.trace.Chrono;
+import org.codefilarete.jumper.NoopExecutionListener;
+import org.codefilarete.jumper.Statistics;
+import org.codefilarete.jumper.Change;
+import org.codefilarete.tool.trace.Chrono;
 
 /**
- * An {@link org.gama.jumper.ExecutionListener} to fullfill statistics
+ * An {@link org.codefilarete.jumper.ExecutionListener} to fullfill statistics
  * 
  * @author Guillaume Mary
  */

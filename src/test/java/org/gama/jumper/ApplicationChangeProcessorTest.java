@@ -1,9 +1,9 @@
-package org.gama.jumper;
+package org.codefilarete.jumper;
 
-import org.gama.jumper.impl.AbstractJavaChange;
-import org.gama.jumper.impl.InMemoryApplicationChangeStorage;
-import org.gama.lang.collection.Arrays;
-import org.gama.lang.trace.ModifiableInt;
+import org.codefilarete.jumper.impl.AbstractJavaChange;
+import org.codefilarete.jumper.impl.InMemoryApplicationChangeStorage;
+import org.codefilarete.tool.collection.Arrays;
+import org.codefilarete.tool.trace.ModifiableInt;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

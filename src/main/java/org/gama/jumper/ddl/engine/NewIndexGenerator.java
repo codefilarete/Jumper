@@ -1,6 +1,6 @@
-package org.gama.jumper.ddl.engine;
+package org.codefilarete.jumper.ddl.engine;
 
-import org.gama.jumper.ddl.dsl.support.NewIndex;
+import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 
 /**
  * @author Guillaume Mary

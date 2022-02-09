@@ -1,8 +1,8 @@
-package org.gama.jumper;
+package org.codefilarete.jumper;
 
 import java.sql.Connection;
 
-import org.gama.jumper.ddl.engine.Dialect;
+import org.codefilarete.jumper.ddl.engine.Dialect;
 
 /**
  * Class aimed at storing information about context of execution.

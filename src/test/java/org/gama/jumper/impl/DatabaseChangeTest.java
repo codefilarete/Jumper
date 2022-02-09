@@ -1,11 +1,11 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.gama.jumper.Context;
+import org.codefilarete.jumper.Context;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.anyString;

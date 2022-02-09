@@ -1,8 +1,8 @@
-package org.gama.jumper.ddl.dsl.support;
+package org.codefilarete.jumper.ddl.dsl.support;
 
 import java.util.Set;
 
-import org.gama.lang.collection.KeepOrderSet;
+import org.codefilarete.tool.collection.KeepOrderSet;
 
 /**
  * @author Guillaume Mary

@@ -1,12 +1,12 @@
-package org.gama.jumper.ddl.engine;
+package org.codefilarete.jumper.ddl.engine;
 
 import javax.annotation.Nonnull;
 
-import org.gama.jumper.ddl.dsl.support.NewColumn;
-import org.gama.jumper.ddl.dsl.support.NewPrimaryKey;
-import org.gama.jumper.ddl.dsl.support.NewTable;
-import org.gama.lang.StringAppender;
-import org.gama.lang.Strings;
+import org.codefilarete.jumper.ddl.dsl.support.NewColumn;
+import org.codefilarete.jumper.ddl.dsl.support.NewPrimaryKey;
+import org.codefilarete.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.tool.StringAppender;
+import org.codefilarete.tool.Strings;
 
 /**
  * Default implementation of {@link NewTableGenerator}

@@ -1,4 +1,4 @@
-package org.gama.jumper;
+package org.codefilarete.jumper;
 
 /**
  * A class dedicated to {@link Change} execution.

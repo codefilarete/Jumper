@@ -1,4 +1,4 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.gama.jumper.ApplicationChangeStorage;
-import org.gama.jumper.Checksum;
-import org.gama.jumper.Change;
-import org.gama.jumper.ChangeId;
+import org.codefilarete.jumper.ApplicationChangeStorage;
+import org.codefilarete.jumper.Checksum;
+import org.codefilarete.jumper.Change;
+import org.codefilarete.jumper.ChangeId;
 
 /**
  * @author Guillaume Mary

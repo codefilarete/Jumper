@@ -1,6 +1,6 @@
-package org.gama.jumper.ddl.dsl.support;
+package org.codefilarete.jumper.ddl.dsl.support;
 
-import org.gama.jumper.ddl.dsl.ForeignKeyCreation;
+import org.codefilarete.jumper.ddl.dsl.ForeignKeyCreation;
 
 /**
  * @author Guillaume Mary

@@ -1,6 +1,6 @@
-package org.gama.jumper.ddl.dsl;
+package org.codefilarete.jumper.ddl.dsl;
 
-import org.gama.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 
 /**
  * @author Guillaume Mary

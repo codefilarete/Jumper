@@ -1,13 +1,13 @@
-package org.gama.jumper.impl;
+package org.codefilarete.jumper.impl;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.gama.jumper.Context;
-import org.gama.jumper.ddl.dsl.DDLEase;
-import org.gama.jumper.ddl.engine.Dialect;
+import org.codefilarete.jumper.Context;
+import org.codefilarete.jumper.ddl.dsl.DDLEase;
+import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

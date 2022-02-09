@@ -1,6 +1,6 @@
-package org.gama.jumper.ddl.engine;
+package org.codefilarete.jumper.ddl.engine;
 
-import org.gama.jumper.ddl.dsl.support.NewForeignKey;
+import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 
 /**
  * @author Guillaume Mary
