@@ -50,7 +50,7 @@ public class SQLChange extends AbstractChange {
 	@Override
 	public void run(Context context) throws ExecutionException {
 		try {
-			TransactionSupport.runAtomically(c -> runAtomatically(sqlOrders, c), context.getConnection());
+			TransactionSupport.runAtomically((Connection c) -> runAtomatically(sqlOrders, c), context.getConnection());
 		} catch (SQLException e) {
 			throw new ExecutionException(e);
 		}
@@ -67,7 +67,6 @@ public class SQLChange extends AbstractChange {
 			try {
 				runSqlOrder(sqlOrder, connection);
 			} catch (SQLException e) {
-				connection.rollback();
 				throw new SQLException("Error executing " + sqlOrder, e);
 			}
 		}

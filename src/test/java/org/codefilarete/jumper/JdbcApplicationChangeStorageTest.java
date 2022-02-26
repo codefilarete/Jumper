@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.tool.collection.Maps;
-import org.codefilarete.stalactite.sql.DataSourceConnectionProvider;
+import org.codefilarete.stalactite.sql.CurrentThreadConnectionProvider;
 import org.codefilarete.stalactite.sql.binder.DefaultParameterBinders;
 import org.codefilarete.stalactite.sql.binder.DefaultResultSetReaders;
 import org.codefilarete.stalactite.sql.binder.LambdaParameterBinder;
@@ -29,7 +29,7 @@ public class JdbcApplicationChangeStorageTest {
 	@Test
 	public void testPersist() throws SQLException {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
-		DataSourceConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
+		CurrentThreadConnectionProvider connectionProvider = new CurrentThreadConnectionProvider(hsqldbInMemoryDataSource);
 		
 		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
 		
