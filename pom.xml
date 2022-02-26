@@ -51,7 +51,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.codefilarete</groupId>
-			<artifactId>tool</artifactId>
+			<artifactId>tools</artifactId>
 			<version>${tools.version}</version>
 		</dependency>
 		<dependency>
