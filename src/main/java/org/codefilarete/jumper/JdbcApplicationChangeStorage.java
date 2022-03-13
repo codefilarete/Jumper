@@ -13,7 +13,7 @@ import org.codefilarete.stalactite.persistence.sql.HSQLDBDialect;
 import org.codefilarete.stalactite.persistence.structure.Column;
 import org.codefilarete.stalactite.persistence.structure.Table;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
-import org.codefilarete.stalactite.sql.binder.LambdaParameterBinder;
+import org.codefilarete.stalactite.sql.statement.binder.LambdaParameterBinder;
 
 /**
  * @author Guillaume Mary
