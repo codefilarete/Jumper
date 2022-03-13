@@ -13,7 +13,7 @@ import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader;
 import org.codefilarete.stalactite.sql.result.Row;
 import org.codefilarete.stalactite.sql.result.RowIterator;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
-import org.codefilarete.stalactite.persistence.engine.DDLDeployer;
+import org.codefilarete.stalactite.persistence.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.persistence.sql.HSQLDBDialect;
 import org.junit.jupiter.api.Test;
 

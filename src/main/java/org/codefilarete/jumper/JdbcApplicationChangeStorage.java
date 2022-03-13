@@ -10,8 +10,8 @@ import java.util.Set;
 import org.codefilarete.tool.sql.TransactionSupport;
 import org.codefilarete.stalactite.persistence.engine.PersistenceContext;
 import org.codefilarete.stalactite.persistence.sql.HSQLDBDialect;
-import org.codefilarete.stalactite.persistence.structure.Column;
-import org.codefilarete.stalactite.persistence.structure.Table;
+import org.codefilarete.stalactite.persistence.sql.ddl.structure.Column;
+import org.codefilarete.stalactite.persistence.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.stalactite.sql.statement.binder.LambdaParameterBinder;
 
