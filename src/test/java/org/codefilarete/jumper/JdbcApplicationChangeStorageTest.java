@@ -4,17 +4,17 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import org.codefilarete.jumper.impl.SQLChange;
-import org.codefilarete.tool.collection.Maps;
 import org.codefilarete.stalactite.sql.CurrentThreadConnectionProvider;
+import org.codefilarete.stalactite.sql.HSQLDBDialect;
+import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
+import org.codefilarete.stalactite.sql.result.Row;
+import org.codefilarete.stalactite.sql.result.RowIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultParameterBinders;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
 import org.codefilarete.stalactite.sql.statement.binder.LambdaParameterBinder;
 import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader;
-import org.codefilarete.stalactite.sql.result.Row;
-import org.codefilarete.stalactite.sql.result.RowIterator;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
-import org.codefilarete.stalactite.persistence.sql.ddl.DDLDeployer;
-import org.codefilarete.stalactite.persistence.sql.HSQLDBDialect;
+import org.codefilarete.tool.collection.Maps;
 import org.junit.jupiter.api.Test;
 
 import static org.codefilarete.jumper.JdbcApplicationChangeStorage.DEFAULT_STORAGE_TABLE;

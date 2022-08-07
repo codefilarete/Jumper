@@ -38,7 +38,7 @@ public class DatabaseChangeTest {
 		testInstance.run(new Context(null, dataSourceMock.getConnection()));
 		
 		verify(connectionMock, times(5)).createStatement();
-		verify(statementMock, times(3)).executeUpdate(anyString());
+		verify(statementMock, times(3)).executeLargeUpdate(anyString());
 		verify(statementMock, times(1)).executeQuery(anyString());
 		verify(statementMock, times(1)).execute(anyString());
 	}

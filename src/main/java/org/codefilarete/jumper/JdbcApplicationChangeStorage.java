@@ -7,15 +7,18 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.codefilarete.tool.sql.TransactionSupport;
-import org.codefilarete.stalactite.persistence.engine.PersistenceContext;
-import org.codefilarete.stalactite.persistence.sql.HSQLDBDialect;
-import org.codefilarete.stalactite.persistence.sql.ddl.structure.Column;
-import org.codefilarete.stalactite.persistence.sql.ddl.structure.Table;
+import org.codefilarete.stalactite.engine.PersistenceContext;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
+import org.codefilarete.stalactite.sql.Dialect;
+import org.codefilarete.stalactite.sql.ServiceLoaderDialectResolver;
+import org.codefilarete.stalactite.sql.ddl.structure.Column;
+import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.statement.binder.LambdaParameterBinder;
+import org.codefilarete.tool.sql.TransactionSupport;
 
 /**
+ * Change that deploys Jumper's history table. Kind of self usage of itself.
+ *
  * @author Guillaume Mary
  */
 public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
@@ -40,7 +43,7 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	
 	@Override
 	public void persist(Change change) {
-		HSQLDBDialect dialect = new HSQLDBDialect();
+		Dialect dialect = new ServiceLoaderDialectResolver().determineDialect(connectionProvider.giveConnection());
 		try (Connection currentConnection = connectionProvider.giveConnection()) {
 			TransactionSupport transactionSupport = new TransactionSupport(currentConnection);
 			transactionSupport.runAtomically(c -> {

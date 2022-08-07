@@ -79,7 +79,7 @@ public class SQLChange extends AbstractChange {
 				case "insert":
 				case "update":
 				case "delete":
-					int updatedRowCount = statement.executeUpdate(sqlOrder);
+					long updatedRowCount = statement.executeLargeUpdate(sqlOrder);
 					LOGGER.info("{} updated rows by " + sqlOrder, updatedRowCount);
 					break;
 				case "select":    // what's the interest to select something during an update ? not sure this case should be taken into account
