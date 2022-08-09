@@ -61,13 +61,26 @@
 		</dependency>
 		<dependency>
 			<groupId>org.codefilarete.stalactite</groupId>
+			<artifactId>core</artifactId>
+			<version>${stalactite.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codefilarete.stalactite</groupId>
 			<artifactId>core-hsqldb-adapter</artifactId>
 			<version>${stalactite.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.codefilarete.stalactite</groupId>
 			<artifactId>sql-hsqldb-adapter</artifactId>
 			<version>${stalactite.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.codefilarete.stalactite</groupId>
+			<artifactId>sql-mariadb-adapter</artifactId>
+			<version>1.0.1-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>

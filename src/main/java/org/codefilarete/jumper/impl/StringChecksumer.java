@@ -1,6 +1,5 @@
 package org.codefilarete.jumper.impl;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +41,7 @@ public class StringChecksumer implements Checksumer<String> {
 	@Override
 	public Checksum checksum(String s) {
 		try {
-			return new Checksum(DatatypeConverter.printHexBinary(buildChecksum(new ByteArrayInputStream(s.getBytes(CHARSET_FOR_BYTES)), getMessageDigest())));
+			return new Checksum(printHexBinary(buildChecksum(new ByteArrayInputStream(s.getBytes(CHARSET_FOR_BYTES)), getMessageDigest())));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -59,5 +58,16 @@ public class StringChecksumer implements Checksumer<String> {
 	
 	public MessageDigest getMessageDigest() {
 		return MD5_ALGORITHM;
+	}
+	
+	private static final char[] hexCode = "0123456789ABCDEF".toCharArray();
+	
+	public static String printHexBinary(byte[] data) {
+		StringBuilder r = new StringBuilder(data.length * 2);
+		for (byte b : data) {
+			r.append(hexCode[(b >> 4) & 0xF]);
+			r.append(hexCode[(b & 0xF)]);
+		}
+		return r.toString();
 	}
 }

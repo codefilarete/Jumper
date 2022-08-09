@@ -39,6 +39,12 @@ public class TableCreationSupport implements TableCreation {
 						newColumn.setDefaultValue(defaultValue);
 						return null;
 					}
+					
+					@Override
+					public TableCreationColumnOption uniqueConstraint(String name) {
+						newColumn.setUniqueConstraint(name);
+						return null;
+					}
 				}, true)
 				.fallbackOn(this)
 				.build(TableCreationColumnOption.class);

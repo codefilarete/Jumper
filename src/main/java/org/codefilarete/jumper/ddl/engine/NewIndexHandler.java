@@ -34,7 +34,7 @@ public class NewIndexHandler implements NewIndexGenerator {
 		}
 		
 		/**
-		 * Overriden to append {@link Column} names
+		 * Overridden to append {@link Column} names
 		 *
 		 * @param o any object
 		 * @return this

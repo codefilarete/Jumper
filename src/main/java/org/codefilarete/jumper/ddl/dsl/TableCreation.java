@@ -27,5 +27,8 @@ public interface TableCreation {
 		TableCreationColumnOption defaultValue(String defaultValue);
 		
 		TableCreationColumnOption inPrimaryKey();
+
+		@Override
+		TableCreationColumnOption uniqueConstraint(String name);
 	}
 }

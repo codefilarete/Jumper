@@ -1,6 +1,5 @@
 package org.codefilarete.jumper.impl;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -31,7 +30,7 @@ public class ClassChecksumer implements Checksumer<Class> {
 	
 	@Override
 	public Checksum checksum(Class c) {
-		return new Checksum(DatatypeConverter.printHexBinary(buildChecksum(c)));
+		return new Checksum(StringChecksumer.printHexBinary(buildChecksum(c)));
 	}
 	
 	public byte[] buildChecksum(Class c) {

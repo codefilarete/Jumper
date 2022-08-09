@@ -1,12 +1,15 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.codefilarete.jumper.ddl.dsl.support.NewColumn;
 import org.codefilarete.jumper.ddl.dsl.support.NewPrimaryKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
+import org.codefilarete.tool.collection.Arrays;
 
 /**
  * Default implementation of {@link NewTableGenerator}
@@ -15,6 +18,47 @@ import org.codefilarete.tool.Strings;
  */
 public class NewTableHandler implements NewTableGenerator {
 	
+	private static final Set<String> MARIADB_KEYWORDS = Arrays.asTreeSet(String.CASE_INSENSITIVE_ORDER,
+			"ACCESSIBLE", "ANALYZE", "ASENSITIVE",
+			"BEFORE", "BIGINT", "BINARY", "BLOB",
+			"CALL", "CHANGE", "CONDITION",
+			"DATABASE", "DATABASES", "DAY_HOUR", "DAY_MICROSECOND", "DAY_MINUTE", "DAY_SECOND", "DELAYED", "DETERMINISTIC", "DISTINCTROW", "DIV", "DUAL",
+			"EACH", "ELSEIF", "ENCLOSED", "ESCAPED", "EXIT", "EXPLAIN",
+			"FLOAT4", "FLOAT8", "FORCE", "FULLTEXT",
+			"HIGH_PRIORITY", "HOUR_MICROSECOND", "HOUR_MINUTE", "HOUR_SECOND",
+			"IF", "IGNORE", "INFILE", "INOUT", "INT1", "INT2", "INT3", "INT4", "INT8", "ITERATE",
+			"KEY", "KEYS", "KILL",
+			"LEAVE", "LIMIT", "LINEAR", "LINES", "LOAD", "LOCALTIME", "LOCALTIMESTAMP", "LOCK", "LONG", "LONGBLOB", "LONGTEXT", "LOOP", "LOW_PRIORITY",
+			"MEDIUMBLOB", "MEDIUMINT", "MEDIUMTEXT", "MIDDLEINT", "MINUTE_MICROSECOND", "MINUTE_SECOND", "MOD", "MODIFIES", "NO_WRITE_TO_BINLOG",
+			"OPTIMIZE", "OPTIONALLY", "OUT", "OUTFILE",
+			"PURGE",
+			"RANGE", "READS", "READ_ONLY", "READ_WRITE", "REGEXP", "RELEASE", "RENAME", "REPEAT", "REPLACE", "REQUIRE", "RETURN", "RLIKE",
+			"SCHEMAS", "SECOND_MICROSECOND", "SENSITIVE", "SEPARATOR", "SHOW", "SPATIAL", "SPECIFIC", "SQLEXCEPTION", "SQL_BIG_RESULT", "SQL_CALC_FOUND_ROWS", "SQL_SMALL_RESULT", "SSL", "STARTING", "STRAIGHT_JOIN",
+			"TERMINATED", "TINYBLOB", "TINYINT", "TINYTEXT", "TRIGGER",
+			"UNDO", "UNLOCK", "UNSIGNED", "USE", "UTC_DATE", "UTC_TIME", "UTC_TIMESTAMP",
+			"VARBINARY", "VARCHARACTER",
+			"WHILE",
+			"X509", "XOR",
+			"YEAR_MONTH",
+			"ZEROFILL",
+			"GENERAL",
+			"IGNORE_SERVER_IDS",
+			"MASTER_HEARTBEAT_PERIOD",
+			"MAXVALUE",
+			"RESIGNAL",
+			"SIGNAL",
+			"SLOW");
+	
+	private final Set<String> keywords;
+	
+	public NewTableHandler() {
+		this(Collections.emptySet());
+	}
+	
+	public NewTableHandler(Set<String> keywords) {
+		this.keywords = keywords;
+	}
+	
 	@Override
 	public String generateScript(NewTable table) {
 		DDLAppender sqlCreateTable = new DDLAppender("create table ");
@@ -22,19 +66,30 @@ public class NewTableHandler implements NewTableGenerator {
 				.catIf(!Strings.isEmpty(table.getSchemaName()), table.getSchemaName(), ".");
 		
 		sqlCreateTable.cat(table.getName(), "(");
+		Set<NewColumn> uniqueKeyConstraints = new LinkedHashSet<>();
 		for (NewColumn column : table.getColumns()) {
 			generateCreateColumn(column, sqlCreateTable);
 			sqlCreateTable.cat(", ");
+			if (column.getUniqueConstraint() != null) {
+				uniqueKeyConstraints.add(column);
+			}
 		}
 		sqlCreateTable.cutTail(2);
 		if (table.getPrimaryKey() != null) {
 			generateCreatePrimaryKey(table.getPrimaryKey(), sqlCreateTable);
 		}
+		uniqueKeyConstraints.forEach(columnWithUKConstraint -> generateUniqueConstraint(columnWithUKConstraint, sqlCreateTable));
 		sqlCreateTable.cat(")");
 		return sqlCreateTable.toString();
 	}
 	
-	protected void generateCreatePrimaryKey(@Nonnull NewPrimaryKey primaryKey, DDLAppender sqlCreateTable) {
+	protected void generateUniqueConstraint(NewColumn columnWithUKConstraint, DDLAppender sqlCreateTable) {
+		sqlCreateTable.cat(", constraint ",
+				columnWithUKConstraint.getUniqueConstraint(),
+				" unique (", columnWithUKConstraint, ")");
+	}
+	
+	protected void generateCreatePrimaryKey(NewPrimaryKey primaryKey, DDLAppender sqlCreateTable) {
 		sqlCreateTable.cat(", primary key (")
 				.ccat(primaryKey.getColumns(), ", ")
 				.cat(")");
@@ -60,7 +115,7 @@ public class NewTableHandler implements NewTableGenerator {
 		}
 		
 		/**
-		 * Overriden to append {@link NewColumn} names
+		 * Overridden to append {@link NewColumn} names
 		 *
 		 * @param o any object
 		 * @return this
@@ -68,52 +123,14 @@ public class NewTableHandler implements NewTableGenerator {
 		@Override
 		public StringAppender cat(Object o) {
 			if (o instanceof NewColumn) {
-				return super.cat(((NewColumn) o).getName());
+				String columnName = ((NewColumn) o).getName();
+				if (MARIADB_KEYWORDS.contains(columnName)) {
+					columnName = "`" + columnName + "`";
+				}
+				return super.cat(columnName);
 			} else {
 				return super.cat(o);
 			}
 		}
 	}
-	
-//	
-//	public String generateCreateForeignKey(ForeignKey foreignKey) {
-//		Table table = foreignKey.getTable();
-//		StringAppender sqlCreateFK = new DDLAppender(dmlNameProvider, "alter table ", table)
-//				.cat(" add constraint ", foreignKey.getName(), " foreign key(")
-//				.ccat(foreignKey.getColumns(), ", ")
-//				.cat(") references ", foreignKey.getTargetTable(), "(")
-//				.ccat(foreignKey.getTargetColumns(), ", ");
-//		return sqlCreateFK.cat(")").toString();
-//	}
-//	
-//	public String generateAddColumn(Column column) {
-//		DDLAppender sqladdColumn = new DDLAppender(dmlNameProvider, "alter table ", column.getTable(), " add column ", column, " ", getSqlType(column));
-//		return sqladdColumn.toString();
-//	}
-//	
-//	public String generateDropTable(Table table) {
-//		DDLAppender sqlCreateTable = new DDLAppender(dmlNameProvider, "drop table ", table);
-//		return sqlCreateTable.toString();
-//	}
-//	
-//	public String generateDropTableIfExists(Table table) {
-//		DDLAppender sqlCreateTable = new DDLAppender(dmlNameProvider, "drop table if exists ", table);
-//		return sqlCreateTable.toString();
-//	}
-//	
-//	public String generateDropIndex(Index index) {
-//		DDLAppender sqlCreateTable = new DDLAppender(dmlNameProvider, "drop index ", index.getName());
-//		return sqlCreateTable.toString();
-//	}
-//	
-//	public String generateDropForeignKey(ForeignKey foreignKey) {
-//		DDLAppender sqlCreateTable = new DDLAppender(dmlNameProvider, "alter table ", foreignKey.getTable(), " drop constraint ", foreignKey.getName());
-//		return sqlCreateTable.toString();
-//	}
-//	
-//	public String generateDropColumn(Column column) {
-//		DDLAppender sqlDropColumn = new DDLAppender(dmlNameProvider, "alter table ", column.getTable(), " drop column ", column);
-//		return sqlDropColumn.toString();
-//	}
-	
 }

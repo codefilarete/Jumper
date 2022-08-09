@@ -6,7 +6,7 @@ import org.codefilarete.jumper.Change;
 import org.codefilarete.tool.trace.Chrono;
 
 /**
- * An {@link org.codefilarete.jumper.ExecutionListener} to fullfill statistics
+ * An {@link org.codefilarete.jumper.ExecutionListener} to fulfill statistics
  * 
  * @author Guillaume Mary
  */

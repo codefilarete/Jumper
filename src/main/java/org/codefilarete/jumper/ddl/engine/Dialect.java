@@ -8,9 +8,13 @@ import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 public class Dialect implements NewTableGenerator {
 	
 	private final NewTableHandler newTableHandler;
+	private final NewForeignKeyHandler newForeignKeyHandler;
+	private final NewIndexHandler newIndexHandler;
 	
 	public Dialect() {
 		this.newTableHandler = new NewTableHandler();
+		this.newForeignKeyHandler = new NewForeignKeyHandler();
+		this.newIndexHandler = new NewIndexHandler();
 	}
 	
 	@Override

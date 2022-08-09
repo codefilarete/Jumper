@@ -50,6 +50,34 @@ class NewTableHandlerTest {
 	}
 	
 	@Test
+	void generateScript_uniqueConstraint() {
+		NewTableHandler testInstance = new NewTableHandler();
+		NewTable newTableSinglePK = DDLEase.createTable("toto")
+				.addColumn("col1", "varchar(100)")
+					.inPrimaryKey()
+				.addColumn("col2", "bigint").uniqueConstraint("UK_col2")
+				.build();
+		assertEquals("create table toto("
+				+ "col1 varchar(100), "
+				+ "col2 bigint, primary key (col1), "
+				+ "constraint UK_col2 unique (col2))", testInstance.generateScript(newTableSinglePK));
+		
+		NewTable newTableComposedPK = DDLEase.createTable("toto")
+				.addColumn("col1", "varchar(100)")
+					.inPrimaryKey()
+					.uniqueConstraint("UK_col1")
+				.addColumn("col2", "bigint")
+					.inPrimaryKey()
+					.uniqueConstraint("UK_col2")
+				.build();
+		assertEquals("create table toto("
+				+ "col1 varchar(100), "
+				+ "col2 bigint, primary key (col1, col2), "
+				+ "constraint UK_col1 unique (col1), "
+				+ "constraint UK_col2 unique (col2))", testInstance.generateScript(newTableComposedPK));
+	}
+	
+	@Test
 	void generateScript_catalogAndSchema() {
 		NewTableHandler testInstance = new NewTableHandler();
 		NewTable newTable = DDLEase.createTable("toto")

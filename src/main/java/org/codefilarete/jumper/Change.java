@@ -12,7 +12,7 @@ public interface Change {
 	
 	/**
 	 * Indicates if this {@link Change} must be executed even if it was already ran. Default is no (false).
-	 * May be overriden according to task.
+	 * May be overridden according to task.
 	 */
 	default boolean shouldAlwaysRun() {
 		return false;
@@ -20,7 +20,7 @@ public interface Change {
 	
 	/**
 	 * Indicates if this {@link Change} must be run on the given {@link Context}. Default is yes (true).
-	 * Should be overriden to implement a conditionnal reason of execution according to {@link Context}. 
+	 * Should be overridden to implement a conditional reason of execution according to {@link Context}.
 	 */
 	default boolean shouldRun(Context context) {
 		return true;
@@ -31,7 +31,7 @@ public interface Change {
 	/**
 	 * Computes the checksum of the execution. Checksum must be considered as a signature of the business logic of the update.
 	 * 
-	 * @return a "busness logic"-relied Checksum
+	 * @return a "business logic"-rely-on Checksum
 	 */
 	Checksum computeChecksum();
 	

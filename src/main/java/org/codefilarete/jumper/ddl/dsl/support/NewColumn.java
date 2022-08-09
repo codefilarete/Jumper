@@ -10,6 +10,7 @@ public class NewColumn {
 	private boolean nullable = true;
 	private String defaultValue;
 	private boolean autoIncrement = false;
+	private String uniqueConstraintName;
 	
 	public NewColumn(String name, String sqlType) {
 		this.name = name;
@@ -54,5 +55,13 @@ public class NewColumn {
 	
 	public void setAutoIncrement(boolean autoIncrement) {
 		this.autoIncrement = autoIncrement;
+	}
+	
+	public String getUniqueConstraint() {
+		return uniqueConstraintName;
+	}
+	
+	public void setUniqueConstraint(String name) {
+		this.uniqueConstraintName = name;
 	}
 }
