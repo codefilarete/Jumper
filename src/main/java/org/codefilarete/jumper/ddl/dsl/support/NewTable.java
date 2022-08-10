@@ -10,35 +10,34 @@ import org.codefilarete.tool.collection.KeepOrderSet;
  */
 public class NewTable implements StructureDefinition {
 	
-	private final String name;
-	private String schemaName;
-	private String catalogName;
+	private final Table table;
 	private final Set<NewColumn> columns = new KeepOrderSet<>();
 	private NewPrimaryKey primaryKey;
+	private final Set<NewUniqueConstraint> uniqueConstraints = new KeepOrderSet<>();
 	
 	public NewTable(String name) {
-		this.name = name;
+		this.table = new Table(name);
 	}
 	
 	public String getName() {
-		return name;
+		return this.table.getName();
 	}
 	
 	public String getSchemaName() {
-		return schemaName;
+		return this.table.getSchemaName();
 	}
 	
 	public NewTable setSchemaName(String schemaName) {
-		this.schemaName = schemaName;
+		this.table.setSchemaName(schemaName);
 		return this;
 	}
 	
 	public String getCatalogName() {
-		return catalogName;
+		return this.table.getCatalogName();
 	}
 	
 	public NewTable setCatalogName(String catalogName) {
-		this.catalogName = catalogName;
+		this.table.setCatalogName(catalogName);
 		return this;
 	}
 	
@@ -53,14 +52,19 @@ public class NewTable implements StructureDefinition {
 		this.columns.add(newColumn);
 	}
 	
-	public void addPrimaryKeyColumn(NewColumn column) {
-		if (this.primaryKey == null) {
-			this.primaryKey = new NewPrimaryKey();
-		}
-		this.primaryKey.addColumn(column);
+	public void setPrimaryKey(NewPrimaryKey primaryKey) {
+		this.primaryKey = primaryKey;
 	}
 	
 	public NewPrimaryKey getPrimaryKey() {
 		return primaryKey;
+	}
+	
+	public void addUniqueConstraint(NewUniqueConstraint constraint) {
+		this.uniqueConstraints.add(constraint);
+	}
+	
+	public Set<NewUniqueConstraint> getUniqueConstraints() {
+		return uniqueConstraints;
 	}
 }

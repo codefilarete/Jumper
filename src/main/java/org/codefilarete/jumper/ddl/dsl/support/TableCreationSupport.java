@@ -20,7 +20,6 @@ public class TableCreationSupport implements TableCreation {
 		NewColumn newColumn = new NewColumn(name, sqlType);
 		this.table.addColumn(newColumn);
 		return new MethodReferenceDispatcher()
-				.redirect(TableCreationColumnOption::inPrimaryKey, () -> table.addPrimaryKeyColumn(newColumn))
 				.redirect(ColumnOption.class, new ColumnOption() {
 					@Override
 					public ColumnOption notNull() {
@@ -37,6 +36,12 @@ public class TableCreationSupport implements TableCreation {
 					@Override
 					public ColumnOption defaultValue(String defaultValue) {
 						newColumn.setDefaultValue(defaultValue);
+						return null;
+					}
+					
+					@Override
+					public ColumnOption primaryKey() {
+						table.setPrimaryKey(new NewPrimaryKey(newColumn.getName()));
 						return null;
 					}
 					
@@ -59,6 +64,18 @@ public class TableCreationSupport implements TableCreation {
 	@Override
 	public TableCreation setCatalog(String catalogName) {
 		table.setCatalogName(catalogName);
+		return this;
+	}
+	
+	@Override
+	public TableCreation primaryKey(String columnName, String... extraColumnNames) {
+		table.setPrimaryKey(new NewPrimaryKey(columnName, extraColumnNames));
+		return this;
+	}
+	
+	@Override
+	public TableCreation uniqueConstraint(String constraintName, String columnName, String... extraColumnNames) {
+		table.addUniqueConstraint(new NewUniqueConstraint(constraintName, columnName, extraColumnNames));
 		return this;
 	}
 	

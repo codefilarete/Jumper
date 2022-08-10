@@ -5,33 +5,31 @@ package org.codefilarete.jumper.ddl.dsl.support;
  */
 public class DropTable {
 	
-	private final String name;
-	private String schemaName;
-	private String catalogName;
+	private final Table table;
 	
 	public DropTable(String name) {
-		this.name = name;
+		this.table = new Table(name);
 	}
 	
 	public String getName() {
-		return name;
+		return this.table.getName();
 	}
 	
 	public String getSchemaName() {
-		return schemaName;
+		return this.table.getSchemaName();
 	}
 	
 	public DropTable setSchemaName(String schemaName) {
-		this.schemaName = schemaName;
+		this.table.setSchemaName(schemaName);
 		return this;
 	}
 	
 	public String getCatalogName() {
-		return catalogName;
+		return this.table.getCatalogName();
 	}
 	
 	public DropTable setCatalogName(String catalogName) {
-		this.catalogName = catalogName;
+		this.table.setCatalogName(catalogName);
 		return this;
 	}
 }

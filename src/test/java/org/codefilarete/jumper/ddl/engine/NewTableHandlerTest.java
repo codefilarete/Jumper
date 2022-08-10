@@ -31,7 +31,7 @@ class NewTableHandlerTest {
 		NewTableHandler testInstance = new NewTableHandler();
 		NewTable newTableSinglePK = DDLEase.createTable("toto")
 				.addColumn("col1", "varchar(100)")
-					.inPrimaryKey()
+					.primaryKey()
 				.addColumn("col2", "bigint")
 				.build();
 		assertEquals("create table toto(" 
@@ -40,9 +40,8 @@ class NewTableHandlerTest {
 		
 		NewTable newTableComposedPK = DDLEase.createTable("toto")
 				.addColumn("col1", "varchar(100)")
-					.inPrimaryKey()
 				.addColumn("col2", "bigint")
-					.inPrimaryKey()
+				.primaryKey("col1", "col2")
 				.build();
 		assertEquals("create table toto(" 
 				+ "col1 varchar(100), " 
@@ -54,27 +53,34 @@ class NewTableHandlerTest {
 		NewTableHandler testInstance = new NewTableHandler();
 		NewTable newTableSinglePK = DDLEase.createTable("toto")
 				.addColumn("col1", "varchar(100)")
-					.inPrimaryKey()
 				.addColumn("col2", "bigint").uniqueConstraint("UK_col2")
 				.build();
 		assertEquals("create table toto("
 				+ "col1 varchar(100), "
-				+ "col2 bigint, primary key (col1), "
+				+ "col2 bigint, "
 				+ "constraint UK_col2 unique (col2))", testInstance.generateScript(newTableSinglePK));
 		
-		NewTable newTableComposedPK = DDLEase.createTable("toto")
+		NewTable newTable2SinglePK = DDLEase.createTable("toto")
 				.addColumn("col1", "varchar(100)")
-					.inPrimaryKey()
 					.uniqueConstraint("UK_col1")
 				.addColumn("col2", "bigint")
-					.inPrimaryKey()
 					.uniqueConstraint("UK_col2")
 				.build();
 		assertEquals("create table toto("
 				+ "col1 varchar(100), "
-				+ "col2 bigint, primary key (col1, col2), "
+				+ "col2 bigint, "
 				+ "constraint UK_col1 unique (col1), "
-				+ "constraint UK_col2 unique (col2))", testInstance.generateScript(newTableComposedPK));
+				+ "constraint UK_col2 unique (col2))", testInstance.generateScript(newTable2SinglePK));
+		
+		NewTable newTableComposedPK = DDLEase.createTable("toto")
+				.addColumn("col1", "varchar(100)")
+				.addColumn("col2", "bigint")
+				.uniqueConstraint("UK", "col1", "col2")
+				.build();
+		assertEquals("create table toto("
+				+ "col1 varchar(100), "
+				+ "col2 bigint, "
+				+ "constraint UK unique (col1, col2))", testInstance.generateScript(newTableComposedPK));
 	}
 	
 	@Test

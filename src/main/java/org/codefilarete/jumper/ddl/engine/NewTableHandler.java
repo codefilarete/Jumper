@@ -7,6 +7,7 @@ import java.util.Set;
 import org.codefilarete.jumper.ddl.dsl.support.NewColumn;
 import org.codefilarete.jumper.ddl.dsl.support.NewPrimaryKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.jumper.ddl.dsl.support.NewUniqueConstraint;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 import org.codefilarete.tool.collection.Arrays;
@@ -79,6 +80,7 @@ public class NewTableHandler implements NewTableGenerator {
 			generateCreatePrimaryKey(table.getPrimaryKey(), sqlCreateTable);
 		}
 		uniqueKeyConstraints.forEach(columnWithUKConstraint -> generateUniqueConstraint(columnWithUKConstraint, sqlCreateTable));
+		table.getUniqueConstraints().forEach(uk -> generateUniqueConstraint(uk, sqlCreateTable));
 		sqlCreateTable.cat(")");
 		return sqlCreateTable.toString();
 	}
@@ -87,6 +89,12 @@ public class NewTableHandler implements NewTableGenerator {
 		sqlCreateTable.cat(", constraint ",
 				columnWithUKConstraint.getUniqueConstraint(),
 				" unique (", columnWithUKConstraint, ")");
+	}
+	
+	protected void generateUniqueConstraint(NewUniqueConstraint uniqueConstraint, DDLAppender sqlCreateTable) {
+		sqlCreateTable.cat(", constraint ",
+				uniqueConstraint.getName(),
+				" unique (").ccat(uniqueConstraint.getColumns(), ", ").cat(")");
 	}
 	
 	protected void generateCreatePrimaryKey(NewPrimaryKey primaryKey, DDLAppender sqlCreateTable) {

@@ -13,6 +13,8 @@ public interface ColumnOption {
 	
 	ColumnOption defaultValue(String defaultValue);
 	
+	ColumnOption primaryKey();
+	
 	TableCreationColumnOption uniqueConstraint(String name);
 	
 }

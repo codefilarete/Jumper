@@ -13,6 +13,10 @@ public interface TableCreation {
 	
 	TableCreation setCatalog(String catalogName);
 	
+	TableCreation primaryKey(String columnName, String... extraColumnNames);
+	
+	TableCreation uniqueConstraint(String constraintName, String columnName, String... extraColumnNames);
+	
 	NewTable build();
 	
 	interface TableCreationColumnOption extends TableCreation, ColumnOption {
@@ -26,7 +30,8 @@ public interface TableCreation {
 		@Override
 		TableCreationColumnOption defaultValue(String defaultValue);
 		
-		TableCreationColumnOption inPrimaryKey();
+		@Override
+		TableCreationColumnOption primaryKey();
 
 		@Override
 		TableCreationColumnOption uniqueConstraint(String name);
