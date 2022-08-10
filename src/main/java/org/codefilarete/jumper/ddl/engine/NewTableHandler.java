@@ -118,8 +118,7 @@ public class NewTableHandler implements NewTableGenerator {
 	private static class DDLAppender extends StringAppender {
 		
 		public DDLAppender(Object... o) {
-			// we don't all super(o) because it may need dmlNameProvider
-			cat(o);
+			super(o);
 		}
 		
 		/**

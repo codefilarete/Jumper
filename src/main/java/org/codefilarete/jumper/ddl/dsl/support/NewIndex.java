@@ -14,7 +14,7 @@ public class NewIndex {
 	
 	private boolean unique;
 	
-	private final Set<Column> columns = new KeepOrderSet<>();
+	private final Set<String> columns = new KeepOrderSet<>();
 	
 	public NewIndex(String name, Table table) {
 		this.name = name;
@@ -41,11 +41,11 @@ public class NewIndex {
 		this.unique = unique;
 	}
 	
-	public Set<Column> getColumns() {
+	public Set<String> getColumns() {
 		return columns;
 	}
 	
-	public void addColumn(Column column) {
-		this.columns.add(column);
+	public void addColumn(String columnName) {
+		this.columns.add(columnName);
 	}
 }

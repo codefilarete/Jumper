@@ -15,7 +15,7 @@ public class IndexCreationSupport implements IndexCreation {
 	
 	@Override
 	public IndexCreation addColumn(String name) {
-		index.addColumn(new Column(name));
+		index.addColumn(name);
 		return this;
 	}
 	

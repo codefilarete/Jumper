@@ -1,6 +1,5 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import org.codefilarete.jumper.ddl.dsl.support.Column;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.tool.StringAppender;
@@ -24,29 +23,23 @@ public class NewIndexHandler implements NewIndexGenerator {
 	}
 	
 	/**
-	 * A {@link StringAppender} that automatically appends {@link Column} and {@link Table}
+	 * A {@link StringAppender} that automatically appends {@link Table}
 	 */
 	private static class DDLAppender extends StringAppender {
 		
 		public DDLAppender(Object... o) {
-			// we don't all super(o) because it may need dmlNameProvider
-			cat(o);
+			super(o);
 		}
 		
 		/**
-		 * Overridden to append {@link Column} names
+		 * Overridden to append {@link Table} names
 		 *
 		 * @param o any object
 		 * @return this
 		 */
 		@Override
 		public StringAppender cat(Object o) {
-			if (o instanceof Column) {
-				Column column = (Column) o;
-				catIf(!Strings.isEmpty(column.getCatalogName()), column.getCatalogName(), ".");
-				catIf(!Strings.isEmpty(column.getSchemaName()), column.getSchemaName(), ".");
-				return super.cat(column.getName());
-			} else if (o instanceof Table) {
+			if (o instanceof Table) {
 				Table table = ((Table) o);
 				catIf(!Strings.isEmpty(table.getCatalogName()), table.getCatalogName(), ".");
 				catIf(!Strings.isEmpty(table.getSchemaName()), table.getSchemaName(), ".");

@@ -1,6 +1,5 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import org.codefilarete.jumper.ddl.dsl.support.Column;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.tool.StringAppender;
@@ -29,29 +28,23 @@ public class NewForeignKeyHandler implements NewForeignKeyGenerator {
 	}
 	
 	/**
-	 * A {@link StringAppender} that automatically appends {@link Column} and {@link org.codefilarete.jumper.ddl.dsl.support.Table}
+	 * A {@link StringAppender} that automatically appends {@link Table}
 	 */
 	private static class DDLAppender extends StringAppender {
 		
 		public DDLAppender(Object... o) {
-			// we don't all super(o) because it may need dmlNameProvider
-			cat(o);
+			super(o);
 		}
 		
 		/**
-		 * Overridden to append {@link Column} names
+		 * Overridden to append {@link Table} names
 		 *
 		 * @param o any object
 		 * @return this
 		 */
 		@Override
 		public StringAppender cat(Object o) {
-			if (o instanceof Column) {
-				Column column = (Column) o;
-				catIf(!Strings.isEmpty(column.getCatalogName()), column.getCatalogName(), ".");
-				catIf(!Strings.isEmpty(column.getSchemaName()), column.getSchemaName(), ".");
-				return super.cat(column.getName());
-			} else if (o instanceof org.codefilarete.jumper.ddl.dsl.support.Table) {
+			if (o instanceof Table) {
 				org.codefilarete.jumper.ddl.dsl.support.Table table = ((org.codefilarete.jumper.ddl.dsl.support.Table) o);
 				catIf(!Strings.isEmpty(table.getCatalogName()), table.getCatalogName(), ".");
 				catIf(!Strings.isEmpty(table.getSchemaName()), table.getSchemaName(), ".");
