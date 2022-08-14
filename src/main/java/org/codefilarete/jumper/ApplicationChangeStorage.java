@@ -8,9 +8,27 @@ import java.util.Set;
  */
 public interface ApplicationChangeStorage {
 	
-	void persist(Change change);
+	void persist(ChangeSignet change);
 	
 	Set<ChangeId> giveRanIdentifiers();
 	
 	Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> updates);
+	
+	class ChangeSignet {
+		private final ChangeId changeId;
+		private final Checksum checksum;
+		
+		public ChangeSignet(ChangeId changeId, Checksum checksum) {
+			this.changeId = changeId;
+			this.checksum = checksum;
+		}
+		
+		public ChangeId getChangeId() {
+			return changeId;
+		}
+		
+		public Checksum getChecksum() {
+			return checksum;
+		}
+	}
 }

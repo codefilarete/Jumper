@@ -3,6 +3,7 @@ package org.codefilarete.jumper;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
+import org.codefilarete.jumper.ApplicationChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.stalactite.sql.CurrentThreadConnectionProvider;
 import org.codefilarete.stalactite.sql.HSQLDBDialect;
@@ -17,9 +18,8 @@ import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.codefilarete.tool.collection.Maps;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.codefilarete.jumper.JdbcApplicationChangeStorage.DEFAULT_STORAGE_TABLE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Guillaume Mary
@@ -45,10 +45,11 @@ public class JdbcApplicationChangeStorageTest {
 		
 		// test
 		JdbcApplicationChangeStorage testInstance = new JdbcApplicationChangeStorage(connectionProvider);
-		SQLChange SQLChange = new SQLChange("dummyId", false, new String[] {
+		SQLChange sqlChange = new SQLChange("dummyId", false, new String[] {
 				"select 1 from dual"
 		});
-		testInstance.persist(SQLChange);
+		Checksum checksum = new Checksum("a robust fake checksum");
+		testInstance.persist(new ChangeSignet(sqlChange.getIdentifier(), checksum));
 		
 		// verifications
 		RowIterator rowIterator = new RowIterator(
@@ -56,11 +57,11 @@ public class JdbcApplicationChangeStorageTest {
 				Maps.asMap("id", (ResultSetReader) DefaultResultSetReaders.STRING_READER)
 				.add(DEFAULT_STORAGE_TABLE.createdAt.getName(), DefaultResultSetReaders.LOCALDATETIME_READER)
 				.add(DEFAULT_STORAGE_TABLE.checksum.getName(), DefaultResultSetReaders.STRING_READER));
-		assertTrue(rowIterator.hasNext());
+		assertThat(rowIterator.hasNext()).isTrue();
 		Row row = rowIterator.next();
-		assertEquals(SQLChange.getIdentifier().toString(), row.get(DEFAULT_STORAGE_TABLE.id.getName()));
-		assertEquals(SQLChange.computeChecksum().toString(), row.get(DEFAULT_STORAGE_TABLE.checksum.getName()));
-		assertEquals(LocalDateTime.now().withNano(0), ((LocalDateTime) row.get(DEFAULT_STORAGE_TABLE.createdAt.getName())).withNano(0));
+		assertThat(row.get(DEFAULT_STORAGE_TABLE.id.getName())).isEqualTo(sqlChange.getIdentifier().toString());
+		assertThat(row.get(DEFAULT_STORAGE_TABLE.checksum.getName())).isEqualTo(checksum.toString());
+		assertThat(((LocalDateTime) row.get(DEFAULT_STORAGE_TABLE.createdAt.getName())).withNano(0)).isEqualTo(LocalDateTime.now().withNano(0));
 	}
 	
 }

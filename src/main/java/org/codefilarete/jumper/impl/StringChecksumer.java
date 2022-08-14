@@ -1,15 +1,12 @@
 package org.codefilarete.jumper.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import org.codefilarete.jumper.Checksum;
 import org.codefilarete.jumper.Checksumer;
+
+import static org.codefilarete.jumper.impl.ByteChecksumer.toHexBinaryString;
 
 /**
  * A class aimed at creating a checksum from a String, based on a MD5 algorithm.
@@ -27,47 +24,10 @@ public class StringChecksumer implements Checksumer<String> {
 	/** Charset of String bytes. Fixed to prevent from being dependent of JVM default's */
 	private static final Charset CHARSET_FOR_BYTES = StandardCharsets.UTF_8;
 	
-	private static final MessageDigest MD5_ALGORITHM;
-	
-	static {
-		try {
-			MD5_ALGORITHM = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e) {
-			// Should not happen because MD5 is a JVM default algorithm
-			throw new RuntimeException(e);
-		}
-	}
+	private final ByteChecksumer byteChecksumer = new ByteChecksumer();
 	
 	@Override
 	public Checksum checksum(String s) {
-		try {
-			return new Checksum(printHexBinary(buildChecksum(new ByteArrayInputStream(s.getBytes(CHARSET_FOR_BYTES)), getMessageDigest())));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public byte[] buildChecksum(InputStream in, MessageDigest digest) throws IOException {
-		byte[] block = new byte[4096];
-		int length;
-		while ((length = in.read(block)) > 0) {
-			digest.update(block, 0, length);
-		}
-		return digest.digest();
-	}
-	
-	public MessageDigest getMessageDigest() {
-		return MD5_ALGORITHM;
-	}
-	
-	private static final char[] hexCode = "0123456789ABCDEF".toCharArray();
-	
-	public static String printHexBinary(byte[] data) {
-		StringBuilder r = new StringBuilder(data.length * 2);
-		for (byte b : data) {
-			r.append(hexCode[(b >> 4) & 0xF]);
-			r.append(hexCode[(b & 0xF)]);
-		}
-		return r.toString();
+		return new Checksum(toHexBinaryString(byteChecksumer.buildChecksum(s.getBytes(CHARSET_FOR_BYTES))));
 	}
 }

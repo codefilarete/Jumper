@@ -1,5 +1,7 @@
 package org.codefilarete.jumper.ddl.dsl.support;
 
+import static org.codefilarete.jumper.ddl.dsl.support.NewTable.*;
+
 /**
  * @author Guillaume Mary
  */

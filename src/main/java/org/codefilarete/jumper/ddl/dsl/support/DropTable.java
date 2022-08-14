@@ -3,7 +3,7 @@ package org.codefilarete.jumper.ddl.dsl.support;
 /**
  * @author Guillaume Mary
  */
-public class DropTable {
+public class DropTable implements DDLStatement {
 	
 	private final Table table;
 	

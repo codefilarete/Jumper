@@ -1,8 +1,6 @@
 package org.codefilarete.jumper;
 
-import java.sql.Connection;
-
-import org.codefilarete.jumper.ddl.engine.Dialect;
+import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 
 /**
  * Class aimed at storing information about context of execution.
@@ -14,19 +12,13 @@ import org.codefilarete.jumper.ddl.engine.Dialect;
  */
 public class Context {
 	
-	private final Dialect dialect;
-	private final Connection connection;
+	private final DatabaseSignet databaseSignet;
 	
-	public Context(Dialect dialect, Connection connection) {
-		this.dialect = dialect;
-		this.connection = connection;
+	public Context(DatabaseSignet databaseSignet) {
+		this.databaseSignet = databaseSignet;
 	}
 	
-	public Dialect getDialect() {
-		return dialect;
-	}
-	
-	public Connection getConnection() {
-		return connection;
+	public DatabaseSignet getDatabaseSignet() {
+		return databaseSignet;
 	}
 }

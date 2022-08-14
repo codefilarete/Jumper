@@ -7,7 +7,7 @@ import org.codefilarete.tool.collection.KeepOrderSet;
 /**
  * @author Guillaume Mary
  */
-public class NewIndex {
+public class NewIndex implements DDLStatement {
 	
 	private final String name;
 	private final Table table;

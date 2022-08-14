@@ -7,9 +7,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.ApplicationChangeStorage;
-import org.codefilarete.jumper.Checksum;
-import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.ChangeId;
+import org.codefilarete.jumper.Checksum;
 
 /**
  * @author Guillaume Mary
@@ -19,8 +18,8 @@ public class InMemoryApplicationChangeStorage implements ApplicationChangeStorag
 	private final Map<ChangeId, StoredUpdate> storage = new HashMap<>();
 	
 	@Override
-	public void persist(Change change) {
-		storage.put(change.getIdentifier(), new StoredUpdate(change.computeChecksum(), OffsetDateTime.now()));
+	public void persist(ChangeSignet change) {
+		storage.put(change.getChangeId(), new StoredUpdate(change.getChecksum(), OffsetDateTime.now()));
 	}
 	
 	@Override

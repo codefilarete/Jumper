@@ -1,15 +1,7 @@
 package org.codefilarete.jumper.impl;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import org.codefilarete.jumper.AbstractChange;
-import org.codefilarete.jumper.Checksum;
-import org.codefilarete.jumper.Context;
-import org.codefilarete.jumper.ExecutionException;
 import org.codefilarete.jumper.ChangeId;
-import org.codefilarete.tool.sql.TransactionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,65 +23,6 @@ public class SQLChange extends AbstractChange {
 	
 	public SQLChange(String identifier, boolean shouldAlwaysRun, String[] sqlOrders) {
 		this(new ChangeId(identifier), shouldAlwaysRun, sqlOrders);
-	}
-	
-	/**
-	 * Implemented to compute the Checksum from SQL orders.
-	 * 
-	 * @return a {@link Checksum} of SQL orders
-	 */
-	@Override
-	public Checksum computeChecksum() {
-		StringBuilder allSQL = new StringBuilder(200);
-		for (String sqlOrder : sqlOrders) {
-			allSQL.append(sqlOrder);
-		}
-		return StringChecksumer.INSTANCE.checksum(allSQL.toString());
-	}
-	
-	@Override
-	public void run(Context context) throws ExecutionException {
-		try {
-			TransactionSupport.runAtomically((Connection c) -> runAtomatically(sqlOrders, c), context.getConnection());
-		} catch (SQLException e) {
-			throw new ExecutionException(e);
-		}
-	}
-	
-	/**
-	 * Executes sql statements within a single transaction
-	 * @param sqlOrders sql orders to be executed
-	 * @param connection the {@link Connection} on which to run sql orders 
-	 * @throws SQLException any error thrown by sql orders or transaction management
-	 */
-	public void runAtomatically(String[] sqlOrders, Connection connection) throws SQLException {
-		for (String sqlOrder : sqlOrders) {
-			try {
-				runSqlOrder(sqlOrder, connection);
-			} catch (SQLException e) {
-				throw new SQLException("Error executing " + sqlOrder, e);
-			}
-		}
-	}
-	
-	private void runSqlOrder(String sqlOrder, Connection connection) throws SQLException {
-		try (Statement statement = connection.createStatement()) {
-			String orderType = sqlOrder.trim().substring(0, 6).toLowerCase();
-			switch (orderType) {
-				case "insert":
-				case "update":
-				case "delete":
-					long updatedRowCount = statement.executeLargeUpdate(sqlOrder);
-					LOGGER.info("{} updated rows by " + sqlOrder, updatedRowCount);
-					break;
-				case "select":    // what's the interest to select something during an update ? not sure this case should be taken into account
-					statement.executeQuery(sqlOrder);
-					break;
-				default:
-					// create/alter/drop table, stored procedure execution, grant privileges, ... whatever
-					statement.execute(sqlOrder);
-			}
-		}
 	}
 	
 	public String[] getSqlOrders() {

@@ -26,11 +26,19 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	public static final JumpsTable DEFAULT_STORAGE_TABLE = new JumpsTable();
 	
 	private final ConnectionProvider connectionProvider;
+	private final PersistenceContext persistenceContext;
 	
 	private JumpsTable storageTable = DEFAULT_STORAGE_TABLE;
 	
 	public JdbcApplicationChangeStorage(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
+		// we use Stalactite to perform inserts of Checksums
+		Dialect dialect = new ServiceLoaderDialectResolver().determineDialect(connectionProvider.giveConnection());
+		// we register a Binder for reading and writing a Checksum in the configured database column as a String
+		dialect.getColumnBinderRegistry().register(storageTable.checksum, new LambdaParameterBinder<>(
+				(resultSet, columnName) -> new Checksum(resultSet.getString(columnName)),
+				(preparedStatement, valueIndex, value) -> preparedStatement.setString(valueIndex, value.toString())));
+		persistenceContext = new PersistenceContext(connectionProvider, dialect);
 	}
 	
 	public JumpsTable getStorageTable() {
@@ -42,20 +50,14 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	}
 	
 	@Override
-	public void persist(Change change) {
-		Dialect dialect = new ServiceLoaderDialectResolver().determineDialect(connectionProvider.giveConnection());
+	public void persist(ChangeSignet change) {
 		try (Connection currentConnection = connectionProvider.giveConnection()) {
 			TransactionSupport transactionSupport = new TransactionSupport(currentConnection);
 			transactionSupport.runAtomically(c -> {
-				PersistenceContext persistenceContext = new PersistenceContext(connectionProvider, dialect);
-				
-				dialect.getColumnBinderRegistry().register(storageTable.checksum, new LambdaParameterBinder<>(
-						(resultSet, columnName) -> new Checksum(resultSet.getString(columnName)),
-						(preparedStatement, valueIndex, value) -> preparedStatement.setString(valueIndex, value.toString())));
 				persistenceContext.insert(storageTable)
-						.set(storageTable.id, change.getIdentifier().toString())
+						.set(storageTable.id, change.getChangeId().toString())
 						.set(storageTable.createdAt, LocalDateTime.now())
-						.set(storageTable.checksum, change.computeChecksum())
+						.set(storageTable.checksum, change.getChecksum())
 						.execute();
 			});
 		} catch (SQLException e) {

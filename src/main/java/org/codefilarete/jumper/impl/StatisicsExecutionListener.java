@@ -1,5 +1,10 @@
 package org.codefilarete.jumper.impl;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.codefilarete.jumper.ChangeId;
 import org.codefilarete.jumper.NoopExecutionListener;
 import org.codefilarete.jumper.Statistics;
 import org.codefilarete.jumper.Change;
@@ -14,10 +19,10 @@ public class StatisicsExecutionListener extends NoopExecutionListener {
 	
 	private Chrono chrono = new Chrono();
 	
-	private final ApplicationUpdateStatistics applicationUpdateStatistics;
+	/** {@link LinkedHashMap} to keep execution order */
+	private final Map<ChangeId, Statistics> executionStatistics = new HashMap<>();
 	
 	public StatisicsExecutionListener() {
-		applicationUpdateStatistics = new ApplicationUpdateStatistics();
 	}
 	
 	@Override
@@ -30,6 +35,6 @@ public class StatisicsExecutionListener extends NoopExecutionListener {
 		long elapsedTime = chrono.getElapsedTime();
 		Statistics statistics = new Statistics();
 		statistics.setExecutionTime(elapsedTime);
-		applicationUpdateStatistics.setExecutionStatistics(change.getIdentifier(), statistics);
+		executionStatistics.put(change.getIdentifier(), statistics);
 	}
 }

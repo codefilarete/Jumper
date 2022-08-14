@@ -4,7 +4,7 @@ import org.codefilarete.jumper.ddl.dsl.DDLEase;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Guillaume Mary
@@ -18,7 +18,7 @@ class NewIndexHandlerTest {
 				.addColumn("col1")
 				.unique()
 				.build();
-		assertEquals("create unique index toto on tutu(col1)", testInstance.generateScript(newIndex));
+		assertThat(testInstance.generateScript(newIndex)).isEqualTo("create unique index toto on tutu(col1)");
 	}
 	
 	@Test
@@ -30,7 +30,7 @@ class NewIndexHandlerTest {
 				.setCatalog("catalog")
 				.unique()
 				.build();
-		assertEquals("create unique index toto on catalog.schema.tutu(col1)", testInstance.generateScript(newIndex));
+		assertThat(testInstance.generateScript(newIndex)).isEqualTo("create unique index toto on catalog.schema.tutu(col1)");
 	}
 	
 }

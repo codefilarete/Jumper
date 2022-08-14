@@ -7,7 +7,7 @@ import org.codefilarete.tool.collection.KeepOrderSet;
 /**
  * @author Guillaume Mary
  */
-public class NewForeignKey {
+public class NewForeignKey implements DDLStatement {
 	
 	private final String name;
 	private final Table table;

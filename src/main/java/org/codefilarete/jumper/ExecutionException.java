@@ -15,7 +15,4 @@ public class ExecutionException extends RuntimeException {
 		super(message, cause);
 	}
 	
-	public ExecutionException(Throwable cause) {
-		super(cause);
-	}
 }

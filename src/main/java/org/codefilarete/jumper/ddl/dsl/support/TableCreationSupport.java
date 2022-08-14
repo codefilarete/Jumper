@@ -17,7 +17,7 @@ public class TableCreationSupport implements TableCreation {
 	
 	@Override
 	public TableCreationColumnOption addColumn(String name, String sqlType) {
-		NewColumn newColumn = new NewColumn(name, sqlType);
+		NewTable.NewColumn newColumn = new NewTable.NewColumn(name, sqlType);
 		this.table.addColumn(newColumn);
 		return new MethodReferenceDispatcher()
 				.redirect(ColumnOption.class, new ColumnOption() {
@@ -41,7 +41,7 @@ public class TableCreationSupport implements TableCreation {
 					
 					@Override
 					public ColumnOption primaryKey() {
-						table.setPrimaryKey(new NewPrimaryKey(newColumn.getName()));
+						table.setPrimaryKey(newColumn.getName());
 						return null;
 					}
 					
@@ -69,13 +69,13 @@ public class TableCreationSupport implements TableCreation {
 	
 	@Override
 	public TableCreation primaryKey(String columnName, String... extraColumnNames) {
-		table.setPrimaryKey(new NewPrimaryKey(columnName, extraColumnNames));
+		table.setPrimaryKey(columnName, extraColumnNames);
 		return this;
 	}
 	
 	@Override
 	public TableCreation uniqueConstraint(String constraintName, String columnName, String... extraColumnNames) {
-		table.addUniqueConstraint(new NewUniqueConstraint(constraintName, columnName, extraColumnNames));
+		table.addUniqueConstraint(constraintName, columnName, extraColumnNames);
 		return this;
 	}
 	

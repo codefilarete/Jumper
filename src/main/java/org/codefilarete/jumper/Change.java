@@ -26,15 +26,6 @@ public interface Change {
 		return true;
 	}
 	
-	void run(Context context) throws ExecutionException;
-	
-	/**
-	 * Computes the checksum of the execution. Checksum must be considered as a signature of the business logic of the update.
-	 * 
-	 * @return a "business logic"-rely-on Checksum
-	 */
-	Checksum computeChecksum();
-	
 	/**
 	 * Interface for {@link Change}s that are signed with a MD5, SHA1, or whatever.
 	 * Aimed at being used to check if this {@link Change} has changed since previous execution. So storage must record signature.

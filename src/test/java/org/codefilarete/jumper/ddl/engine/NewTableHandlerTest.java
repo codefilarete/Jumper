@@ -4,7 +4,7 @@ import org.codefilarete.jumper.ddl.dsl.DDLEase;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Guillaume Mary
@@ -21,9 +21,9 @@ class NewTableHandlerTest {
 					.defaultValue("'hello world !'")
 				.addColumn("col2", "bigint")
 				.build();
-		assertEquals("create table toto(" 
-				+ "col1 varchar(100) not null auto_increment default 'hello world !', " 
-				+ "col2 bigint)", testInstance.generateScript(newTable));
+		assertThat(testInstance.generateScript(newTable)).isEqualTo("create table toto("
+				+ "col1 varchar(100) not null auto_increment default 'hello world !', "
+				+ "col2 bigint)");
 	}
 	
 	@Test
@@ -34,18 +34,18 @@ class NewTableHandlerTest {
 					.primaryKey()
 				.addColumn("col2", "bigint")
 				.build();
-		assertEquals("create table toto(" 
-				+ "col1 varchar(100), " 
-				+ "col2 bigint, primary key (col1))", testInstance.generateScript(newTableSinglePK));
+		assertThat(testInstance.generateScript(newTableSinglePK)).isEqualTo("create table toto("
+				+ "col1 varchar(100), "
+				+ "col2 bigint, primary key (col1))");
 		
 		NewTable newTableComposedPK = DDLEase.createTable("toto")
 				.addColumn("col1", "varchar(100)")
 				.addColumn("col2", "bigint")
 				.primaryKey("col1", "col2")
 				.build();
-		assertEquals("create table toto(" 
-				+ "col1 varchar(100), " 
-				+ "col2 bigint, primary key (col1, col2))", testInstance.generateScript(newTableComposedPK));
+		assertThat(testInstance.generateScript(newTableComposedPK)).isEqualTo("create table toto("
+				+ "col1 varchar(100), "
+				+ "col2 bigint, primary key (col1, col2))");
 	}
 	
 	@Test
@@ -55,10 +55,10 @@ class NewTableHandlerTest {
 				.addColumn("col1", "varchar(100)")
 				.addColumn("col2", "bigint").uniqueConstraint("UK_col2")
 				.build();
-		assertEquals("create table toto("
+		assertThat(testInstance.generateScript(newTableSinglePK)).isEqualTo("create table toto("
 				+ "col1 varchar(100), "
 				+ "col2 bigint, "
-				+ "constraint UK_col2 unique (col2))", testInstance.generateScript(newTableSinglePK));
+				+ "constraint UK_col2 unique (col2))");
 		
 		NewTable newTable2SinglePK = DDLEase.createTable("toto")
 				.addColumn("col1", "varchar(100)")
@@ -66,21 +66,21 @@ class NewTableHandlerTest {
 				.addColumn("col2", "bigint")
 					.uniqueConstraint("UK_col2")
 				.build();
-		assertEquals("create table toto("
+		assertThat(testInstance.generateScript(newTable2SinglePK)).isEqualTo("create table toto("
 				+ "col1 varchar(100), "
 				+ "col2 bigint, "
 				+ "constraint UK_col1 unique (col1), "
-				+ "constraint UK_col2 unique (col2))", testInstance.generateScript(newTable2SinglePK));
+				+ "constraint UK_col2 unique (col2))");
 		
 		NewTable newTableComposedPK = DDLEase.createTable("toto")
 				.addColumn("col1", "varchar(100)")
 				.addColumn("col2", "bigint")
 				.uniqueConstraint("UK", "col1", "col2")
 				.build();
-		assertEquals("create table toto("
+		assertThat(testInstance.generateScript(newTableComposedPK)).isEqualTo("create table toto("
 				+ "col1 varchar(100), "
 				+ "col2 bigint, "
-				+ "constraint UK unique (col1, col2))", testInstance.generateScript(newTableComposedPK));
+				+ "constraint UK unique (col1, col2))");
 	}
 	
 	@Test
@@ -92,9 +92,9 @@ class NewTableHandlerTest {
 				.setSchema("schema")
 				.setCatalog("catalog")
 				.build();
-		assertEquals("create table catalog.schema.toto(" 
-				+ "col1 varchar(100), " 
-				+ "col2 bigint)", testInstance.generateScript(newTable));
+		assertThat(testInstance.generateScript(newTable)).isEqualTo("create table catalog.schema.toto("
+				+ "col1 varchar(100), "
+				+ "col2 bigint)");
 		
 	}
 	
