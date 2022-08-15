@@ -3,10 +3,7 @@ package org.codefilarete.jumper.impl;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import org.codefilarete.jumper.Checksum;
 import org.codefilarete.jumper.Checksumer;
-
-import static org.codefilarete.jumper.impl.ByteChecksumer.toHexBinaryString;
 
 /**
  * A class aimed at creating a checksum from a String, based on a MD5 algorithm.
@@ -27,7 +24,7 @@ public class StringChecksumer implements Checksumer<String> {
 	private final ByteChecksumer byteChecksumer = new ByteChecksumer();
 	
 	@Override
-	public Checksum checksum(String s) {
-		return new Checksum(toHexBinaryString(byteChecksumer.buildChecksum(s.getBytes(CHARSET_FOR_BYTES))));
+	public byte[] buildChecksum(String source) {
+		return byteChecksumer.buildChecksum(source.getBytes(CHARSET_FOR_BYTES));
 	}
 }

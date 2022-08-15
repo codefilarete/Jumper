@@ -3,7 +3,6 @@ package org.codefilarete.jumper.ddl.dsl.support;
 import java.util.Arrays;
 import java.util.Set;
 
-import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.collection.KeepOrderSet;
 
 /**
@@ -47,9 +46,6 @@ public class NewTable implements DDLStatement {
 	}
 	
 	public void addColumn(NewColumn newColumn) {
-		if (Iterables.contains(columns, NewColumn::getName, newColumn.getName()::equals)) {
-			throw new DuplicateColumnDefinition(newColumn);
-		}
 		this.columns.add(newColumn);
 	}
 	

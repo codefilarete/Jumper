@@ -71,7 +71,7 @@ public class JdbcApplicationChangeStorage implements ApplicationChangeStorage {
 	}
 	
 	@Override
-	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> updates) {
+	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> changes) {
 		return null;
 	}
 	

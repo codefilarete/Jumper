@@ -45,9 +45,7 @@ public class JdbcApplicationChangeStorageTest {
 		
 		// test
 		JdbcApplicationChangeStorage testInstance = new JdbcApplicationChangeStorage(connectionProvider);
-		SQLChange sqlChange = new SQLChange("dummyId", false, new String[] {
-				"select 1 from dual"
-		});
+		SQLChange sqlChange = new SQLChange("dummyId", "select 1 from dual");
 		Checksum checksum = new Checksum("a robust fake checksum");
 		testInstance.persist(new ChangeSignet(sqlChange.getIdentifier(), checksum));
 		

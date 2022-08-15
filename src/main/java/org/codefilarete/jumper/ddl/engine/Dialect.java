@@ -53,7 +53,7 @@ public class Dialect {
 			}
 			return Arrays.asList(ddl);
 		} else if (table instanceof SQLChange) {
-			return Arrays.asList(((SQLChange) table).getSqlOrders());
+			return ((SQLChange) table).getSqlOrders();
 		} else {
 			throw new NotImplementedException("Change of type " + Reflections.toString(table.getClass()) + " is not supported");
 		}

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.Checksum;
+import org.codefilarete.jumper.Checksumer.ByteChecksumer;
 import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
@@ -20,10 +21,11 @@ import static java.lang.String.valueOf;
 
 public class ChangeChecksumer {
 	
-	private final ByteChecksumer byteChecksumer;
+	private final ByteChecksumer byteChecksumer = new ByteChecksumer();
+	private final StringChecksumer stringChecksumer = new StringChecksumer();
+	private final ClassChecksumer classChecksumer = new ClassChecksumer();
 	
 	public ChangeChecksumer() {
-		byteChecksumer = new ByteChecksumer();
 	}
 	
 	/**
@@ -33,16 +35,18 @@ public class ChangeChecksumer {
 	 * @return a "business logic"-rely-on Checksum
 	 */
 	public Checksum buildChecksum(Change change) {
-		byte[] bytes;
+		Checksum result;
 		if (change instanceof DDLChange) {
 			DDLStatement ddlStatement = ((DDLChange) change).getDdlStatement();
-			bytes = byteChecksumer.buildChecksum(giveSignature(ddlStatement).getBytes(StandardCharsets.UTF_8));
+			result = byteChecksumer.checksum(giveSignature(ddlStatement).getBytes(StandardCharsets.UTF_8));
+		} else if (change instanceof SQLChange) {
+			result = stringChecksumer.checksum(String.join(" ", ((SQLChange) change).getSqlOrders()));
 		} else if (change instanceof AbstractJavaChange) {
-			bytes = new ClassChecksumer().buildChecksum(change.getClass());
+			result = classChecksumer.checksum(change.getClass());
 		} else {
 			throw new NotImplementedException("Checksum computation is not implemented for " + change.getClass());
 		}
-		return new Checksum(ByteChecksumer.toHexBinaryString(bytes));
+		return result;
 	}
 	
 	protected String giveSignature(DDLStatement ddlStatement) {

@@ -11,11 +11,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.ApplicationChangeStorage.ChangeSignet;
+import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
-import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
 import org.codefilarete.jumper.impl.ChangeChecksumer;
+import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.VisibleForTesting;
 import org.codefilarete.tool.collection.Iterables;
@@ -46,9 +47,9 @@ public class ChangeSetRunner {
 		this.executionListener = executionListener;
 	}
 	
-	public void processUpdates() throws ExecutionException {
+	public void processUpdate() throws ExecutionException {
 		
-		assertNonCompliantUpdates(changes);
+		assertNonCompliantChanges(changes);
 		
 		Context context = buildContext(connectionProvider.giveConnection());
 		List<Change> updatesToRun = keepChangesToRun(changes, context);
@@ -71,7 +72,7 @@ public class ChangeSetRunner {
 	}
 	
 	
-	private void assertNonCompliantUpdates(List<Change> changes) {
+	private void assertNonCompliantChanges(List<Change> changes) {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
 		Map<Change, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
 		Map<ChangeId, Checksum> currentlyStoredChecksums = applicationChangeStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
@@ -137,7 +138,12 @@ public class ChangeSetRunner {
 				if (change instanceof AbstractJavaChange) {
 					((AbstractJavaChange) change).run(context, connection);
 				} else {
-					List<String> sqlOrders = dialect.generateScript(change);
+					List<String> sqlOrders;
+					if (change instanceof SQLChange) {
+						sqlOrders = ((SQLChange) change).getSqlOrders();
+					} else {
+						sqlOrders = dialect.generateScript(change);
+					}
 					runSqlOrders(sqlOrders, connection);
 				}
 			} catch (SQLException e) {

@@ -28,7 +28,7 @@ public class InMemoryApplicationChangeStorage implements ApplicationChangeStorag
 	}
 	
 	@Override
-	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> updates) {
+	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> changes) {
 		return storage.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getChecksum()));
 	}
 	
