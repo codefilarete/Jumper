@@ -184,7 +184,7 @@ public class ChangeSetRunnerTest {
 		Change change = new DDLChange("x", new DropTable("toto"));
 		ModifiableInt beforeRunCount = new ModifiableInt();
 		ModifiableInt afterRunCount = new ModifiableInt();
-		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryApplicationChangeStorage(), new ExecutionListener() {
+		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryApplicationChangeStorage(), new NoopExecutionListener() {
 			@Override
 			public void beforeRun(Change change) {
 				beforeRunCount.increment();

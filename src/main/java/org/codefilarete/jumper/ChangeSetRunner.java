@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.ApplicationChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
+import org.codefilarete.jumper.ExecutionListener.FineGrainExecutionListener;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
@@ -20,8 +21,6 @@ import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.VisibleForTesting;
 import org.codefilarete.tool.collection.Iterables;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Guillaume Mary
@@ -114,8 +113,6 @@ public class ChangeSetRunner {
 	@VisibleForTesting
 	class ChangeRunner {
 		
-		private final Logger LOGGER = LoggerFactory.getLogger(ChangeRunner.class);
-		
 		private final Dialect dialect;
 		
 		ChangeRunner(Dialect dialect) {
@@ -123,12 +120,14 @@ public class ChangeSetRunner {
 		}
 		
 		public void run(Iterable<Change> updatesToRun, Context context) throws ExecutionException {
+			executionListener.beforeAll();
 			for (Change change : updatesToRun) {
 				executionListener.beforeRun(change);
 				run(change, context);
 				executionListener.afterRun(change);
 				persistState(change);
 			}
+			executionListener.afterAll();
 		}
 		
 		private void run(Change change, Context context) throws ExecutionException {
@@ -169,14 +168,14 @@ public class ChangeSetRunner {
 		}
 		
 		private void runSqlOrder(String sqlOrder, Connection connection) throws SQLException {
+			Long updatedRowCount = null;
 			try (Statement statement = connection.createStatement()) {
 				String orderType = sqlOrder.trim().substring(0, 6).toLowerCase();
 				switch (orderType) {
 					case "insert":
 					case "update":
 					case "delete":
-						long updatedRowCount = statement.executeLargeUpdate(sqlOrder);
-						LOGGER.info("{} updated rows by " + sqlOrder, updatedRowCount);
+						updatedRowCount = statement.executeLargeUpdate(sqlOrder);
 						break;
 					case "select":    // what's the interest to select something during an update ? not sure this case should be taken into account
 						statement.executeQuery(sqlOrder);
@@ -185,6 +184,9 @@ public class ChangeSetRunner {
 						// create/alter/drop table, stored procedure execution, grant privileges, ... whatever
 						statement.execute(sqlOrder);
 				}
+			}
+			if (executionListener instanceof FineGrainExecutionListener) {
+				((FineGrainExecutionListener) executionListener).afterRun(sqlOrder, updatedRowCount);
 			}
 		}
 		

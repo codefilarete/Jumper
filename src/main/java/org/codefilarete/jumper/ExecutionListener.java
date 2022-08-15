@@ -18,4 +18,14 @@ public interface ExecutionListener {
 	 * @param change the executed change
 	 */
 	void afterRun(Change change);
+	
+	void afterAll();
+	
+	void beforeAll();
+	
+	interface FineGrainExecutionListener extends ExecutionListener {
+		
+		void afterRun(String statement, Long updatedRowCount);
+		
+	}
 }

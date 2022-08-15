@@ -16,4 +16,14 @@ public class NoopExecutionListener implements ExecutionListener {
 	public void afterRun(Change change) {
 		
 	}
+	
+	@Override
+	public void afterAll() {
+	
+	}
+	
+	@Override
+	public void beforeAll() {
+	
+	}
 }
