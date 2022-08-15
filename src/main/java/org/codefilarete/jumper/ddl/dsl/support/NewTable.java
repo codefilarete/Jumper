@@ -105,32 +105,37 @@ public class NewTable implements DDLStatement {
 			return nullable;
 		}
 		
-		public void notNull() {
+		public NewColumn notNull() {
 			setNullable(false);
+			return this;
 		}
 		
-		public void setNullable(boolean nullable) {
+		public NewColumn setNullable(boolean nullable) {
 			this.nullable = nullable;
+			return this;
 		}
 		
 		public String getDefaultValue() {
 			return defaultValue;
 		}
 		
-		public void setDefaultValue(String defaultValue) {
+		public NewColumn setDefaultValue(String defaultValue) {
 			this.defaultValue = defaultValue;
+			return this;
 		}
 		
 		public boolean isAutoIncrement() {
 			return autoIncrement;
 		}
 		
-		public void autoIncrement() {
+		public NewColumn autoIncrement() {
 			setAutoIncrement(true);
+			return this;
 		}
 		
-		public void setAutoIncrement(boolean autoIncrement) {
+		public NewColumn setAutoIncrement(boolean autoIncrement) {
 			this.autoIncrement = autoIncrement;
+			return this;
 		}
 		
 		public String getUniqueConstraintName() {

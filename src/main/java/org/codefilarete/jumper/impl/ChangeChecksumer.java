@@ -3,6 +3,7 @@ package org.codefilarete.jumper.impl;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.Checksum;
@@ -13,11 +14,9 @@ import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.tool.Reflections;
+import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
-
-import static java.lang.String.join;
-import static java.lang.String.valueOf;
 
 public class ChangeChecksumer {
 	
@@ -59,52 +58,72 @@ public class ChangeChecksumer {
 		} else if (ddlStatement instanceof NewIndex) {
 			return giveSignature(((NewIndex) ddlStatement));
 		} else {
-			throw new NotImplementedException("Checksum computation is not implemented for " + Reflections.toString(ddlStatement.getClass()));
+			throw new NotImplementedException("Signature computation is not implemented for " + Reflections.toString(ddlStatement.getClass()));
 		}
 	}
 	
-	protected String giveSignature(NewTable ddlStatement) {
-		NewTable newTable = ddlStatement;
+	protected String giveSignature(NewTable newTable) {
 		List<String> columnsSignature = Iterables.collect(newTable.getColumns(), this::giveSignature, ArrayList::new);
 		List<String> ukSignature = Iterables.collect(newTable.getUniqueConstraints(), this::giveSignature, ArrayList::new);
-		return join(" ", "NewTable",
-				join(" ", columnsSignature),
-				giveSignature(newTable.getPrimaryKey()),
-				join(" ", ukSignature));
+		StringAppender result = new StringAppender() {
+			@Override
+			public StringAppender cat(Object s) {
+				if (s instanceof Supplier) {
+					s = ((Supplier<?>) s).get();
+				}
+				return super.cat(s);
+			}
+		};
+		return result.cat("NewTable ")
+				.ccat(columnsSignature, ", ")
+				.cat(" ")
+				.catIf(newTable.getPrimaryKey() != null, (Supplier) () -> giveSignature(newTable.getPrimaryKey()))
+				.cat(" ")
+				.ccat(ukSignature, ", ")
+				.toString();
 	}
 	
 	protected String giveSignature(NewTable.NewColumn newColumn) {
-		return join(" ", "NewColumn",
-				newColumn.getName(),
-				newColumn.getSqlType(),
-				valueOf(newColumn.isNullable()),
-				newColumn.getDefaultValue(),
-				valueOf(newColumn.isAutoIncrement()),
-				newColumn.getUniqueConstraintName());
+		StringAppender result = new StringAppender();
+		return result.ccat(
+						newColumn.getName(),
+						newColumn.getSqlType(),
+						newColumn.isNullable(),
+						newColumn.getDefaultValue(),
+						newColumn.isAutoIncrement(),
+						newColumn.getUniqueConstraintName(),
+						" ")
+				.toString();
 	}
 	
 	protected String giveSignature(NewTable.NewPrimaryKey primaryKey) {
-		return join(" ", "NewPrimaryKey", join(" ", primaryKey.getColumns()));
+		StringAppender result = new StringAppender();
+		return result.cat("PK ").ccat(primaryKey.getColumns(), " ").toString();
 	}
 	
 	protected String giveSignature(NewTable.NewUniqueConstraint newUniqueConstraint) {
-		return join(" ", "NewUniqueConstraint", newUniqueConstraint.getName(), join(" ", newUniqueConstraint.getColumns()));
+		StringAppender result = new StringAppender();
+		return result.cat("UK ", newUniqueConstraint.getName(), " ").ccat(newUniqueConstraint.getColumns(), " ").toString();
 	}
 	
-	protected static String giveSignature(DropTable ddlStatement) {
-		return "drop " + ddlStatement.getName();
+	protected String giveSignature(DropTable ddlStatement) {
+		return "DropTable " + ddlStatement.getName();
 	}
 	
 	protected String giveSignature(NewForeignKey newForeignKey) {
-		return join(" ", "NewForeignKey", newForeignKey.getName(),
-				newForeignKey.getTable().getName(), join(" ", newForeignKey.getSourceColumns()),
-				newForeignKey.getTargetTable().getName(), join(" ", newForeignKey.getTargetColumns()));
+		StringAppender result = new StringAppender();
+		return result.cat("NewForeignKey ", newForeignKey.getName(), " ", newForeignKey.getTable().getName(), " ")
+				.ccat(newForeignKey.getSourceColumns(), " ")
+				.cat(", ", newForeignKey.getTargetTable().getName(), " ")
+				.ccat(newForeignKey.getTargetColumns(), " ")
+				.toString();
 	}
 	
 	public String giveSignature(NewIndex newIndex) {
-		return join(" ", "NewIndex", newIndex.getName(),
-				newIndex.getTable().getName(),
-				join(" ", newIndex.getColumns()),
-				valueOf(newIndex.isUnique()));
+		StringAppender result = new StringAppender();
+		return result.cat("NewIndex ", newIndex.getName(), " ", newIndex.getTable().getName())
+				.ccat(newIndex.getColumns(), " ")
+				.cat(" ", newIndex.isUnique())
+				.toString();
 	}
 }
