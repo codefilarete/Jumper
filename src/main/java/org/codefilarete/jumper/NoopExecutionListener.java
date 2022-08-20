@@ -5,7 +5,7 @@ package org.codefilarete.jumper;
  * 
  * @author Guillaume Mary
  */
-public class NoopExecutionListener implements ExecutionListener {
+public class NoopExecutionListener implements ChangeSetExecutionListener {
 	
 	@Override
 	public void beforeRun(Change change) {

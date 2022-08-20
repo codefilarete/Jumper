@@ -8,7 +8,7 @@ import java.util.Set;
  *
  * @author Guillaume Mary
  */
-public interface ApplicationChangeStorage {
+public interface ChangeStorage {
 	
 	void persist(ChangeSignet change);
 	

@@ -14,8 +14,8 @@
 		<slf4j-api.version>1.7.12</slf4j-api.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
 		<mockito.version>2.22.0</mockito.version>
-		<tools.version>1.0-SNAPSHOT</tools.version>
-		<stalactite.version>1.0.0</stalactite.version>
+		<tools.version>1.0.2-SNAPSHOT</tools.version>
+		<stalactite.version>1.0.1-SNAPSHOT</stalactite.version>
 		<reflection.version>1.0.0</reflection.version>
 		<assertj.version>3.22.0</assertj.version>
 	</properties>

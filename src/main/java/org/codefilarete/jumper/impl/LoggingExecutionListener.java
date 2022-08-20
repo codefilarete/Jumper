@@ -5,7 +5,7 @@ import java.time.Instant;
 
 import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.ChangeSetRunner;
-import org.codefilarete.jumper.ExecutionListener.FineGrainExecutionListener;
+import org.codefilarete.jumper.ChangeSetExecutionListener.FineGrainExecutionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

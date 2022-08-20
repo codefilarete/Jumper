@@ -3,10 +3,10 @@ package org.codefilarete.jumper;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
-import org.codefilarete.jumper.ApplicationChangeStorage.ChangeSignet;
+import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.impl.SQLChange;
-import org.codefilarete.stalactite.sql.CurrentThreadConnectionProvider;
 import org.codefilarete.stalactite.sql.HSQLDBDialect;
+import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.sql.result.Row;
 import org.codefilarete.stalactite.sql.result.RowIterator;
@@ -19,17 +19,17 @@ import org.codefilarete.tool.collection.Maps;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.codefilarete.jumper.JdbcApplicationChangeStorage.DEFAULT_STORAGE_TABLE;
+import static org.codefilarete.jumper.JdbcChangeStorage.DEFAULT_STORAGE_TABLE;
 
 /**
  * @author Guillaume Mary
  */
-public class JdbcApplicationChangeStorageTest {
+public class JdbcChangeStorageTest {
 	
 	@Test
-	public void testPersist() throws SQLException {
+	void persist() throws SQLException {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
-		CurrentThreadConnectionProvider connectionProvider = new CurrentThreadConnectionProvider(hsqldbInMemoryDataSource);
+		SimpleConnectionProvider connectionProvider = new SimpleConnectionProvider(hsqldbInMemoryDataSource.getConnection());
 		
 		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
 		
@@ -44,7 +44,7 @@ public class JdbcApplicationChangeStorageTest {
 		ddlDeployer.deployDDL();
 		
 		// test
-		JdbcApplicationChangeStorage testInstance = new JdbcApplicationChangeStorage(connectionProvider);
+		JdbcChangeStorage testInstance = new JdbcChangeStorage(connectionProvider);
 		SQLChange sqlChange = new SQLChange("dummyId", "select 1 from dual");
 		Checksum checksum = new Checksum("a robust fake checksum");
 		testInstance.persist(new ChangeSignet(sqlChange.getIdentifier(), checksum));

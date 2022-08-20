@@ -6,14 +6,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.codefilarete.jumper.ApplicationChangeStorage;
+import org.codefilarete.jumper.ChangeStorage;
 import org.codefilarete.jumper.ChangeId;
 import org.codefilarete.jumper.Checksum;
 
 /**
  * @author Guillaume Mary
  */
-public class InMemoryApplicationChangeStorage implements ApplicationChangeStorage {
+public class InMemoryChangeStorage implements ChangeStorage {
 	
 	private final Map<ChangeId, StoredUpdate> storage = new HashMap<>();
 	

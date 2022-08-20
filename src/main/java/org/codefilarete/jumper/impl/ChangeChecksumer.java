@@ -119,7 +119,7 @@ public class ChangeChecksumer {
 				.toString();
 	}
 	
-	public String giveSignature(NewIndex newIndex) {
+	protected String giveSignature(NewIndex newIndex) {
 		StringAppender result = new StringAppender();
 		return result.cat("NewIndex ", newIndex.getName(), " ", newIndex.getTable().getName())
 				.ccat(newIndex.getColumns(), " ")

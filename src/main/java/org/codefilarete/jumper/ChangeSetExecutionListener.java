@@ -5,7 +5,7 @@ package org.codefilarete.jumper;
  * 
  * @author Guillaume Mary
  */
-public interface ExecutionListener {
+public interface ChangeSetExecutionListener {
 	
 	/**
 	 * Is called before the execution of the given change
@@ -23,7 +23,7 @@ public interface ExecutionListener {
 	
 	void beforeAll();
 	
-	interface FineGrainExecutionListener extends ExecutionListener {
+	interface FineGrainExecutionListener extends ChangeSetExecutionListener {
 		
 		void afterRun(String statement, Long updatedRowCount);
 		

@@ -3,6 +3,7 @@ package org.codefilarete.jumper;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,50 +11,101 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.codefilarete.jumper.ApplicationChangeStorage.ChangeSignet;
+import org.codefilarete.jumper.ChangeSetExecutionListener.FineGrainExecutionListener;
+import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
-import org.codefilarete.jumper.ExecutionListener.FineGrainExecutionListener;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
 import org.codefilarete.jumper.impl.ChangeChecksumer;
+import org.codefilarete.jumper.impl.DDLChange;
 import org.codefilarete.jumper.impl.SQLChange;
+import org.codefilarete.jumper.impl.StringChecksumer;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
+import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.VisibleForTesting;
 import org.codefilarete.tool.collection.Iterables;
+import org.codefilarete.tool.exception.NotImplementedException;
+import org.codefilarete.tool.sql.TransactionSupport;
 
 /**
  * @author Guillaume Mary
  */
 public class ChangeSetRunner {
 	
+	public static ChangeSetRunner forJdbcStorage(List<Change> changes, ConnectionProvider connectionProvider) {
+		JdbcChangeStorage changeHistoryStorage = new JdbcChangeStorage(connectionProvider);
+		JdbcUpdateProcessLockStorage processLockStorage = new JdbcUpdateProcessLockStorage(connectionProvider);
+		ChangeSetRunner result = new ChangeSetRunner(changes, connectionProvider, changeHistoryStorage, processLockStorage);
+		// TODO: create a listener Collection to chain listeners
+		result.setExecutionListener(changeHistoryStorage.getChangeHistoryTableEnsurer());
+		result.setExecutionListener(processLockStorage.getLockTableEnsurer());
+		return result;
+	}
+	
 	private final List<Change> changes;
 	private final ConnectionProvider connectionProvider;
-	private final ApplicationChangeStorage applicationChangeStorage;
+	private final ChangeStorage changeStorage;
+	private final UpdateProcessLockStorage processLockStorage;
 	
-	private final ExecutionListener executionListener;
+	private ChangeSetExecutionListener executionListener = new NoopExecutionListener();
 	
 	private final CachingChangeChecksumer checksumer = new CachingChangeChecksumer();
 	
-	public ChangeSetRunner(List<Change> changes, ConnectionProvider connectionProvider, ApplicationChangeStorage applicationChangeStorage) {
-		this(changes, connectionProvider, applicationChangeStorage, new NoopExecutionListener());
-	}
+	/**
+	 * {@link Connection} to use during change execution process (because we handle transaction on it)
+	 */
+	private Connection executionConnection;
 	
-	public ChangeSetRunner(List<Change> changes, ConnectionProvider connectionProvider, ApplicationChangeStorage applicationChangeStorage, ExecutionListener executionListener) {
+	public ChangeSetRunner(List<Change> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage, UpdateProcessLockStorage lockStorage) {
 		this.changes = changes;
 		this.connectionProvider = connectionProvider;
-		this.applicationChangeStorage = applicationChangeStorage;
+		this.changeStorage = changeStorage;
+		this.processLockStorage = lockStorage;
+	}
+	
+	public void setExecutionListener(ChangeSetExecutionListener executionListener) {
 		this.executionListener = executionListener;
 	}
 	
 	public void processUpdate() throws ExecutionException {
+		// note that we decouple lock acquisition from try-with-resource to avoid closing Lock on acquisition error
+		UpdateLock voluntarilyOutOfTryWithResource = acquireUpdateLock();
+		try (UpdateLock ignored = voluntarilyOutOfTryWithResource) {
+			assertNonCompliantChanges();
+			
+			executionConnection = connectionProvider.giveConnection();
+			
+			Context context = buildContext(executionConnection);
+			List<Change> updatesToRun = keepChangesToRun(changes, context);
+			ChangeRunner changeRunner = new ChangeRunner(giveDialect(context.getDatabaseSignet()));
+			changeRunner.run(updatesToRun, context);
+		}
+	}
+	
+	private UpdateLock acquireUpdateLock() {
+		String allChangesSignature = changes.stream().map(checksumer::buildChecksum).map(Object::toString).collect(Collectors.toList()).toString();
+		Checksum allChangesChecksum = new StringChecksumer().checksum(allChangesSignature);
+		processLockStorage.insertRow(allChangesChecksum.toString());
+		return new UpdateLock(allChangesChecksum.toString());
+	}
+	
+	private class UpdateLock implements AutoCloseable {
 		
-		assertNonCompliantChanges(changes);
+		private final String identifier;
 		
-		Context context = buildContext(connectionProvider.giveConnection());
-		List<Change> updatesToRun = keepChangesToRun(changes, context);
-		ChangeRunner changeRunner = new ChangeRunner(giveDialect(context.getDatabaseSignet()));
-		changeRunner.run(updatesToRun, context);
+		public UpdateLock(String identifier) {
+			this.identifier = identifier;
+		}
+		
+		@Override
+		public void close() {
+			releaseUpdateLock();
+		}
+		
+		private void releaseUpdateLock() {
+			processLockStorage.deleteRow(identifier);
+		}
 	}
 	
 	protected Context buildContext(Connection connection) {
@@ -71,10 +123,10 @@ public class ChangeSetRunner {
 	}
 	
 	
-	private void assertNonCompliantChanges(List<Change> changes) {
+	private void assertNonCompliantChanges() {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
 		Map<Change, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
-		Map<ChangeId, Checksum> currentlyStoredChecksums = applicationChangeStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
+		Map<ChangeId, Checksum> currentlyStoredChecksums = changeStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
 		changes.forEach(change -> {
 			Checksum currentlyStoredChecksum = currentlyStoredChecksums.get(change.getIdentifier());
 			if (currentlyStoredChecksum != null) {
@@ -92,7 +144,7 @@ public class ChangeSetRunner {
 	}
 	
 	private List<Change> keepChangesToRun(List<Change> changes, Context context) {
-		Set<ChangeId> ranIdentifiers = applicationChangeStorage.giveRanIdentifiers();
+		Set<ChangeId> ranIdentifiers = changeStorage.giveRanIdentifiers();
 		return changes.stream()
 				.filter(u -> shouldRun(u, ranIdentifiers, context))
 				.collect(Collectors.toList());
@@ -101,7 +153,7 @@ public class ChangeSetRunner {
 	/**
 	 * Decides whether a {@link Change} must be run
 	 *
-	 * @param change         the {@link Change} to be checked
+	 * @param change the {@link Change} to be checked
 	 * @param ranIdentifiers the already ran identifiers
 	 * @return true to plan it for running
 	 */
@@ -123,30 +175,36 @@ public class ChangeSetRunner {
 			executionListener.beforeAll();
 			for (Change change : updatesToRun) {
 				executionListener.beforeRun(change);
-				run(change, context);
+				try {
+					TransactionSupport.runAtomically(c -> {
+						run(change, context);
+						persistState(change);
+					}, executionConnection);
+				} catch (SQLException e) {
+					throw new ExecutionException("Error while running change " + change.getIdentifier(), e);
+				}
 				executionListener.afterRun(change);
-				persistState(change);
 			}
 			executionListener.afterAll();
 		}
 		
-		private void run(Change change, Context context) throws ExecutionException {
-			Connection connection = connectionProvider.giveConnection();
-			// TODO : handle commit and rollback
+		private void run(Change change, Context context) throws SQLException {
 			try {
 				if (change instanceof AbstractJavaChange) {
-					((AbstractJavaChange) change).run(context, connection);
+					((AbstractJavaChange) change).run(context, executionConnection);
 				} else {
 					List<String> sqlOrders;
 					if (change instanceof SQLChange) {
 						sqlOrders = ((SQLChange) change).getSqlOrders();
+					} else if (change instanceof DDLChange) {
+						sqlOrders = Arrays.asList(dialect.generateScript((DDLChange) change));
 					} else {
-						sqlOrders = dialect.generateScript(change);
+						throw new NotImplementedException("Change of type " + Reflections.toString(change.getClass()) + " is not supported");
 					}
-					runSqlOrders(sqlOrders, connection);
+					runSqlOrders(sqlOrders, executionConnection);
 				}
 			} catch (SQLException e) {
-				throw new ExecutionException("Error while running change " + change.getIdentifier(), e);
+				throw new SQLException("Error while running change " + change.getIdentifier(), e);
 			}
 		}
 		
@@ -192,7 +250,7 @@ public class ChangeSetRunner {
 		
 		private void persistState(Change change) throws ExecutionException {
 			try {
-				applicationChangeStorage.persist(new ChangeSignet(change.getIdentifier(), checksumer.buildChecksum(change)));
+				changeStorage.persist(new ChangeSignet(change.getIdentifier(), checksumer.buildChecksum(change)));
 			} catch (RuntimeException | OutOfMemoryError e) {
 				throw new ExecutionException("State of change " + change.getIdentifier() + " couldn't be stored", e);
 			}

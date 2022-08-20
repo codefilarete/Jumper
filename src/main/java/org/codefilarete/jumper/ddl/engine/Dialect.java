@@ -1,16 +1,11 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.jumper.impl.DDLChange;
-import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.exception.NotImplementedException;
 
@@ -38,25 +33,21 @@ public class Dialect {
 		this.dropTableHandler = dropTableHandler;
 	}
 	
-	public List<String> generateScript(Change table) {
-		if (table instanceof DDLChange) {
-			DDLStatement ddlStatement = ((DDLChange) table).getDdlStatement();
-			String ddl = null;
-			if (ddlStatement instanceof NewTable) {
-				ddl = newTableHandler.generateScript((NewTable) ddlStatement);
-			} else if (ddlStatement instanceof DropTable) {
-				ddl = dropTableHandler.generateScript((DropTable) ddlStatement);
-			} else if (ddlStatement instanceof NewForeignKey) {
-				ddl = newForeignKeyHandler.generateScript(((NewForeignKey) ddlStatement));
-			} else if (ddlStatement instanceof NewIndex) {
-				ddl = newIndexHandler.generateScript(((NewIndex) ddlStatement));
-			}
-			return Arrays.asList(ddl);
-		} else if (table instanceof SQLChange) {
-			return ((SQLChange) table).getSqlOrders();
+	public String generateScript(DDLChange change) {
+		DDLStatement ddlStatement = change.getDdlStatement();
+		String ddl;
+		if (ddlStatement instanceof NewTable) {
+			ddl = newTableHandler.generateScript((NewTable) ddlStatement);
+		} else if (ddlStatement instanceof DropTable) {
+			ddl = dropTableHandler.generateScript((DropTable) ddlStatement);
+		} else if (ddlStatement instanceof NewForeignKey) {
+			ddl = newForeignKeyHandler.generateScript(((NewForeignKey) ddlStatement));
+		} else if (ddlStatement instanceof NewIndex) {
+			ddl = newIndexHandler.generateScript(((NewIndex) ddlStatement));
 		} else {
-			throw new NotImplementedException("Change of type " + Reflections.toString(table.getClass()) + " is not supported");
+			throw new NotImplementedException("Statement of type " + Reflections.toString(change.getClass()) + " is not supported");
 		}
+		return ddl;
 	}
 	
 	public static class DialectBuilder {

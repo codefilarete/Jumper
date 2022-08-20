@@ -1,7 +1,5 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import java.util.List;
-
 import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
@@ -30,7 +28,7 @@ class DialectTest {
 	@MethodSource
 	void generateScript(DialectBuilder scriptGenerator, DDLStatement input, String expectedScript) {
 		Dialect testInstance = scriptGenerator.build();
-		List<String> script = testInstance.generateScript(new DDLChange("x", input));
-		assertThat(script).containsExactly(expectedScript);
+		String script = testInstance.generateScript(new DDLChange("x", input));
+		assertThat(script).isEqualTo(expectedScript);
 	}
 }
