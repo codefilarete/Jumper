@@ -15,9 +15,11 @@ import org.codefilarete.stalactite.sql.Dialect;
 import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.sql.ddl.structure.Column;
+import org.codefilarete.stalactite.sql.ddl.structure.Database.Schema;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.statement.SQLExecutionException;
 import org.codefilarete.tool.Duo;
+import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.exception.Exceptions;
 import org.codefilarete.tool.sql.TransactionSupport;
 
@@ -111,10 +113,14 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 		protected Connection connection;
 		
 		@Override
-		public void beforeAll() {
+		public void beforeProcess() {
 			connection = connectionProvider.giveConnection();
 			try {
-				ResultSet tables = connection.getMetaData().getTables(storageTable.getSchema().getName(), storageTable.getSchema().getName(), storageTable.getName(), null);
+				ResultSet tables = connection.getMetaData().getTables(
+						Nullable.nullable(storageTable.getSchema()).map(Schema::getName).get(),
+						Nullable.nullable(storageTable.getSchema()).map(Schema::getName).get(),
+						storageTable.getName(),
+						null);
 				if (!tables.next()) {
 					createTable();
 				}

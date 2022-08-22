@@ -7,7 +7,6 @@ import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.jumper.ddl.engine.Dialect.DialectBuilder;
-import org.codefilarete.jumper.impl.DDLChange;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -28,7 +27,7 @@ class DialectTest {
 	@MethodSource
 	void generateScript(DialectBuilder scriptGenerator, DDLStatement input, String expectedScript) {
 		Dialect testInstance = scriptGenerator.build();
-		String script = testInstance.generateScript(new DDLChange("x", input));
+		String script = testInstance.generateScript(input);
 		assertThat(script).isEqualTo(expectedScript);
 	}
 }

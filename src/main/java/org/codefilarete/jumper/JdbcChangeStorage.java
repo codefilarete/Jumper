@@ -4,23 +4,31 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.codefilarete.stalactite.engine.PersistenceContext;
+import org.codefilarete.stalactite.query.model.Operators;
+import org.codefilarete.stalactite.query.model.QueryEase;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.stalactite.sql.Dialect;
 import org.codefilarete.stalactite.sql.ServiceLoaderDialectResolver;
 import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.sql.ddl.structure.Column;
+import org.codefilarete.stalactite.sql.ddl.structure.Database.Schema;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
+import org.codefilarete.stalactite.sql.statement.binder.DefaultParameterBinders;
 import org.codefilarete.stalactite.sql.statement.binder.LambdaParameterBinder;
+import org.codefilarete.tool.Duo;
+import org.codefilarete.tool.Nullable;
+import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.sql.TransactionSupport;
 
 /**
- * Change that deploys Jumper's history table. Kind of self usage of itself.
+ * Change that deploys Jumper's history table.
  *
  * @author Guillaume Mary
  */
@@ -38,9 +46,8 @@ public class JdbcChangeStorage implements ChangeStorage {
 		// we use Stalactite to perform inserts of Checksums
 		Dialect dialect = new ServiceLoaderDialectResolver().determineDialect(connectionProvider.giveConnection());
 		// we register a Binder for reading and writing a Checksum in the configured database column as a String
-		dialect.getColumnBinderRegistry().register(storageTable.checksum, new LambdaParameterBinder<>(
-				(resultSet, columnName) -> new Checksum(resultSet.getString(columnName)),
-				(preparedStatement, valueIndex, value) -> preparedStatement.setString(valueIndex, value.toString())));
+		dialect.getColumnBinderRegistry().register(Checksum.class, new LambdaParameterBinder<>(DefaultParameterBinders.STRING_BINDER, Checksum::new, Checksum::toString));
+		dialect.getSqlTypeRegistry().put(Checksum.class, "VARCHAR(255)");
 		persistenceContext = new PersistenceContext(connectionProvider, dialect);
 		changeHistoryTableEnsurer = new ChangeHistoryTableEnsurer();
 	}
@@ -76,12 +83,19 @@ public class JdbcChangeStorage implements ChangeStorage {
 	
 	@Override
 	public Set<ChangeId> giveRanIdentifiers() {
-		return Collections.emptySet();
+		return new HashSet<>(persistenceContext.newQuery(QueryEase.select(storageTable.id)
+						.from(storageTable), ChangeId.class)
+				.mapKey(ChangeId::new, storageTable.id)
+				.execute());
 	}
 	
 	@Override
 	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> changes) {
-		return null;
+		List<Duo> changeIds = persistenceContext.newQuery(QueryEase.select(storageTable.id, storageTable.checksum)
+						.from(storageTable).where(storageTable.id, Operators.in(Iterables.collectToList(changes, ChangeId::toString))), Duo.class)
+				.mapKey(Duo::new, storageTable.id, storageTable.checksum)
+				.execute();
+		return Iterables.map((List<Duo<String, Checksum>>) (List) changeIds, duo -> new ChangeId(duo.getLeft()), Duo::getRight);
 	}
 	
 	protected class ChangeHistoryTableEnsurer extends NoopExecutionListener {
@@ -89,10 +103,14 @@ public class JdbcChangeStorage implements ChangeStorage {
 		protected Connection connection;
 		
 		@Override
-		public void beforeAll() {
+		public void beforeProcess() {
 			connection = connectionProvider.giveConnection();
 			try {
-				ResultSet tables = connection.getMetaData().getTables(storageTable.getSchema().getName(), storageTable.getSchema().getName(), storageTable.getName(), null);
+				ResultSet tables = connection.getMetaData().getTables(
+						Nullable.nullable(storageTable.getSchema()).map(Schema::getName).get(),
+						Nullable.nullable(storageTable.getSchema()).map(Schema::getName).get(),
+						storageTable.getName(),
+						null);
 				if (!tables.next()) {
 					createTable();
 				}

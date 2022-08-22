@@ -36,8 +36,7 @@ public class ChangeChecksumer {
 	public Checksum buildChecksum(Change change) {
 		Checksum result;
 		if (change instanceof DDLChange) {
-			DDLStatement ddlStatement = ((DDLChange) change).getDdlStatement();
-			result = byteChecksumer.checksum(giveSignature(ddlStatement).getBytes(StandardCharsets.UTF_8));
+			result = byteChecksumer.checksum(giveSignature((DDLChange) change).getBytes(StandardCharsets.UTF_8));
 		} else if (change instanceof SQLChange) {
 			result = stringChecksumer.checksum(String.join(" ", ((SQLChange) change).getSqlOrders()));
 		} else if (change instanceof AbstractJavaChange) {
@@ -46,6 +45,21 @@ public class ChangeChecksumer {
 			throw new NotImplementedException("Checksum computation is not implemented for " + change.getClass());
 		}
 		return result;
+	}
+	
+	protected String giveSignature(DDLChange ddlChange) {
+		List<DDLStatement> ddlStatement = ddlChange.getDdlStatements();
+		return new StringAppender() {
+			@Override
+			public StringAppender cat(Object s) {
+				if (s instanceof DDLStatement) {
+					super.cat(giveSignature(((DDLStatement) s)));
+					return this;
+				} else {
+					return super.cat(s);
+				}
+			}
+		}.ccat(ddlStatement, " ").toString();
 	}
 	
 	protected String giveSignature(DDLStatement ddlStatement) {

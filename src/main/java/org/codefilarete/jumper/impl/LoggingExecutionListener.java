@@ -47,12 +47,12 @@ public class LoggingExecutionListener implements FineGrainExecutionListener {
 	}
 	
 	@Override
-	public void beforeAll() {
+	public void beforeProcess() {
 		beginAllInstant = Instant.now();
 	}
 	
 	@Override
-	public void afterAll() {
+	public void afterProcess() {
 		Duration duration = Duration.between(beginAllInstant, Instant.now());
 		logger.debug("Total execution took {}", String.format("%sm %ss %sms", duration.toMinutes(), duration.getSeconds(), duration.toMillis()));
 	}

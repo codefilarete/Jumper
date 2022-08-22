@@ -192,7 +192,7 @@ public class ChangeSetRunnerTest {
 		ModifiableInt beforeRunCount = new ModifiableInt();
 		ModifiableInt afterRunCount = new ModifiableInt();
 		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
-		localChangeRunner.setExecutionListener(new NoopExecutionListener() {
+		localChangeRunner.addExecutionListener(new NoopExecutionListener() {
 			@Override
 			public void beforeRun(Change change) {
 				beforeRunCount.increment();

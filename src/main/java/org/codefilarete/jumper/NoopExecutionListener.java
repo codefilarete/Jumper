@@ -18,12 +18,12 @@ public class NoopExecutionListener implements ChangeSetExecutionListener {
 	}
 	
 	@Override
-	public void afterAll() {
+	public void afterProcess() {
 	
 	}
 	
 	@Override
-	public void beforeAll() {
+	public void beforeProcess() {
 	
 	}
 }

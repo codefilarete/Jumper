@@ -32,14 +32,14 @@ class LoggingExecutionListenerTest {
 		
 		
 		LoggingExecutionListener testInstance = new LoggingExecutionListener(logger);
-		testInstance.beforeAll();
+		testInstance.beforeProcess();
 		Change change = () -> new ChangeId("x");
 		testInstance.beforeRun(change);
 		Thread.sleep(50);
 		testInstance.afterRun(change);
 		testInstance.afterRun("toto", 42L);
 		Thread.sleep(50);
-		testInstance.afterAll();
+		testInstance.afterProcess();
 		
 		assertThat(logs).element(0, CHAR_SEQUENCE).isEqualTo("DEBUG: Executing x");
 		assertThat(logs).element(1, CHAR_SEQUENCE).matches("DEBUG: Execution took 0m 0s \\d+ms");

@@ -1,5 +1,8 @@
 package org.codefilarete.jumper.ddl.engine;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
@@ -7,6 +10,7 @@ import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.jumper.impl.DDLChange;
 import org.codefilarete.tool.Reflections;
+import org.codefilarete.tool.VisibleForTesting;
 import org.codefilarete.tool.exception.NotImplementedException;
 
 /**
@@ -33,8 +37,12 @@ public class Dialect {
 		this.dropTableHandler = dropTableHandler;
 	}
 	
-	public String generateScript(DDLChange change) {
-		DDLStatement ddlStatement = change.getDdlStatement();
+	public List<String> generateScript(DDLChange change) {
+		return change.getDdlStatements().stream().map(this::generateScript).collect(Collectors.toList());
+	}
+	
+	@VisibleForTesting
+	String generateScript(DDLStatement ddlStatement) {
 		String ddl;
 		if (ddlStatement instanceof NewTable) {
 			ddl = newTableHandler.generateScript((NewTable) ddlStatement);
@@ -45,7 +53,7 @@ public class Dialect {
 		} else if (ddlStatement instanceof NewIndex) {
 			ddl = newIndexHandler.generateScript(((NewIndex) ddlStatement));
 		} else {
-			throw new NotImplementedException("Statement of type " + Reflections.toString(change.getClass()) + " is not supported");
+			throw new NotImplementedException("Statement of type " + Reflections.toString(ddlStatement.getClass()) + " is not supported");
 		}
 		return ddl;
 	}

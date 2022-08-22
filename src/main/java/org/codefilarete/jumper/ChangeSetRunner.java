@@ -3,7 +3,6 @@ package org.codefilarete.jumper;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.codefilarete.jumper.ChangeSetExecutionListener.FineGrainExecutionListener;
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.engine.Dialect;
@@ -24,6 +22,7 @@ import org.codefilarete.jumper.impl.StringChecksumer;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.VisibleForTesting;
+import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.codefilarete.tool.sql.TransactionSupport;
@@ -33,13 +32,13 @@ import org.codefilarete.tool.sql.TransactionSupport;
  */
 public class ChangeSetRunner {
 	
-	public static ChangeSetRunner forJdbcStorage(List<Change> changes, ConnectionProvider connectionProvider) {
+	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, Change... changes) {
 		JdbcChangeStorage changeHistoryStorage = new JdbcChangeStorage(connectionProvider);
 		JdbcUpdateProcessLockStorage processLockStorage = new JdbcUpdateProcessLockStorage(connectionProvider);
-		ChangeSetRunner result = new ChangeSetRunner(changes, connectionProvider, changeHistoryStorage, processLockStorage);
-		// TODO: create a listener Collection to chain listeners
-		result.setExecutionListener(changeHistoryStorage.getChangeHistoryTableEnsurer());
-		result.setExecutionListener(processLockStorage.getLockTableEnsurer());
+		ChangeSetRunner result = new ChangeSetRunner(Arrays.asList(changes), connectionProvider, changeHistoryStorage, processLockStorage);
+		// we add storage listeners so they can create their tables at very beginning of the process
+		result.addExecutionListener(processLockStorage.getLockTableEnsurer());
+		result.addExecutionListener(changeHistoryStorage.getChangeHistoryTableEnsurer());
 		return result;
 	}
 	
@@ -48,7 +47,7 @@ public class ChangeSetRunner {
 	private final ChangeStorage changeStorage;
 	private final UpdateProcessLockStorage processLockStorage;
 	
-	private ChangeSetExecutionListener executionListener = new NoopExecutionListener();
+	private final ChangeSetExecutionListenerCollection executionListener = new ChangeSetExecutionListenerCollection();
 	
 	private final CachingChangeChecksumer checksumer = new CachingChangeChecksumer();
 	
@@ -64,11 +63,12 @@ public class ChangeSetRunner {
 		this.processLockStorage = lockStorage;
 	}
 	
-	public void setExecutionListener(ChangeSetExecutionListener executionListener) {
-		this.executionListener = executionListener;
+	public void addExecutionListener(ChangeSetExecutionListener executionListener) {
+		this.executionListener.add(executionListener);
 	}
 	
 	public void processUpdate() throws ExecutionException {
+		executionListener.beforeProcess();
 		// note that we decouple lock acquisition from try-with-resource to avoid closing Lock on acquisition error
 		UpdateLock voluntarilyOutOfTryWithResource = acquireUpdateLock();
 		try (UpdateLock ignored = voluntarilyOutOfTryWithResource) {
@@ -81,6 +81,7 @@ public class ChangeSetRunner {
 			ChangeRunner changeRunner = new ChangeRunner(giveDialect(context.getDatabaseSignet()));
 			changeRunner.run(updatesToRun, context);
 		}
+		executionListener.afterProcess();
 	}
 	
 	private UpdateLock acquireUpdateLock() {
@@ -121,7 +122,6 @@ public class ChangeSetRunner {
 	protected Dialect giveDialect(DatabaseSignet databaseSignet) {
 		return new ServiceLoaderDialectResolver().determineDialect(databaseSignet);
 	}
-	
 	
 	private void assertNonCompliantChanges() {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
@@ -172,7 +172,6 @@ public class ChangeSetRunner {
 		}
 		
 		public void run(Iterable<Change> updatesToRun, Context context) throws ExecutionException {
-			executionListener.beforeAll();
 			for (Change change : updatesToRun) {
 				executionListener.beforeRun(change);
 				try {
@@ -185,7 +184,6 @@ public class ChangeSetRunner {
 				}
 				executionListener.afterRun(change);
 			}
-			executionListener.afterAll();
 		}
 		
 		private void run(Change change, Context context) throws SQLException {
@@ -197,7 +195,7 @@ public class ChangeSetRunner {
 					if (change instanceof SQLChange) {
 						sqlOrders = ((SQLChange) change).getSqlOrders();
 					} else if (change instanceof DDLChange) {
-						sqlOrders = Arrays.asList(dialect.generateScript((DDLChange) change));
+						sqlOrders = dialect.generateScript((DDLChange) change);
 					} else {
 						throw new NotImplementedException("Change of type " + Reflections.toString(change.getClass()) + " is not supported");
 					}
@@ -243,9 +241,7 @@ public class ChangeSetRunner {
 						statement.execute(sqlOrder);
 				}
 			}
-			if (executionListener instanceof FineGrainExecutionListener) {
-				((FineGrainExecutionListener) executionListener).afterRun(sqlOrder, updatedRowCount);
-			}
+			executionListener.afterRun(sqlOrder, updatedRowCount);
 		}
 		
 		private void persistState(Change change) throws ExecutionException {
