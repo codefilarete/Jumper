@@ -9,14 +9,14 @@ import java.util.Map;
  */
 public class NonCompliantUpdateException extends ExecutionException {
 	
-	private final Map<Change, Checksum> nonCompliantUpdates;
+	private final Map<ChangeSet, Checksum> nonCompliantUpdates;
 	
-	public NonCompliantUpdateException(String message, Map<Change, Checksum> nonCompliantUpdates) {
+	public NonCompliantUpdateException(String message, Map<ChangeSet, Checksum> nonCompliantUpdates) {
 		super(message);
 		this.nonCompliantUpdates = nonCompliantUpdates;
 	}
 	
-	public Map<Change, Checksum> getNonCompliantUpdates() {
+	public Map<ChangeSet, Checksum> getNonCompliantUpdates() {
 		return nonCompliantUpdates;
 	}
 }

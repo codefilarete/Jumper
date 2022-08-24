@@ -1,16 +1,11 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
-import org.codefilarete.jumper.impl.DDLChange;
+import org.codefilarete.jumper.impl.SupportedChange;
 import org.codefilarete.tool.Reflections;
-import org.codefilarete.tool.VisibleForTesting;
 import org.codefilarete.tool.exception.NotImplementedException;
 
 /**
@@ -37,23 +32,18 @@ public class Dialect {
 		this.dropTableHandler = dropTableHandler;
 	}
 	
-	public List<String> generateScript(DDLChange change) {
-		return change.getDdlStatements().stream().map(this::generateScript).collect(Collectors.toList());
-	}
-	
-	@VisibleForTesting
-	String generateScript(DDLStatement ddlStatement) {
+	public String generateScript(SupportedChange supportedChange) {
 		String ddl;
-		if (ddlStatement instanceof NewTable) {
-			ddl = newTableHandler.generateScript((NewTable) ddlStatement);
-		} else if (ddlStatement instanceof DropTable) {
-			ddl = dropTableHandler.generateScript((DropTable) ddlStatement);
-		} else if (ddlStatement instanceof NewForeignKey) {
-			ddl = newForeignKeyHandler.generateScript(((NewForeignKey) ddlStatement));
-		} else if (ddlStatement instanceof NewIndex) {
-			ddl = newIndexHandler.generateScript(((NewIndex) ddlStatement));
+		if (supportedChange instanceof NewTable) {
+			ddl = newTableHandler.generateScript((NewTable) supportedChange);
+		} else if (supportedChange instanceof DropTable) {
+			ddl = dropTableHandler.generateScript((DropTable) supportedChange);
+		} else if (supportedChange instanceof NewForeignKey) {
+			ddl = newForeignKeyHandler.generateScript(((NewForeignKey) supportedChange));
+		} else if (supportedChange instanceof NewIndex) {
+			ddl = newIndexHandler.generateScript(((NewIndex) supportedChange));
 		} else {
-			throw new NotImplementedException("Statement of type " + Reflections.toString(ddlStatement.getClass()) + " is not supported");
+			throw new NotImplementedException("Statement of type " + Reflections.toString(supportedChange.getClass()) + " is not supported");
 		}
 		return ddl;
 	}

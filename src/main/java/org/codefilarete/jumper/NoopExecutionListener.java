@@ -8,13 +8,23 @@ package org.codefilarete.jumper;
 public class NoopExecutionListener implements ChangeSetExecutionListener {
 	
 	@Override
-	public void beforeRun(Change change) {
+	public void beforeRun(ChangeSet changes) {
 		
 	}
 	
 	@Override
-	public void afterRun(Change change) {
+	public void afterRun(ChangeSet changes) {
 		
+	}
+	
+	@Override
+	public void beforeRun(Change change) {
+	
+	}
+	
+	@Override
+	public void afterRun(Change change) {
+	
 	}
 	
 	@Override

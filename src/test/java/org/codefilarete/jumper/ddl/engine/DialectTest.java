@@ -1,12 +1,12 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.jumper.ddl.engine.Dialect.DialectBuilder;
+import org.codefilarete.jumper.impl.SupportedChange;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -25,7 +25,7 @@ class DialectTest {
 	
 	@ParameterizedTest
 	@MethodSource
-	void generateScript(DialectBuilder scriptGenerator, DDLStatement input, String expectedScript) {
+	void generateScript(DialectBuilder scriptGenerator, SupportedChange input, String expectedScript) {
 		Dialect testInstance = scriptGenerator.build();
 		String script = testInstance.generateScript(input);
 		assertThat(script).isEqualTo(expectedScript);

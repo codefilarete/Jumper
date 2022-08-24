@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.codefilarete.jumper.Change;
+import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.Checksum;
 import org.codefilarete.jumper.Checksumer.ByteChecksumer;
-import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
@@ -17,62 +17,49 @@ import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
+import org.codefilarete.tool.io.IOs;
 
 public class ChangeChecksumer {
 	
 	private final ByteChecksumer byteChecksumer = new ByteChecksumer();
-	private final StringChecksumer stringChecksumer = new StringChecksumer();
 	private final ClassChecksumer classChecksumer = new ClassChecksumer();
 	
 	public ChangeChecksumer() {
 	}
 	
 	/**
-	 * Computes the checksum of given change. Only works for well-known {@link Change} class, if not known, then a {@link NotImplementedException} is thrown.
+	 * Computes the checksum of given change. Only works for well-known {@link ChangeSet} class, if not known, then a {@link NotImplementedException} is thrown.
 	 * Checksum must be considered as a signature of the business logic of the update.
 	 *
 	 * @return a "business logic"-rely-on Checksum
 	 */
-	public Checksum buildChecksum(Change change) {
-		Checksum result;
-		if (change instanceof DDLChange) {
-			result = byteChecksumer.checksum(giveSignature((DDLChange) change).getBytes(StandardCharsets.UTF_8));
-		} else if (change instanceof SQLChange) {
-			result = stringChecksumer.checksum(String.join(" ", ((SQLChange) change).getSqlOrders()));
-		} else if (change instanceof AbstractJavaChange) {
-			result = classChecksumer.checksum(change.getClass());
-		} else {
-			throw new NotImplementedException("Checksum computation is not implemented for " + change.getClass());
-		}
-		return result;
-	}
-	
-	protected String giveSignature(DDLChange ddlChange) {
-		List<DDLStatement> ddlStatement = ddlChange.getDdlStatements();
-		return new StringAppender() {
-			@Override
-			public StringAppender cat(Object s) {
-				if (s instanceof DDLStatement) {
-					super.cat(giveSignature(((DDLStatement) s)));
-					return this;
-				} else {
-					return super.cat(s);
-				}
+	public Checksum buildChecksum(ChangeSet changes) {
+		ByteBuffer byteBuffer = new ByteBuffer((int) IOs._512_Ko);
+		for (Change change : changes.getChanges()) {
+			if (change instanceof SupportedChange) {
+				byteBuffer.append(giveSignature(((SupportedChange) change)).getBytes(StandardCharsets.UTF_8));
+			} else if (change instanceof SQLChange) {
+				byteBuffer.append(String.join(" ", ((SQLChange) change).getSqlOrders()).getBytes(StandardCharsets.UTF_8));
+			} else if (change instanceof AbstractJavaChange) {
+				byteBuffer.append(classChecksumer.buildChecksum(change.getClass()));
+			} else {
+				throw new NotImplementedException("Checksum computation is not implemented for " + change.getClass());
 			}
-		}.ccat(ddlStatement, " ").toString();
+		}
+		return byteChecksumer.checksum(byteBuffer.getBytes());
 	}
 	
-	protected String giveSignature(DDLStatement ddlStatement) {
-		if (ddlStatement instanceof NewTable) {
-			return giveSignature((NewTable) ddlStatement);
-		} else if (ddlStatement instanceof DropTable) {
-			return giveSignature((DropTable) ddlStatement);
-		} else if (ddlStatement instanceof NewForeignKey) {
-			return giveSignature(((NewForeignKey) ddlStatement));
-		} else if (ddlStatement instanceof NewIndex) {
-			return giveSignature(((NewIndex) ddlStatement));
+	protected String giveSignature(SupportedChange supportedChange) {
+		if (supportedChange instanceof NewTable) {
+			return giveSignature((NewTable) supportedChange);
+		} else if (supportedChange instanceof DropTable) {
+			return giveSignature((DropTable) supportedChange);
+		} else if (supportedChange instanceof NewForeignKey) {
+			return giveSignature(((NewForeignKey) supportedChange));
+		} else if (supportedChange instanceof NewIndex) {
+			return giveSignature(((NewIndex) supportedChange));
 		} else {
-			throw new NotImplementedException("Signature computation is not implemented for " + Reflections.toString(ddlStatement.getClass()));
+			throw new NotImplementedException("Signature computation is not implemented for " + Reflections.toString(supportedChange.getClass()));
 		}
 	}
 	
@@ -120,8 +107,8 @@ public class ChangeChecksumer {
 		return result.cat("UK ", newUniqueConstraint.getName(), " ").ccat(newUniqueConstraint.getColumns(), " ").toString();
 	}
 	
-	protected String giveSignature(DropTable ddlStatement) {
-		return "DropTable " + ddlStatement.getName();
+	protected String giveSignature(DropTable dropTable) {
+		return "DropTable " + dropTable.getName();
 	}
 	
 	protected String giveSignature(NewForeignKey newForeignKey) {
@@ -139,5 +126,38 @@ public class ChangeChecksumer {
 				.ccat(newIndex.getColumns(), " ")
 				.cat(" ", newIndex.isUnique())
 				.toString();
+	}
+	
+	/**
+	 * Bytes array that auto-expends if necessary appending some bytes to it
+	 *
+	 * @author Guillaume Mary
+	 */
+	static class ByteBuffer {
+		
+		private byte[] bytes;
+		private int position = 0;
+		
+		ByteBuffer(int initialCapacity) {
+			this.bytes = new byte[initialCapacity];
+		}
+		
+		void append(byte[] bytes) {
+			if ((this.bytes.length - position) < bytes.length) {
+				byte[] newBuffer = new byte[position + bytes.length];
+				System.arraycopy(this.bytes, 0, newBuffer, 0, position);
+				System.arraycopy(bytes, 0, newBuffer, position, bytes.length);
+				this.bytes = newBuffer;
+			} else {
+				System.arraycopy(bytes, 0, this.bytes, position, bytes.length);
+			}
+			this.position += bytes.length;
+		}
+		
+		byte[] getBytes() {
+			byte[] result = new byte[position];
+			System.arraycopy(this.bytes, 0, result, 0, position);
+			return result;
+		}
 	}
 }

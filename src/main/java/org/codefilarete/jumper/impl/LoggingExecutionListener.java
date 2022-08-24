@@ -4,8 +4,10 @@ import java.time.Duration;
 import java.time.Instant;
 
 import org.codefilarete.jumper.Change;
+import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ChangeSetRunner;
 import org.codefilarete.jumper.ChangeSetExecutionListener.FineGrainExecutionListener;
+import org.codefilarete.tool.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,15 +37,24 @@ public class LoggingExecutionListener implements FineGrainExecutionListener {
 	}
 	
 	@Override
-	public void beforeRun(Change change) {
+	public void beforeRun(ChangeSet change) {
 		logger.debug("Executing {}", change.getIdentifier());
 		beginChangeInstant = Instant.now();
 	}
 	
 	@Override
-	public void afterRun(Change change) {
+	public void afterRun(ChangeSet change) {
 		Duration duration = Duration.between(beginChangeInstant, Instant.now());
 		logger.debug("Execution took {}", String.format("%sm %ss %sms", duration.toMinutes(), duration.getSeconds(), duration.toMillis()));
+	}
+	
+	@Override
+	public void beforeRun(Change change) {
+		logger.trace("Executing {}", Reflections.toString(change.getClass()));
+	}
+	
+	@Override
+	public void afterRun(Change change) {
 	}
 	
 	@Override

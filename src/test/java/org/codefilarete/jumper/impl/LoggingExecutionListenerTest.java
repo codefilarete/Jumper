@@ -3,8 +3,7 @@ package org.codefilarete.jumper.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codefilarete.jumper.Change;
-import org.codefilarete.jumper.ChangeId;
+import org.codefilarete.jumper.ChangeSet;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -33,7 +32,7 @@ class LoggingExecutionListenerTest {
 		
 		LoggingExecutionListener testInstance = new LoggingExecutionListener(logger);
 		testInstance.beforeProcess();
-		Change change = () -> new ChangeId("x");
+		ChangeSet change = new ChangeSet("x", false);
 		testInstance.beforeRun(change);
 		Thread.sleep(50);
 		testInstance.afterRun(change);

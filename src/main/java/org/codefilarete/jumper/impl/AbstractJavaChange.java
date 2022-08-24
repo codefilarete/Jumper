@@ -2,8 +2,7 @@ package org.codefilarete.jumper.impl;
 
 import java.sql.Connection;
 
-import org.codefilarete.jumper.AbstractChange;
-import org.codefilarete.jumper.ChangeId;
+import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.Checksum;
 import org.codefilarete.jumper.ChecksumCapableChange;
 import org.codefilarete.jumper.Context;
@@ -15,14 +14,9 @@ import org.codefilarete.jumper.Context;
  * 
  * @author Guillaume Mary
  */
-public abstract class AbstractJavaChange extends AbstractChange implements ChecksumCapableChange {
+public abstract class AbstractJavaChange implements Change, ChecksumCapableChange {
 	
-	public AbstractJavaChange(ChangeId changeId, boolean shouldAlwaysRun) {
-		super(changeId, shouldAlwaysRun);
-	}
-	
-	public AbstractJavaChange(String identifier, boolean shouldAlwaysRun) {
-		this(new ChangeId(identifier), shouldAlwaysRun);
+	public AbstractJavaChange() {
 	}
 	
 	/**

@@ -3,51 +3,22 @@ package org.codefilarete.jumper.impl;
 import java.util.Arrays;
 import java.util.List;
 
-import org.codefilarete.jumper.AbstractChange;
-import org.codefilarete.jumper.ChangeId;
+import org.codefilarete.jumper.Change;
 
 /**
- * An update dedicated to SQL execution
+ * An update dedicated to user-defined SQL execution
  * 
  * @author Guillaume Mary
  */
-public class SQLChange extends AbstractChange {
+public class SQLChange implements Change {
 	
 	private final List<String> sqlOrders;
 	
-	public SQLChange(ChangeId changeId, String... sqlOrders) {
-		this(changeId, false, sqlOrders);
+	public SQLChange(String... sqlOrders) {
+		this(Arrays.asList(sqlOrders));
 	}
 	
-	public SQLChange(String identifier, String... sqlOrders) {
-		this(identifier, false, sqlOrders);
-	}
-	
-	public SQLChange(ChangeId changeId, boolean shouldAlwaysRun, String... sqlOrders) {
-		this(changeId, shouldAlwaysRun, Arrays.asList(sqlOrders));
-	}
-	
-	public SQLChange(String identifier, boolean shouldAlwaysRun, String... sqlOrders) {
-		this(new ChangeId(identifier), shouldAlwaysRun, sqlOrders);
-	}
-	
-	public SQLChange(ChangeId changeId, List<String> sqlOrders) {
-		super(changeId, false);
-		this.sqlOrders = sqlOrders;
-	}
-	
-	public SQLChange(String identifier, List<String> sqlOrders) {
-		super(identifier, false);
-		this.sqlOrders = sqlOrders;
-	}
-	
-	public SQLChange(ChangeId changeId, boolean shouldAlwaysRun, List<String> sqlOrders) {
-		super(changeId, shouldAlwaysRun);
-		this.sqlOrders = sqlOrders;
-	}
-	
-	public SQLChange(String identifier, boolean shouldAlwaysRun, List<String> sqlOrders) {
-		super(identifier, shouldAlwaysRun);
+	public SQLChange(List<String> sqlOrders) {
 		this.sqlOrders = sqlOrders;
 	}
 	

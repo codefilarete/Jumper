@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
-import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.stalactite.sql.HSQLDBDialect;
 import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
@@ -45,9 +44,8 @@ public class JdbcChangeStorageTest {
 		
 		// test
 		JdbcChangeStorage testInstance = new JdbcChangeStorage(connectionProvider);
-		SQLChange sqlChange = new SQLChange("dummyId", "select 1 from dual");
 		Checksum checksum = new Checksum("a robust fake checksum");
-		testInstance.persist(new ChangeSignet(sqlChange.getIdentifier(), checksum));
+		testInstance.persist(new ChangeSignet("dummyId", checksum));
 		
 		// verifications
 		RowIterator rowIterator = new RowIterator(
@@ -57,7 +55,7 @@ public class JdbcChangeStorageTest {
 				.add(DEFAULT_STORAGE_TABLE.checksum.getName(), DefaultResultSetReaders.STRING_READER));
 		assertThat(rowIterator.hasNext()).isTrue();
 		Row row = rowIterator.next();
-		assertThat(row.get(DEFAULT_STORAGE_TABLE.id.getName())).isEqualTo(sqlChange.getIdentifier().toString());
+		assertThat(row.get(DEFAULT_STORAGE_TABLE.id.getName())).isEqualTo("dummyId");
 		assertThat(row.get(DEFAULT_STORAGE_TABLE.checksum.getName())).isEqualTo(checksum.toString());
 		assertThat(((LocalDateTime) row.get(DEFAULT_STORAGE_TABLE.createdAt.getName())).withNano(0)).isEqualTo(LocalDateTime.now().withNano(0));
 	}

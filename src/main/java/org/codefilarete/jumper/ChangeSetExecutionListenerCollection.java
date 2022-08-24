@@ -28,6 +28,16 @@ public class ChangeSetExecutionListenerCollection implements ChangeSetExecutionL
 	}
 	
 	@Override
+	public void beforeRun(ChangeSet changes) {
+		this.listeners.forEach(l -> l.beforeRun(changes));
+	}
+	
+	@Override
+	public void afterRun(ChangeSet changes) {
+		this.listeners.forEach(l -> l.afterRun(changes));
+	}
+	
+	@Override
 	public void beforeRun(Change change) {
 		this.listeners.forEach(l -> l.beforeRun(change));
 	}

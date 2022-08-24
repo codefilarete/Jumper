@@ -16,7 +16,6 @@ import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
-import org.codefilarete.jumper.impl.DDLChange;
 import org.codefilarete.jumper.impl.InMemoryChangeStorage;
 import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
@@ -46,7 +45,7 @@ public class ChangeSetRunnerTest {
 		
 		private final Dialect dialect = new Dialect();
 		
-		private LocalChangeRunner(List<Change> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage) {
+		private LocalChangeRunner(List<ChangeSet> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage) {
 			super(changes, connectionProvider, changeStorage, new UpdateProcessLockStorage() {
 				@Override
 				public void insertRow(String lockIdentifier) {
@@ -79,7 +78,7 @@ public class ChangeSetRunnerTest {
 		
 		ModifiableInt executionCounter = new ModifiableInt();
 		
-		AbstractJavaChange dummyUpdate = new AbstractJavaChange("dummyId", false) {
+		AbstractJavaChange dummyUpdate = new AbstractJavaChange() {
 			@Override
 			public void run(Context context, Connection connection) throws ExecutionException {
 				executionCounter.increment();
@@ -91,7 +90,7 @@ public class ChangeSetRunnerTest {
 			}
 		};
 		
-		LocalChangeRunner testInstance = new LocalChangeRunner(Arrays.asList(dummyUpdate), () -> connectionMock, new InMemoryChangeStorage());
+		LocalChangeRunner testInstance = new LocalChangeRunner(Arrays.asList(new ChangeSet("dummyId", false).addChanges(dummyUpdate)), () -> connectionMock, new InMemoryChangeStorage());
 		testInstance.processUpdate();
 		
 		// Change must be ran
@@ -113,7 +112,7 @@ public class ChangeSetRunnerTest {
 		
 		ModifiableInt executionCounter = new ModifiableInt();
 		
-		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
+		Change dummyUpdate = new AbstractJavaChange() {
 			@Override
 			public void run(Context context, Connection connection) throws ExecutionException {
 				executionCounter.increment();
@@ -125,7 +124,7 @@ public class ChangeSetRunnerTest {
 			}
 		};
 		
-		LocalChangeRunner testInstance = new LocalChangeRunner(Arrays.asList(dummyUpdate), () -> connectionMock, new InMemoryChangeStorage());
+		LocalChangeRunner testInstance = new LocalChangeRunner(Arrays.asList(new ChangeSet("dummyId", true).addChanges(dummyUpdate)), () -> connectionMock, new InMemoryChangeStorage());
 		testInstance.processUpdate();
 		
 		// Change must be ran
@@ -147,7 +146,7 @@ public class ChangeSetRunnerTest {
 		
 		ModifiableInt executionCounter = new ModifiableInt();
 		
-		AbstractChange dummyUpdate = new AbstractJavaChange("dummyId", true) {
+		Change dummyUpdate = new AbstractJavaChange() {
 			@Override
 			public void run(Context context, Connection connection) throws ExecutionException {
 				executionCounter.increment();
@@ -159,7 +158,7 @@ public class ChangeSetRunnerTest {
 			}
 		};
 		
-		LocalChangeRunner testInstance = new LocalChangeRunner(Arrays.asList(dummyUpdate), () -> connectionMock, new InMemoryChangeStorage());
+		LocalChangeRunner testInstance = new LocalChangeRunner(Arrays.asList(new ChangeSet("dummyId", false).addChanges(dummyUpdate)), () -> connectionMock, new InMemoryChangeStorage());
 		testInstance.processUpdate();
 		
 		// Change must be ran
@@ -167,7 +166,7 @@ public class ChangeSetRunnerTest {
 		// id must be stored
 		assertThat(testInstance.changeStorage.giveRanIdentifiers()).isEqualTo(Arrays.asSet(new ChangeId("dummyId")));
 		
-		AbstractChange dummyUpdate2 = new AbstractJavaChange("dummyId", true) {
+		Change dummyUpdate2 = new AbstractJavaChange() {
 			@Override
 			public void run(Context context, Connection connection) throws ExecutionException {
 				executionCounter.increment();
@@ -180,7 +179,7 @@ public class ChangeSetRunnerTest {
 		};
 		
 		// second execution
-		LocalChangeRunner testInstance2 = new LocalChangeRunner(Arrays.asList(dummyUpdate2), () -> connectionMock, testInstance.changeStorage);
+		LocalChangeRunner testInstance2 = new LocalChangeRunner(Arrays.asList(new ChangeSet("dummyId", false).addChanges(dummyUpdate2)), () -> connectionMock, testInstance.changeStorage);
 		assertThatExceptionOfType(NonCompliantUpdateException.class).isThrownBy(testInstance2::processUpdate);
 	}
 	
@@ -188,18 +187,18 @@ public class ChangeSetRunnerTest {
 	void processUpdate_changeIsPersisted() throws SQLException {
 		Connection connectionMock = Mockito.mock(Connection.class);
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
-		Change change = new DDLChange("x", new DropTable("toto"));
+		ChangeSet change = new ChangeSet("dummyId", false).addChanges(new DropTable("toto"));
 		ModifiableInt beforeRunCount = new ModifiableInt();
 		ModifiableInt afterRunCount = new ModifiableInt();
 		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
 		localChangeRunner.addExecutionListener(new NoopExecutionListener() {
 			@Override
-			public void beforeRun(Change change) {
+			public void beforeRun(ChangeSet changes) {
 				beforeRunCount.increment();
 			}
 			
 			@Override
-			public void afterRun(Change change) {
+			public void afterRun(ChangeSet changes) {
 				afterRunCount.increment();
 			}
 		});
@@ -213,7 +212,7 @@ public class ChangeSetRunnerTest {
 		Connection connectionMock = Mockito.mock(Connection.class);
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
 		Holder<ChangeSignet> changeSignetCapturer = new Holder<>();
-		Change change = new DDLChange("x", new DropTable("toto"));
+		ChangeSet change = new ChangeSet("x", false).addChanges(new DropTable("toto"));
 		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new ChangeStorage() {
 			@Override
 			public void persist(ChangeSignet change) {
@@ -242,13 +241,13 @@ public class ChangeSetRunnerTest {
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
 		Holder<Context> contextCapturer = new Holder<>();
 		Holder<Connection> connectionCapturer = new Holder<>();
-		Change change = new AbstractJavaChange("x", false) {
+		ChangeSet change = new ChangeSet("dummyId", false).addChanges(new AbstractJavaChange() {
 			@Override
 			public void run(Context context, Connection connection) {
 				contextCapturer.set(context);
 				connectionCapturer.set(connection);
 			}
-		};
+		});
 		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
 		localChangeRunner.processUpdate();
 		assertThat(contextCapturer.get()).isEqualTo(localChangeRunner.context);
@@ -257,10 +256,10 @@ public class ChangeSetRunnerTest {
 	
 	static Object[][] processUpdate_withCRUDChange_adhocStatementMethodIsCalled() throws NoSuchMethodException {
 		return new Object[][] {
-				{ new SQLChange("1", "insert ..."), PreparedStatement.class.getMethod("executeLargeUpdate", String.class) },
-				{ new SQLChange("1", "update ..."), PreparedStatement.class.getMethod("executeLargeUpdate", String.class) },
-				{ new SQLChange("1", "delete ..."), PreparedStatement.class.getMethod("executeLargeUpdate", String.class) },
-				{ new SQLChange("1", "select ..."), PreparedStatement.class.getMethod("executeQuery", String.class) }
+				{ new SQLChange("insert ..."), PreparedStatement.class.getMethod("executeLargeUpdate", String.class) },
+				{ new SQLChange("update ..."), PreparedStatement.class.getMethod("executeLargeUpdate", String.class) },
+				{ new SQLChange("delete ..."), PreparedStatement.class.getMethod("executeLargeUpdate", String.class) },
+				{ new SQLChange("select ..."), PreparedStatement.class.getMethod("executeQuery", String.class) }
 		};
 	}
 	
@@ -270,7 +269,7 @@ public class ChangeSetRunnerTest {
 		Connection connectionMock = Mockito.mock(Connection.class);
 		PreparedStatement preparedStatementMock = Mockito.mock(PreparedStatement.class);
 		when(connectionMock.createStatement()).thenReturn(preparedStatementMock);
-		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(sqlChange), () -> connectionMock, new InMemoryChangeStorage());
+		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(new ChangeSet("dummyId", false).addChanges(sqlChange)), () -> connectionMock, new InMemoryChangeStorage());
 		localChangeRunner.processUpdate();
 		method.invoke(verify(preparedStatementMock), sqlChange.getSqlOrders().get(0));
 	}
@@ -281,13 +280,13 @@ public class ChangeSetRunnerTest {
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
 		Holder<Context> contextCapturer = new Holder<>();
 		Holder<Connection> connectionCapturer = new Holder<>();
-		Change change = new AbstractJavaChange("x", false) {
+		ChangeSet change = new ChangeSet("dummyId", false).addChanges(new AbstractJavaChange() {
 			@Override
 			public void run(Context context, Connection connection) {
 				contextCapturer.set(context);
 				connectionCapturer.set(connection);
 			}
-		};
+		});
 		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
 		localChangeRunner.processUpdate();
 		assertThat(contextCapturer.get()).isEqualTo(localChangeRunner.context);

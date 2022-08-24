@@ -2,12 +2,13 @@ package org.codefilarete.jumper.ddl.dsl.support;
 
 import java.util.Set;
 
+import org.codefilarete.jumper.impl.SupportedChange;
 import org.codefilarete.tool.collection.KeepOrderSet;
 
 /**
  * @author Guillaume Mary
  */
-public class NewForeignKey implements DDLStatement {
+public class NewForeignKey implements SupportedChange {
 	
 	private final String name;
 	private final Table table;

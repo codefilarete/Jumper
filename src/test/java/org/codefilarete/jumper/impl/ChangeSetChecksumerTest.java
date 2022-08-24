@@ -1,27 +1,31 @@
 package org.codefilarete.jumper.impl;
 
+import java.nio.charset.StandardCharsets;
+
 import org.assertj.core.api.Assertions;
-import org.codefilarete.jumper.ddl.dsl.support.DDLStatement;
+import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewColumn;
 import org.codefilarete.jumper.ddl.dsl.support.Table;
+import org.codefilarete.jumper.impl.ChangeChecksumer.ByteBuffer;
 import org.codefilarete.tool.exception.NotImplementedException;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
-class ChangeChecksumerTest {
+class ChangeSetChecksumerTest {
 	
 	@Test
 	void buildChecksum_handleNewTable() {
 		ChangeChecksumer testInstance = Mockito.spy(new ChangeChecksumer());
 		NewTable newTable = new NewTable("x");
-		testInstance.buildChecksum(new DDLChange("x", newTable));
+		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(newTable));
 		verify(testInstance).giveSignature(newTable);
 	}
 	
@@ -29,7 +33,7 @@ class ChangeChecksumerTest {
 	void buildChecksum_handleDropTable() {
 		ChangeChecksumer testInstance = Mockito.spy(new ChangeChecksumer());
 		DropTable dropTable = new DropTable("x");
-		testInstance.buildChecksum(new DDLChange("x", dropTable));
+		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(dropTable));
 		verify(testInstance).giveSignature(dropTable);
 	}
 	
@@ -39,7 +43,7 @@ class ChangeChecksumerTest {
 		NewForeignKey newForeignKey = new NewForeignKey("x", new Table("y"));
 		newForeignKey.addTargetColumn("a");
 		newForeignKey.setTargetTable(new Table("b"));
-		testInstance.buildChecksum(new DDLChange("x", newForeignKey));
+		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(newForeignKey));
 		verify(testInstance).giveSignature(newForeignKey);
 	}
 	
@@ -47,7 +51,7 @@ class ChangeChecksumerTest {
 	void buildChecksum_handleNewIndex() {
 		ChangeChecksumer testInstance = Mockito.spy(new ChangeChecksumer());
 		NewIndex newIndex = new NewIndex("x", new Table("y"));
-		testInstance.buildChecksum(new DDLChange("x", newIndex));
+		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(newIndex));
 		verify(testInstance).giveSignature(newIndex);
 	}
 	
@@ -105,9 +109,23 @@ class ChangeChecksumerTest {
 	void giveSignature() {
 		ChangeChecksumer testInstance = new ChangeChecksumer();
 		Assertions.assertThatCode(() -> {
-			testInstance.giveSignature(new DDLStatement() {
+			testInstance.giveSignature(new SupportedChange() {
 			});
 		}).isInstanceOf(NotImplementedException.class)
 				.hasMessageStartingWith("Signature computation is not implemented for ");
+	}
+	
+	@Nested
+	class ByteBufferTest {
+		
+		@Test
+		void append_autoExpands() {
+			ByteBuffer testInstance = new ByteBuffer(10);
+			testInstance.append("Hello".getBytes(StandardCharsets.UTF_8));
+			assertThat(testInstance.getBytes()).asString(StandardCharsets.UTF_8).isEqualTo("Hello");
+			testInstance.append(" world !".getBytes(StandardCharsets.UTF_8));
+			assertThat(testInstance.getBytes()).asString(StandardCharsets.UTF_8).isEqualTo("Hello world !");
+		}
+		
 	}
 }

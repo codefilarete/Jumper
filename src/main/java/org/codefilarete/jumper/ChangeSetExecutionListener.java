@@ -8,18 +8,6 @@ package org.codefilarete.jumper;
 public interface ChangeSetExecutionListener {
 	
 	/**
-	 * Is called before the execution of the given change
-	 * @param change the change that's going to be executed
-	 */
-	void beforeRun(Change change);
-	
-	/**
-	 * Is called after the execution of the given change
-	 * @param change the executed change
-	 */
-	void afterRun(Change change);
-	
-	/**
 	 * Is called at the very beginning of update process
 	 */
 	void beforeProcess();
@@ -28,6 +16,30 @@ public interface ChangeSetExecutionListener {
 	 * Is called at the end of update process
 	 */
 	void afterProcess();
+	
+	/**
+	 * Is called before the execution of the given changes
+	 * @param changes the {@link ChangeSet} that's going to be executed
+	 */
+	void beforeRun(ChangeSet changes);
+	
+	/**
+	 * Is called after the execution of the given changes
+	 * @param changes the executed {@link ChangeSet}
+	 */
+	void afterRun(ChangeSet changes);
+	
+	/**
+	 * Is called before the execution of the given change
+	 * @param change the {@link Change} that's going to be executed
+	 */
+	void beforeRun(Change change);
+	
+	/**
+	 * Is called after the execution of the given change
+	 * @param change the executed {@link Change}
+	 */
+	void afterRun(Change change);
 	
 	/**
 	 * To be implemented by listeners that need to be notified of statement treatment

@@ -1,7 +1,7 @@
 package org.codefilarete.jumper;
 
 /**
- * An identifier of an {@link Change}.
+ * An identifier of a {@link ChangeSet}.
  * For instance a date, a ticket number, ... or a combination of them.
  * 
  * @author Guillaume Mary

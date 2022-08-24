@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Contract for persisting {@link Change} signatures, then, making it available for future checking of runnable {@link Change}s.
+ * Contract for persisting {@link ChangeSet} signatures, then, making it available for future checking of runnable {@link ChangeSet}s.
  *
  * @author Guillaume Mary
  */
@@ -13,9 +13,9 @@ public interface ChangeStorage {
 	void persist(ChangeSignet change);
 	
 	/**
-	 * Gives all {@link Change} identifiers stored in this storage
+	 * Gives all {@link ChangeSet} identifiers stored in this storage
 	 *
-	 * @return all {@link Change} identifiers stored in this storage
+	 * @return all {@link ChangeSet} identifiers stored in this storage
 	 */
 	Set<ChangeId> giveRanIdentifiers();
 	
@@ -28,7 +28,7 @@ public interface ChangeStorage {
 	Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> changes);
 	
 	/**
-	 * A {@link Change} signature
+	 * A {@link ChangeSet} signature
 	 *
 	 * @author Guillaume Mary
 	 */
@@ -36,6 +36,10 @@ public interface ChangeStorage {
 		
 		private final ChangeId changeId;
 		private final Checksum checksum;
+		
+		public ChangeSignet(String identifier, Checksum checksum) {
+			this(new ChangeId(identifier), checksum);
+		}
 		
 		public ChangeSignet(ChangeId changeId, Checksum checksum) {
 			this.changeId = changeId;

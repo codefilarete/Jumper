@@ -3,12 +3,13 @@ package org.codefilarete.jumper.ddl.dsl.support;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.codefilarete.jumper.impl.SupportedChange;
 import org.codefilarete.tool.collection.KeepOrderSet;
 
 /**
  * @author Guillaume Mary
  */
-public class NewTable implements DDLStatement {
+public class NewTable implements SupportedChange {
 	
 	private final Table table;
 	private final Set<NewColumn> columns = new KeepOrderSet<>();
@@ -65,7 +66,7 @@ public class NewTable implements DDLStatement {
 		return uniqueConstraints;
 	}
 	
-	public static class NewPrimaryKey implements DDLStatement {
+	public static class NewPrimaryKey {
 		
 		private final KeepOrderSet<String> columns = new KeepOrderSet<>();
 		
@@ -79,7 +80,7 @@ public class NewTable implements DDLStatement {
 		}
 	}
 	
-	public static class NewColumn implements DDLStatement {
+	public static class NewColumn {
 		
 		private final String name;
 		private final String sqlType;
@@ -147,7 +148,7 @@ public class NewTable implements DDLStatement {
 		}
 	}
 	
-	public static class NewUniqueConstraint implements DDLStatement {
+	public static class NewUniqueConstraint {
 		
 		private final String name;
 		

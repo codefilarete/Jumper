@@ -1,9 +1,11 @@
 package org.codefilarete.jumper.ddl.dsl.support;
 
+import org.codefilarete.jumper.impl.SupportedChange;
+
 /**
  * @author Guillaume Mary
  */
-public class DropTable implements DDLStatement {
+public class DropTable implements SupportedChange {
 	
 	private final Table table;
 	

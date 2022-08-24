@@ -3,6 +3,7 @@ package org.codefilarete.jumper;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,7 +17,7 @@ import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
 import org.codefilarete.jumper.impl.ChangeChecksumer;
-import org.codefilarete.jumper.impl.DDLChange;
+import org.codefilarete.jumper.impl.SupportedChange;
 import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.jumper.impl.StringChecksumer;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
@@ -32,7 +33,7 @@ import org.codefilarete.tool.sql.TransactionSupport;
  */
 public class ChangeSetRunner {
 	
-	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, Change... changes) {
+	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, ChangeSet... changes) {
 		JdbcChangeStorage changeHistoryStorage = new JdbcChangeStorage(connectionProvider);
 		JdbcUpdateProcessLockStorage processLockStorage = new JdbcUpdateProcessLockStorage(connectionProvider);
 		ChangeSetRunner result = new ChangeSetRunner(Arrays.asList(changes), connectionProvider, changeHistoryStorage, processLockStorage);
@@ -42,7 +43,7 @@ public class ChangeSetRunner {
 		return result;
 	}
 	
-	private final List<Change> changes;
+	private final List<ChangeSet> changes;
 	private final ConnectionProvider connectionProvider;
 	private final ChangeStorage changeStorage;
 	private final UpdateProcessLockStorage processLockStorage;
@@ -56,7 +57,7 @@ public class ChangeSetRunner {
 	 */
 	private Connection executionConnection;
 	
-	public ChangeSetRunner(List<Change> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage, UpdateProcessLockStorage lockStorage) {
+	public ChangeSetRunner(List<ChangeSet> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage, UpdateProcessLockStorage lockStorage) {
 		this.changes = changes;
 		this.connectionProvider = connectionProvider;
 		this.changeStorage = changeStorage;
@@ -77,7 +78,7 @@ public class ChangeSetRunner {
 			executionConnection = connectionProvider.giveConnection();
 			
 			Context context = buildContext(executionConnection);
-			List<Change> updatesToRun = keepChangesToRun(changes, context);
+			List<ChangeSet> updatesToRun = keepChangesToRun(changes, context);
 			ChangeRunner changeRunner = new ChangeRunner(giveDialect(context.getDatabaseSignet()));
 			changeRunner.run(updatesToRun, context);
 		}
@@ -125,8 +126,8 @@ public class ChangeSetRunner {
 	
 	private void assertNonCompliantChanges() {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
-		Map<Change, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
-		Map<ChangeId, Checksum> currentlyStoredChecksums = changeStorage.giveChecksum(Iterables.collectToList(changes, Change::getIdentifier));
+		Map<ChangeSet, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
+		Map<ChangeId, Checksum> currentlyStoredChecksums = changeStorage.giveChecksum(Iterables.collectToList(changes, ChangeSet::getIdentifier));
 		changes.forEach(change -> {
 			Checksum currentlyStoredChecksum = currentlyStoredChecksums.get(change.getIdentifier());
 			if (currentlyStoredChecksum != null) {
@@ -143,7 +144,7 @@ public class ChangeSetRunner {
 		}
 	}
 	
-	private List<Change> keepChangesToRun(List<Change> changes, Context context) {
+	private List<ChangeSet> keepChangesToRun(List<ChangeSet> changes, Context context) {
 		Set<ChangeId> ranIdentifiers = changeStorage.giveRanIdentifiers();
 		return changes.stream()
 				.filter(u -> shouldRun(u, ranIdentifiers, context))
@@ -151,14 +152,14 @@ public class ChangeSetRunner {
 	}
 	
 	/**
-	 * Decides whether a {@link Change} must be run
+	 * Decides whether a {@link ChangeSet} must be run
 	 *
-	 * @param change the {@link Change} to be checked
+	 * @param change the {@link ChangeSet} to be checked
 	 * @param ranIdentifiers the already ran identifiers
 	 * @return true to plan it for running
 	 */
-	protected boolean shouldRun(Change change, Set<ChangeId> ranIdentifiers, Context context) {
-		boolean isAuthorizedToRun = !ranIdentifiers.contains(change.getIdentifier()) || change.shouldAlwaysRun();
+	protected boolean shouldRun(ChangeSet change, Set<ChangeId> ranIdentifiers, Context context) {
+		boolean isAuthorizedToRun = !ranIdentifiers.contains(change.getIdentifier()) || change.alwaysRun();
 		return isAuthorizedToRun && change.shouldRun(context);
 	}
 	
@@ -171,38 +172,46 @@ public class ChangeSetRunner {
 			this.dialect = dialect;
 		}
 		
-		public void run(Iterable<Change> updatesToRun, Context context) throws ExecutionException {
-			for (Change change : updatesToRun) {
-				executionListener.beforeRun(change);
+		public void run(Iterable<ChangeSet> updatesToRun, Context context) throws ExecutionException {
+			for (ChangeSet changes : updatesToRun) {
+				executionListener.beforeRun(changes);
 				try {
 					TransactionSupport.runAtomically(c -> {
-						run(change, context);
-						persistState(change);
+						run(changes, context);
+						persistState(changes);
 					}, executionConnection);
 				} catch (SQLException e) {
-					throw new ExecutionException("Error while running change " + change.getIdentifier(), e);
+					throw new ExecutionException("Error while running change " + changes.getIdentifier(), e);
 				}
-				executionListener.afterRun(change);
+				executionListener.afterRun(changes);
+			}
+		}
+		
+		private void run(ChangeSet changes, Context context) throws SQLException {
+			try {
+				for (Change change : changes.getChanges()) {
+					executionListener.beforeRun(change);
+					run(change, context);
+					executionListener.afterRun(change);
+				}
+			} catch (SQLException e) {
+				throw new SQLException("Error while running change " + changes.getIdentifier(), e);
 			}
 		}
 		
 		private void run(Change change, Context context) throws SQLException {
-			try {
-				if (change instanceof AbstractJavaChange) {
-					((AbstractJavaChange) change).run(context, executionConnection);
+			if (change instanceof AbstractJavaChange) {
+				((AbstractJavaChange) change).run(context, executionConnection);
+			} else {
+				List<String> sqlOrders;
+				if (change instanceof SQLChange) {
+					sqlOrders = ((SQLChange) change).getSqlOrders();
+				} else if (change instanceof SupportedChange) {
+					sqlOrders = Collections.singletonList(dialect.generateScript((SupportedChange) change));
 				} else {
-					List<String> sqlOrders;
-					if (change instanceof SQLChange) {
-						sqlOrders = ((SQLChange) change).getSqlOrders();
-					} else if (change instanceof DDLChange) {
-						sqlOrders = dialect.generateScript((DDLChange) change);
-					} else {
-						throw new NotImplementedException("Change of type " + Reflections.toString(change.getClass()) + " is not supported");
-					}
-					runSqlOrders(sqlOrders, executionConnection);
+					throw new NotImplementedException("Change of type " + Reflections.toString(change.getClass()) + " is not supported");
 				}
-			} catch (SQLException e) {
-				throw new SQLException("Error while running change " + change.getIdentifier(), e);
+				runSqlOrders(sqlOrders, executionConnection);
 			}
 		}
 		
@@ -244,7 +253,7 @@ public class ChangeSetRunner {
 			executionListener.afterRun(sqlOrder, updatedRowCount);
 		}
 		
-		private void persistState(Change change) throws ExecutionException {
+		private void persistState(ChangeSet change) throws ExecutionException {
 			try {
 				changeStorage.persist(new ChangeSignet(change.getIdentifier(), checksumer.buildChecksum(change)));
 			} catch (RuntimeException | OutOfMemoryError e) {
@@ -255,10 +264,10 @@ public class ChangeSetRunner {
 	
 	private static class CachingChangeChecksumer extends ChangeChecksumer {
 		
-		private final Map<Change, Checksum> checksumCache = new HashMap<>(50);
+		private final Map<ChangeSet, Checksum> checksumCache = new HashMap<>(50);
 		
 		@Override
-		public Checksum buildChecksum(Change change) {
+		public Checksum buildChecksum(ChangeSet change) {
 			return checksumCache.computeIfAbsent(change, super::buildChecksum);
 		}
 	}
