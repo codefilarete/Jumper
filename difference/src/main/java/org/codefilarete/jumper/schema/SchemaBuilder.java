@@ -9,13 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.codefilarete.jumper.schema.DDLElement.ColumnMetadata;
-import org.codefilarete.jumper.schema.DDLElement.ForeignKeyMetadata;
-import org.codefilarete.jumper.schema.DDLElement.IndexMetadata;
-import org.codefilarete.jumper.schema.DDLElement.PrimaryKeyMetadata;
-import org.codefilarete.jumper.schema.DDLElement.SequenceMetadata;
-import org.codefilarete.jumper.schema.DDLElement.TableMetadata;
-import org.codefilarete.jumper.schema.DDLElement.ViewMetadata;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Index;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Sequence;
@@ -38,7 +31,7 @@ public class SchemaBuilder {
 	private String tableNamePattern;
 	
 	public SchemaBuilder(DatabaseMetaData databaseMetaData) {
-		this.metadataReader = new MetadataReader(databaseMetaData);
+		this.metadataReader = new DefaultMetadataReader(databaseMetaData);
 	}
 	
 	public SchemaBuilder withCatalog(String catalog) {

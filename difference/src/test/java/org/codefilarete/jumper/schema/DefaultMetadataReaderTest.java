@@ -5,23 +5,18 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Set;
 
-import org.codefilarete.jumper.schema.DDLElement.ColumnMetadata;
-import org.codefilarete.jumper.schema.DDLElement.ForeignKeyMetadata;
-import org.codefilarete.jumper.schema.DDLElement.PrimaryKeyMetadata;
-import org.codefilarete.jumper.schema.DDLElement.ProcedureMetadata;
-import org.codefilarete.jumper.schema.DDLElement.TableMetadata;
 import org.codefilarete.jumper.schema.MetadataReader.TypeInfo;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.junit.jupiter.api.Test;
 
-class MetadataReaderTest {
+class DefaultMetadataReaderTest {
 	
 	@Test
 	void giveTables() throws SQLException {
 		
 		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
-		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
+		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
 		Set<TableMetadata> ddlElements = testInstance.giveTables("integrationTests", null, "%");
 		ddlElements.forEach(t -> {
 			System.out.println(t.getCatalog() + "." + t.getSchema() + "." + t.getName());
@@ -33,7 +28,7 @@ class MetadataReaderTest {
 		
 		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
-		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
+		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
 		Set<ForeignKeyMetadata> ddlElements = testInstance.giveExportedKeys("integrationTests", null, "%");
 		ddlElements.stream().sorted(Comparator.comparing(ForeignKeyMetadata::getName)).forEach(t -> {
 			System.out.println(t);
@@ -45,7 +40,7 @@ class MetadataReaderTest {
 		
 		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
-		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
+		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
 		Set<ForeignKeyMetadata> ddlElements = testInstance.giveImportedKeys("integrationTests", null, "Prescription");
 		ddlElements.stream().sorted(Comparator.comparing(ForeignKeyMetadata::getName)).forEach(t -> {
 			System.out.println(t);
@@ -57,7 +52,7 @@ class MetadataReaderTest {
 		
 		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
-		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
+		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
 		PrimaryKeyMetadata ddlElement = testInstance.givePrimaryKey("integrationTests", null, "Prescription");
 		System.out.println(ddlElement);
 	}
@@ -67,7 +62,7 @@ class MetadataReaderTest {
 		
 		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
-		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
+		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
 		Set<ColumnMetadata> ddlElements = testInstance.giveColumns("integrationTests", null, "Patient");
 		ddlElements.forEach(t -> {
 			System.out.println(t);
@@ -80,7 +75,7 @@ class MetadataReaderTest {
 		
 		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
-		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
+		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
 		Set<TypeInfo> ddlElements = testInstance.giveColumnTypes();
 		ddlElements.forEach(t -> {
 			System.out.println(t);
@@ -93,7 +88,7 @@ class MetadataReaderTest {
 		
 		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
-		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
+		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
 		Set<ProcedureMetadata> ddlElements = testInstance.giveProcedures(null, null, "%");
 		ddlElements.forEach(t -> {
 			System.out.println(t.getName());
