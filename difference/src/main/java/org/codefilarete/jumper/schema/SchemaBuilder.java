@@ -15,6 +15,16 @@ import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Sequence;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table.Column;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.View;
+import org.codefilarete.jumper.schema.metadata.ColumnMetadata;
+import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
+import org.codefilarete.jumper.schema.metadata.ForeignKeyMetadata;
+import org.codefilarete.jumper.schema.metadata.IndexMetadata;
+import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.PrimaryKeyMetadata;
+import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
+import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
+import org.codefilarete.jumper.schema.metadata.TableMetadata;
+import org.codefilarete.jumper.schema.metadata.ViewMetadata;
 import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
@@ -31,7 +41,11 @@ public class SchemaBuilder {
 	private String tableNamePattern;
 	
 	public SchemaBuilder(DatabaseMetaData databaseMetaData) {
-		this.metadataReader = new DefaultMetadataReader(databaseMetaData);
+		this(new DefaultMetadataReader(databaseMetaData));
+	}
+	
+	public SchemaBuilder(MetadataReader metadataReader) {
+		this.metadataReader = metadataReader;
 	}
 	
 	public SchemaBuilder withCatalog(String catalog) {

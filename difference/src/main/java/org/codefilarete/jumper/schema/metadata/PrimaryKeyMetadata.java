@@ -1,6 +1,6 @@
-package org.codefilarete.jumper.schema;
+package org.codefilarete.jumper.schema.metadata;
 
-import org.codefilarete.jumper.schema.MetadataElement.TableNamespaceElementSupport;
+import org.codefilarete.jumper.schema.metadata.MetadataElement.TableNamespaceElementSupport;
 import org.codefilarete.tool.collection.KeepOrderSet;
 
 public class PrimaryKeyMetadata extends TableNamespaceElementSupport implements MetadataElement {

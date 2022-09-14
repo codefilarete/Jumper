@@ -1,6 +1,6 @@
-package org.codefilarete.jumper.schema;
+package org.codefilarete.jumper.schema.metadata;
 
-import org.codefilarete.jumper.schema.MetadataElement.SchemaNamespaceElementSupport;
+import org.codefilarete.jumper.schema.metadata.MetadataElement.SchemaNamespaceElementSupport;
 
 public class TableMetadata extends SchemaNamespaceElementSupport implements MetadataElement {
 	

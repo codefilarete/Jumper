@@ -1,4 +1,4 @@
-package org.codefilarete.jumper.schema;
+package org.codefilarete.jumper.schema.metadata;
 
 /**
  * A marking interface for all elements of a catalog / schema structure, such as Tables, Columns, Indexes, etc

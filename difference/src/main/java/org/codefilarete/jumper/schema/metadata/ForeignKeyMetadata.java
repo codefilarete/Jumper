@@ -1,4 +1,4 @@
-package org.codefilarete.jumper.schema;
+package org.codefilarete.jumper.schema.metadata;
 
 import java.util.Set;
 import java.util.stream.Collectors;

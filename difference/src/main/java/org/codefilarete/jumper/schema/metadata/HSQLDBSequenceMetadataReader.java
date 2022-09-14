@@ -1,4 +1,4 @@
-package org.codefilarete.jumper.schema;
+package org.codefilarete.jumper.schema.metadata;
 
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.codefilarete.jumper.schema.DefaultMetadataReader.ColumnReader;
+import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader.ColumnReader;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;

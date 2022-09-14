@@ -1,4 +1,4 @@
-package org.codefilarete.jumper.schema;
+package org.codefilarete.jumper.schema.metadata;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;

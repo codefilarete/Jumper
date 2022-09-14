@@ -1,9 +1,9 @@
-package org.codefilarete.jumper.schema;
+package org.codefilarete.jumper.schema.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codefilarete.jumper.schema.MetadataElement.TableNamespaceElementSupport;
+import org.codefilarete.jumper.schema.metadata.MetadataElement.TableNamespaceElementSupport;
 import org.codefilarete.tool.Duo;
 
 public class IndexMetadata extends TableNamespaceElementSupport implements MetadataElement {
