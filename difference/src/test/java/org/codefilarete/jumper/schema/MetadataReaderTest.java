@@ -13,16 +13,13 @@ import org.codefilarete.jumper.schema.DDLElement.TableMetadata;
 import org.codefilarete.jumper.schema.MetadataReader.TypeInfo;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.junit.jupiter.api.Test;
-import org.mariadb.jdbc.MariaDbDataSource;
 
 class MetadataReaderTest {
 	
 	@Test
 	void giveTables() throws SQLException {
 		
-		MariaDbDataSource dataSource = new MariaDbDataSource("jdbc:mariadb://localhost:" + 3307 + "/" + "integrationTests");
-		dataSource.setUser("root");
-		dataSource.setPassword("root");
+		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
 		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
 		Set<TableMetadata> ddlElements = testInstance.giveTables("integrationTests", null, "%");
@@ -34,9 +31,7 @@ class MetadataReaderTest {
 	@Test
 	void giveExportedKeys() throws SQLException {
 		
-		MariaDbDataSource dataSource = new MariaDbDataSource("jdbc:mariadb://localhost:" + 3307 + "/" + "integrationTests");
-		dataSource.setUser("root");
-		dataSource.setPassword("root");
+		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
 		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
 		Set<ForeignKeyMetadata> ddlElements = testInstance.giveExportedKeys("integrationTests", null, "%");
@@ -48,9 +43,7 @@ class MetadataReaderTest {
 	@Test
 	void giveImportedKeys() throws SQLException {
 		
-		MariaDbDataSource dataSource = new MariaDbDataSource("jdbc:mariadb://localhost:" + 3307 + "/" + "integrationTests");
-		dataSource.setUser("root");
-		dataSource.setPassword("root");
+		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
 		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
 		Set<ForeignKeyMetadata> ddlElements = testInstance.giveImportedKeys("integrationTests", null, "Prescription");
@@ -62,9 +55,7 @@ class MetadataReaderTest {
 	@Test
 	void givePrimaryKeys() throws SQLException {
 		
-		MariaDbDataSource dataSource = new MariaDbDataSource("jdbc:mariadb://localhost:" + 3307 + "/" + "integrationTests");
-		dataSource.setUser("root");
-		dataSource.setPassword("root");
+		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
 		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
 		PrimaryKeyMetadata ddlElement = testInstance.givePrimaryKey("integrationTests", null, "Prescription");
@@ -74,9 +65,7 @@ class MetadataReaderTest {
 	@Test
 	void giveColumns() throws SQLException {
 		
-		MariaDbDataSource dataSource = new MariaDbDataSource("jdbc:mariadb://localhost:" + 3307 + "/" + "integrationTests");
-		dataSource.setUser("root");
-		dataSource.setPassword("root");
+		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
 		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
 		Set<ColumnMetadata> ddlElements = testInstance.giveColumns("integrationTests", null, "Patient");
@@ -89,9 +78,7 @@ class MetadataReaderTest {
 	@Test
 	void giveColumnTypes() throws SQLException {
 		
-		MariaDbDataSource dataSource = new MariaDbDataSource("jdbc:mariadb://localhost:" + 3307 + "/" + "integrationTests");
-		dataSource.setUser("root");
-		dataSource.setPassword("root");
+		DataSource dataSource = new HSQLDBInMemoryDataSource();
 		
 		MetadataReader testInstance = new MetadataReader(dataSource.getConnection().getMetaData());
 		Set<TypeInfo> ddlElements = testInstance.giveColumnTypes();

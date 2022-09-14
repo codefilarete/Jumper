@@ -11,54 +11,15 @@
 	</parent>
 
 	<artifactId>core</artifactId>
-	<name>jumper-core</name>
 
 	<properties>
-		<encoding>UTF-8</encoding>
-		<junit.version>5.9.0</junit.version>
-		<slf4j-api.version>1.7.12</slf4j-api.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
-		<mockito.version>4.6.1</mockito.version>
 		<tools.version>1.0.2-SNAPSHOT</tools.version>
 		<stalactite.version>1.0.1-SNAPSHOT</stalactite.version>
 		<reflection.version>1.0.1-SNAPSHOT</reflection.version>
-		<assertj.version>3.23.1</assertj.version>
 	</properties>
 	
 	<dependencies>
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<version>${hsqldb.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4j-api.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>${mockito.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<version>${assertj.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.codefilarete</groupId>
-			<artifactId>tools</artifactId>
-			<version>${tools.version}</version>
-		</dependency>
 		<dependency>
 			<groupId>org.codefilarete</groupId>
 			<artifactId>reflection</artifactId>
@@ -70,23 +31,15 @@
 			<version>${stalactite.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>${hsqldb.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.codefilarete.stalactite</groupId>
 			<artifactId>core-hsqldb-adapter</artifactId>
 			<version>${stalactite.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.codefilarete.stalactite</groupId>
-			<artifactId>sql-hsqldb-adapter</artifactId>
-			<version>${stalactite.version}</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.codefilarete.stalactite</groupId>
-			<artifactId>sql-mariadb-adapter</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
-			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -96,24 +49,12 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.codefilarete.stalactite</groupId>
+			<artifactId>sql-hsqldb-adapter</artifactId>
+			<version>${stalactite.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
-	
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
-				<configuration>
-					<encoding>${encoding}</encoding>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M4</version>
-			</plugin>
-		</plugins>
-	</build>
 </project>
