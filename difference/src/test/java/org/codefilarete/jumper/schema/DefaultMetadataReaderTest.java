@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Set;
 
-import org.codefilarete.jumper.schema.MetadataReader.TypeInfo;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.junit.jupiter.api.Test;
 
@@ -67,19 +66,6 @@ class DefaultMetadataReaderTest {
 		ddlElements.forEach(t -> {
 			System.out.println(t);
 //			System.out.println(t.getName() + ": " + t.getSqlType() + Nullable.nullable(t.getSize()).map(s -> "(" + s + ")").getOr(""));
-		});
-	}
-	
-	@Test
-	void giveColumnTypes() throws SQLException {
-		
-		DataSource dataSource = new HSQLDBInMemoryDataSource();
-		
-		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
-		Set<TypeInfo> ddlElements = testInstance.giveColumnTypes();
-		ddlElements.forEach(t -> {
-			System.out.println(t);
-//			System.out.println(t.getName() + ": " + t.getType());
 		});
 	}
 	

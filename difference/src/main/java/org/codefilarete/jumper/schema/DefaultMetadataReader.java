@@ -143,30 +143,6 @@ public class DefaultMetadataReader implements MetadataReader {
 	}
 	
 	@Override
-	public Set<TypeInfo> giveColumnTypes() {
-		try (ResultSet tableResultSet = metaData.getTypeInfo()) {
-			ResultSetIterator<TypeInfo> resultSetIterator = new ResultSetIterator<TypeInfo>(tableResultSet) {
-				@Override
-				public TypeInfo convert(ResultSet resultSet) {
-					TypeInfo result = new TypeInfo(
-							TypeInfoMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet),
-							TypeInfoMetaDataPseudoTable.INSTANCE.type.giveValue(resultSet));
-					TypeInfoMetaDataPseudoTable.INSTANCE.createParams.apply(resultSet, result::setCreateParams);
-					TypeInfoMetaDataPseudoTable.INSTANCE.literalPrefix.apply(resultSet, result::setLiteralPrefix);
-					TypeInfoMetaDataPseudoTable.INSTANCE.literalSuffix.apply(resultSet, result::setLiteralSuffix);
-					TypeInfoMetaDataPseudoTable.INSTANCE.precision.apply(resultSet, result::setPrecision);
-					TypeInfoMetaDataPseudoTable.INSTANCE.nullable.apply(resultSet, result::setNullable);
-					TypeInfoMetaDataPseudoTable.INSTANCE.autoIncrementable.apply(resultSet, result::setAutoIncrementable);
-					return result;
-				}
-			};
-			return new HashSet<>(resultSetIterator.convert());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	@Override
 	public Set<TableMetadata> giveTables(String catalog, String schema, String tableNamePattern) {
 		try (ResultSet tableResultSet = metaData.getTables(catalog, schema, tableNamePattern, new String[] { "TABLE" })) {
 			ResultSetIterator<TableMetadata> resultSetIterator = new ResultSetIterator<TableMetadata>(tableResultSet) {
