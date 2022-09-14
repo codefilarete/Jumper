@@ -18,6 +18,7 @@ import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
 import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader;
 import org.codefilarete.tool.Nullable;
+import org.codefilarete.tool.bean.Objects;
 
 public class DefaultMetadataReader implements MetadataReader {
 	
@@ -201,19 +202,9 @@ public class DefaultMetadataReader implements MetadataReader {
 						IndexMetaDataPseudoTable.INSTANCE.nonUnique.apply(resultSet, nonUnique -> newInstance.setUnique(!nonUnique));
 						return newInstance;
 					});
-					String a_d = IndexMetaDataPseudoTable.INSTANCE.ascOrDesc.giveValue(resultSet);
-					Boolean ascOrDesc;
-					switch (a_d) {
-						case "A":
-							ascOrDesc = true; break;
-						case "D":
-							ascOrDesc = false; break;
-						default:
-							ascOrDesc = null; break;
-					}
 					result.addColumn(
 							IndexMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet),
-							ascOrDesc
+							IndexMetaDataPseudoTable.INSTANCE.ascOrDesc.giveValue(resultSet)
 					);
 					return result;
 				}
@@ -230,7 +221,7 @@ public class DefaultMetadataReader implements MetadataReader {
 			ResultSetIterator<ProcedureMetadata> resultSetIterator = new ResultSetIterator<ProcedureMetadata>(tableResultSet) {
 				@Override
 				public ProcedureMetadata convert(ResultSet resultSet) {
-					ProcedureMetadata newInstance = new ProcedureMetadata(
+					return new ProcedureMetadata(
 							ProcedureMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
 							ProcedureMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
 							ProcedureMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet),
@@ -238,7 +229,6 @@ public class DefaultMetadataReader implements MetadataReader {
 							ProcedureMetaDataPseudoTable.INSTANCE.procedureType.giveValue(resultSet),
 							ProcedureMetaDataPseudoTable.INSTANCE.specificName.giveValue(resultSet)
 					);
-					return newInstance;
 				}
 			};
 			return new HashSet<>(resultSetIterator.convert());
@@ -251,21 +241,21 @@ public class DefaultMetadataReader implements MetadataReader {
 	 * Pseudo table representing columns given by {@link DatabaseMetaData#getProcedures(String, String, String)}
 	 * @author Guillaume Mary
 	 */
-	static class ProcedureMetaDataPseudoTable extends Table<ProcedureMetaDataPseudoTable> {
+	public static class ProcedureMetaDataPseudoTable extends Table<ProcedureMetaDataPseudoTable> {
 		
-		static final ProcedureMetaDataPseudoTable INSTANCE = new ProcedureMetaDataPseudoTable();
+		public static final ProcedureMetaDataPseudoTable INSTANCE = new ProcedureMetaDataPseudoTable();
 		
-		/** procedure catalog (may be null) */
-		private final ColumnReader<String> catalog = new ColumnReader<>(addColumn("PROCEDURE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Procedure catalog (may be null) */
+		public final ColumnReader<String> catalog = new ColumnReader<>(addColumn("PROCEDURE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** procedure schema (may be null) */
-		private final ColumnReader<String> schema = new ColumnReader<>(addColumn("PROCEDURE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Procedure schema (may be null) */
+		public final ColumnReader<String> schema = new ColumnReader<>(addColumn("PROCEDURE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** procedure name */
-		private final ColumnReader<String> name = new ColumnReader<>(addColumn("PROCEDURE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Procedure name */
+		public final ColumnReader<String> name = new ColumnReader<>(addColumn("PROCEDURE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** explanatory comment on the procedure */
-		private final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Explanatory comment on the procedure */
+		public final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/**
 		 * Kind of procedure:
@@ -273,10 +263,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		 * - {@link DatabaseMetaData#procedureNoResult} : Does not return a return value
 		 * - {@link DatabaseMetaData#procedureReturnsResult} : Returns a return value
 		 */
-		private final ColumnReader<Short> procedureType = new ColumnReader<>(addColumn("PROCEDURE_TYPE", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> procedureType = new ColumnReader<>(addColumn("PROCEDURE_TYPE", short.class), ResultSet::getShort);
 		
 		/** The name which uniquely identifies this procedure within its schema */
-		private final ColumnReader<String> specificName = new ColumnReader<>(addColumn("SPECIFIC_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> specificName = new ColumnReader<>(addColumn("SPECIFIC_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		public ProcedureMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getProcedures() ResultSet
@@ -288,54 +278,73 @@ public class DefaultMetadataReader implements MetadataReader {
 	 * Pseudo table representing columns given by {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)}
 	 * @author Guillaume Mary
 	 */
-	static class IndexMetaDataPseudoTable extends Table<IndexMetaDataPseudoTable> {
+	public static class IndexMetaDataPseudoTable extends Table<IndexMetaDataPseudoTable> {
 		
-		static final IndexMetaDataPseudoTable INSTANCE = new IndexMetaDataPseudoTable();
+		public static final IndexMetaDataPseudoTable INSTANCE = new IndexMetaDataPseudoTable();
 		
-		/** table catalog (may be null) */
-		private final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Table catalog (may be null) */
+		public final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** table schema (may be null) */
-		private final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Table schema (may be null) */
+		public final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** table name */
-		private final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Table name */
+		public final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** boolean => Can index values be non-unique. false when TYPE is tableIndexStatistic */
-		private final ColumnReader<Boolean> nonUnique = new ColumnReader<>(addColumn("NON_UNIQUE", boolean.class), DefaultResultSetReaders.BOOLEAN_PRIMITIVE_READER);
+		/** Can index values be non-unique. false when TYPE is tableIndexStatistic */
+		public final ColumnReader<Boolean> nonUnique = new ColumnReader<>(addColumn("NON_UNIQUE", boolean.class), DefaultResultSetReaders.BOOLEAN_PRIMITIVE_READER);
 		
-		/** index catalog (may be null); null when TYPE is tableIndexStatistic */
-		private final ColumnReader<String> indexQualifier = new ColumnReader<>(addColumn("INDEX_QUALIFIER", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Index catalog (may be null); null when TYPE is tableIndexStatistic */
+		public final ColumnReader<String> indexQualifier = new ColumnReader<>(addColumn("INDEX_QUALIFIER", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** index name; null when TYPE is tableIndexStatistic */
-		private final ColumnReader<String> indexName = new ColumnReader<>(addColumn("INDEX_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Index name; null when TYPE is tableIndexStatistic */
+		public final ColumnReader<String> indexName = new ColumnReader<>(addColumn("INDEX_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/**
-		 * TYPE short => index type:
+		 * Index type:
 		 * - {@link DatabaseMetaData#tableIndexStatistic} : this identifies table statistics that are returned in conjunction with a table's index descriptions
 		 * - {@link DatabaseMetaData#tableIndexClustered} : this is a clustered index
 		 * - {@link DatabaseMetaData#tableIndexHashed} : this is a hashed index
 		 * - {@link DatabaseMetaData#tableIndexOther} : this is some other style of index
 		 */
-		private final ColumnReader<Short> type = new ColumnReader<>(addColumn("TYPE", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> type = new ColumnReader<>(addColumn("TYPE", short.class), ResultSet::getShort);
 
-		/** column sequence number within index; zero when TYPE is tableIndexStatistic */
-		private final ColumnReader<Short> ordinalPosition = new ColumnReader<>(addColumn("ORDINAL_POSITION", short.class), ResultSet::getShort);
+		/** Column sequence number within index; zero when TYPE is tableIndexStatistic */
+		public final ColumnReader<Short> ordinalPosition = new ColumnReader<>(addColumn("ORDINAL_POSITION", short.class), ResultSet::getShort);
 		
-		/** column name; null when TYPE is tableIndexStatistic */
-		private final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Column name; null when TYPE is tableIndexStatistic */
+		public final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 
-		/** column sort sequence, "A" => ascending, "D" => descending, may be null if sort sequence is not supported; null when TYPE is tableIndexStatistic */
-		private final ColumnReader<String> ascOrDesc = new ColumnReader<>(addColumn("ASC_OR_DESC", String.class), DefaultResultSetReaders.STRING_READER);
+		/**
+		 * Column sort sequence, originally :
+		 * - "A" => ascending
+		 * - "D" => descending
+		 * - may be null if sort sequence is not supported
+		 * - null when TYPE is {@link DatabaseMetaData#tableIndexStatistic}
+		 * Transformed as Boolean :
+		 * - true for ascending
+		 * - false for descending
+		 * - null for original null cases
+		 */
+		public final ColumnReader<Boolean> ascOrDesc = new ColumnReader<>(addColumn("ASC_OR_DESC", Boolean.class), (rs, col) -> {
+			switch (Objects.preventNull(rs.getString(col))) {
+				case "A":
+					return true;
+				case "D":
+					return false;
+				default:
+					return null;
+			}
+		});
 
-		/** When TYPE is tableIndexStatistic, then this is the number of rows in the table; otherwise, it is the number of unique values in the index. */
-		private final ColumnReader<Long> cardinality = new ColumnReader<>(addColumn("CARDINALITY", long.class), DefaultResultSetReaders.LONG_READER);
+		/** When TYPE is {@link DatabaseMetaData#tableIndexStatistic}, then this is the number of rows in the table; otherwise, it is the number of unique values in the index. */
+		public final ColumnReader<Long> cardinality = new ColumnReader<>(addColumn("CARDINALITY", long.class), DefaultResultSetReaders.LONG_READER);
 		
-		/** When TYPE is tableIndexStatisic then this is the number of pages used for the table, otherwise it is the number of pages used for the current index. */
-		private final ColumnReader<Long> pages = new ColumnReader<>(addColumn("PAGES", long.class), DefaultResultSetReaders.LONG_READER);
+		/** When TYPE is {@link DatabaseMetaData#tableIndexStatistic}, then this is the number of pages used for the table, otherwise it is the number of pages used for the current index. */
+		public final ColumnReader<Long> pages = new ColumnReader<>(addColumn("PAGES", long.class), DefaultResultSetReaders.LONG_READER);
 		
 		/** Filter condition, if any. (may be null) */
-		private final ColumnReader<String> filterCondition = new ColumnReader<>(addColumn("FILTER_CONDITION", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> filterCondition = new ColumnReader<>(addColumn("FILTER_CONDITION", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		public IndexMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getIndexInfo() ResultSet
@@ -347,48 +356,45 @@ public class DefaultMetadataReader implements MetadataReader {
 	 * Pseudo table representing columns given by {@link DatabaseMetaData#getTables(String, String, String, String[])}
 	 * @author Guillaume Mary
 	 */
-	static class TableMetaDataPseudoTable extends Table<TableMetaDataPseudoTable> {
+	public static class TableMetaDataPseudoTable extends Table<TableMetaDataPseudoTable> {
 		
-		static final TableMetaDataPseudoTable INSTANCE = new TableMetaDataPseudoTable();
+		public static final TableMetaDataPseudoTable INSTANCE = new TableMetaDataPseudoTable();
 		
-		private enum Generation {
+		public enum Generation {
 			SYSTEM,
 			USER,
 			DERIVED;
 		}
 		
-		/** table catalog (may be null) */
-		private final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Table catalog (may be null) */
+		public final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** table schema (may be null) */
-		private final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Table schema (may be null) */
+		public final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/** TABLE_NAME String => table name */
-		private final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Table name */
+		public final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> tableType = new ColumnReader<>(addColumn("TABLE_TYPE", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Table type. Typical types are "TABLE", "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM". */
+		public final ColumnReader<String> tableType = new ColumnReader<>(addColumn("TABLE_TYPE", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		/**
-		 * Explanatory comment on the table
-		 */
-		private final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
-		/**
-		 * Types catalog
-		 */
-		private final ColumnReader<String> catalogType = new ColumnReader<>(addColumn("TYPE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
-		/**
-		 * Types schema
-		 */
-		private final ColumnReader<String> schemaType = new ColumnReader<>(addColumn("TYPE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
-		private final ColumnReader<String> typeName = new ColumnReader<>(addColumn("TYPE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
-		/**
-		 * Name of the designated "identifier" column of a typed table
-		 */
-		private final ColumnReader<String> selfReferencingColName = new ColumnReader<>(addColumn("SELF_REFERENCING_COL_NAME", String.class), DefaultResultSetReaders.STRING_READER);
-		/**
-		 * Specifies how values in SELF_REFERENCING_COL_NAME are created
-		 */
-		private final ColumnReader<Generation> refGeneration = new ColumnReader<>(addColumn("REF_GENERATION", Generation.class),
+		/** Explanatory comment on the table */
+		public final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Types catalog */
+		public final ColumnReader<String> catalogType = new ColumnReader<>(addColumn("TYPE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Types schema */
+		public final ColumnReader<String> schemaType = new ColumnReader<>(addColumn("TYPE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Type name (may be null) */
+		public final ColumnReader<String> typeName = new ColumnReader<>(addColumn("TYPE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Name of the designated "identifier" column of a typed table */
+		public final ColumnReader<String> selfReferencingColName = new ColumnReader<>(addColumn("SELF_REFERENCING_COL_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Specifies how values in SELF_REFERENCING_COL_NAME are created */
+		public final ColumnReader<Generation> refGeneration = new ColumnReader<>(addColumn("REF_GENERATION", Generation.class),
 				(resultSet, columnName) -> Generation.valueOf(DefaultResultSetReaders.STRING_READER.get(resultSet, columnName)));
 		
 		public TableMetaDataPseudoTable() {
@@ -398,129 +404,74 @@ public class DefaultMetadataReader implements MetadataReader {
 	}
 	
 	/**
-	 * Pseudo table representing columns given by {@link DatabaseMetaData#getTypeInfo()}
-	 * @author Guillaume Mary
-	 */
-	static class TypeInfoMetaDataPseudoTable extends Table<TypeInfoMetaDataPseudoTable> {
-		
-		static final TypeInfoMetaDataPseudoTable INSTANCE = new TypeInfoMetaDataPseudoTable();
-
-//		TYPE_NAME String => Type name
-//		DATA_TYPE int => SQL data type from java.sql.Types
-//		PRECISION int => maximum precision
-//		LITERAL_PREFIX String => prefix used to quote a literal (may be null)
-//		LITERAL_SUFFIX String => suffix used to quote a literal (may be null)
-//		CREATE_PARAMS String => parameters used in creating the type (may be null)
-//		NULLABLE short => can you use NULL for this type
-//				typeNoNulls - does not allow NULL values
-//				typeNullable - allows NULL values
-//				typeNullableUnknown - nullability unknown
-//		CASE_SENSITIVE boolean=> is it case sensitive.
-//		SEARCHABLE short => can you use "WHERE" based on this type:
-//				typePredNone - No support
-//				typePredChar - Only supported with WHERE .. LIKE
-//				typePredBasic - Supported except for WHERE .. LIKE
-//				typeSearchable - Supported for all WHERE ..
-//		UNSIGNED_ATTRIBUTE boolean => is it unsigned.
-//		FIXED_PREC_SCALE boolean => can it be a money value.
-//		AUTO_INCREMENT boolean => can it be used for an auto-increment value.
-//		LOCAL_TYPE_NAME String => localized version of type name (may be null)
-//		MINIMUM_SCALE short => minimum scale supported
-//		MAXIMUM_SCALE short => maximum scale supported
-//		SQL_DATA_TYPE int => unused
-//		SQL_DATETIME_SUB int => unused
-//		NUM_PREC_RADIX int => usually 2 or 10
-		
-		/** Type name */
-		private final ColumnReader<String> name = new ColumnReader<>(addColumn("TYPE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
-		
-		/** SQL data type from {@link java.sql.Types} */
-		private final ColumnReader<Integer> type = new ColumnReader<>(addColumn("DATA_TYPE", int.class), DefaultResultSetReaders.INTEGER_PRIMITIVE_READER);
-		
-		/** maximum precision */
-		private final ColumnReader<Integer> precision = new ColumnReader<>(addColumn("PRECISION", int.class), DefaultResultSetReaders.INTEGER_PRIMITIVE_READER);
-		
-		/** prefix used to quote a literal (may be null) */
-		private final ColumnReader<String> literalPrefix = new ColumnReader<>(addColumn("LITERAL_PREFIX", String.class), DefaultResultSetReaders.STRING_READER);
-		
-		/** suffix used to quote a literal (may be null) */
-		private final ColumnReader<String> literalSuffix = new ColumnReader<>(addColumn("LITERAL_SUFFIX", String.class), DefaultResultSetReaders.STRING_READER);
-		
-		/** parameters used in creating the type (may be null) */
-		private final ColumnReader<String> createParams = new ColumnReader<>(addColumn("CREATE_PARAMS", String.class), DefaultResultSetReaders.STRING_READER);
-		
-		/**
-		 * an you use NULL for this type, possible values :
-		 * - {@link DatabaseMetaData#typeNoNulls}
-		 * - {@link DatabaseMetaData#typeNullable}
-		 * - {@link DatabaseMetaData#typeNullableUnknown}
-		 */
-		private final ColumnReader<Boolean> nullable = new ColumnReader<>(addColumn("NULLABLE", boolean.class), (rs, col) -> rs.getShort(col) == DatabaseMetaData.typeNullable);
-		
-		/** can it be used for an auto-increment value */
-		private final ColumnReader<Boolean> autoIncrementable = new ColumnReader<>(addColumn("AUTO_INCREMENT", boolean.class), DefaultResultSetReaders.BOOLEAN_PRIMITIVE_READER);
-		
-		public TypeInfoMetaDataPseudoTable() {
-			// This table has no real name, it's made to map DatabaseMetaData.getTypeInfo() ResultSet
-			super("TypeInfoMetaData");
-		}
-	}
-	
-	/**
 	 * Pseudo table representing columns given by {@link DatabaseMetaData#getExportedKeys(String, String, String)}
 	 * @author Guillaume Mary
 	 */
-	static class ExportedKeysMetaDataPseudoTable extends Table<ExportedKeysMetaDataPseudoTable> {
+	public static class ExportedKeysMetaDataPseudoTable extends Table<ExportedKeysMetaDataPseudoTable> {
 		
-		// PKTABLE_CAT String => parent key table catalog (may be null)
-		// PKTABLE_SCHEM String => parent key table schema (may be null)
-		// PKTABLE_NAME String => parent key table name
-		// PKCOLUMN_NAME String => parent key column name
-		// FKTABLE_CAT String => foreign key table catalog (may be null) being exported (may be null)
-		// FKTABLE_SCHEM String => foreign key table schema (may be null) being exported (may be null)
-		// FKTABLE_NAME String => foreign key table name being exported
-		// FKCOLUMN_NAME String => foreign key column name being exported
-		// KEY_SEQ short => sequence number within foreign key( a value of 1 represents the first column of the foreign key, a value of 2 would represent the second column within the foreign key).
-		// UPDATE_RULE short => What happens to foreign key when parent key is updated:
-		// 	importedNoAction - do not allow update of parent key if it has been imported
-		// 	importedKeyCascade - change imported key to agree with parent key update
-		// 	importedKeySetNull - change imported key to NULL if its parent key has been updated
-		// 	importedKeySetDefault - change imported key to default values if its parent key has been updated
-		// 	importedKeyRestrict - same as importedKeyNoAction (for ODBC 2.x compatibility)
-		// DELETE_RULE short => What happens to the foreign key when parent key is deleted.
-		// 	importedKeyNoAction - do not allow delete of parent key if it has been imported
-		// 	importedKeyCascade - delete rows that import a deleted key
-		// 	importedKeySetNull - change imported key to NULL if its primary key has been deleted
-		// 	importedKeyRestrict - same as importedKeyNoAction (for ODBC 2.x compatibility)
-		// 	importedKeySetDefault - change imported key to default if its parent key has been deleted
-		// FK_NAME String => foreign key name (may be null)
-		// PK_NAME String => parent key name (may be null)
-		// DEFERRABILITY short => can the evaluation of foreign key constraints be deferred until commit
-		// 	importedKeyInitiallyDeferred - see SQL92 for definition
-		// 	importedKeyInitiallyImmediate - see SQL92 for definition
-		// 	importedKeyNotDeferrable - see SQL92 for definition
+		public static final ExportedKeysMetaDataPseudoTable INSTANCE = new ExportedKeysMetaDataPseudoTable();
 		
-		static final ExportedKeysMetaDataPseudoTable INSTANCE = new ExportedKeysMetaDataPseudoTable();
+		/** Parent key table catalog (may be null) */
+		public final ColumnReader<String> pkCatalog = new ColumnReader<>(addColumn("PKTABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> pkCatalog = new ColumnReader<>(addColumn("PKTABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Parent key table schema (may be null) */
+		public final ColumnReader<String> pkSchema = new ColumnReader<>(addColumn("PKTABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> pkSchema = new ColumnReader<>(addColumn("PKTABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Parent key table name */
+		public final ColumnReader<String> pkTableName = new ColumnReader<>(addColumn("PKTABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> pkTableName = new ColumnReader<>(addColumn("PKTABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Parent key column name */
+		public final ColumnReader<String> pkColumnName = new ColumnReader<>(addColumn("PKCOLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> pkColumnName = new ColumnReader<>(addColumn("PKCOLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Foreign key table catalog (may be null) being exported (may be null) */
+		public final ColumnReader<String> fkCatalog = new ColumnReader<>(addColumn("FKTABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> fkCatalog = new ColumnReader<>(addColumn("FKTABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Foreign key table schema (may be null) being exported (may be null) */
+		public final ColumnReader<String> fkSchema = new ColumnReader<>(addColumn("FKTABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> fkSchema = new ColumnReader<>(addColumn("FKTABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Foreign key table name being exported */
+		public final ColumnReader<String> fkTableName = new ColumnReader<>(addColumn("FKTABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> fkTableName = new ColumnReader<>(addColumn("FKTABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Foreign key column name being exported */
+		public final ColumnReader<String> fkColumnName = new ColumnReader<>(addColumn("FKCOLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> fkColumnName = new ColumnReader<>(addColumn("FKCOLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/** Sequence number within foreign key( a value of 1 represents the first column of the foreign key, a value of 2 would represent the second column within the foreign key). */
+		public final ColumnReader<Short> sequence = new ColumnReader<>(addColumn("KEY_SEQ", short.class), ResultSet::getShort);
 		
-		private final ColumnReader<String> fkName = new ColumnReader<>(addColumn("FK_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/**
+		 * What happens to foreign key when parent key is updated:
+		 * - {@link DatabaseMetaData#importedKeyNoAction} : do not allow update of parent key if it has been imported
+		 * - {@link DatabaseMetaData#importedKeyCascade} : change imported key to agree with parent key update
+		 * - {@link DatabaseMetaData#importedKeySetNull} : change imported key to NULL if its parent key has been updated
+		 * - {@link DatabaseMetaData#importedKeySetDefault} : change imported key to default values if its parent key has been updated
+		 * - {@link DatabaseMetaData#importedKeyRestrict} : same as {@link DatabaseMetaData#importedKeyNoAction} (for ODBC 2.x compatibility)
+		 */
+		public final ColumnReader<Short> updateRule = new ColumnReader<>(addColumn("UPDATE_RULE", short.class), ResultSet::getShort);
 		
-		private final ColumnReader<String> pkName = new ColumnReader<>(addColumn("PK_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		/**
+		 * What happens to the foreign key when parent key is deleted:
+		 * - {@link DatabaseMetaData#importedKeyNoAction} : do not allow delete of parent key if it has been imported
+		 * - {@link DatabaseMetaData#importedKeyCascade} : delete rows that import a deleted key
+		 * - {@link DatabaseMetaData#importedKeySetNull} : change imported key to NULL if its primary key has been deleted
+		 * - {@link DatabaseMetaData#importedKeySetDefault} : change imported key to default if its parent key has been deleted
+		 * - {@link DatabaseMetaData#importedKeyRestrict} : same as {@link DatabaseMetaData#importedKeyNoAction} (for ODBC 2.x compatibility)
+		 */
+		public final ColumnReader<Short> deleteRule = new ColumnReader<>(addColumn("DELETE_RULE", short.class), ResultSet::getShort);
+		
+		
+		/** Foreign key name (may be null) */
+		public final ColumnReader<String> fkName = new ColumnReader<>(addColumn("FK_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Parent key name (may be null) */
+		public final ColumnReader<String> pkName = new ColumnReader<>(addColumn("PK_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/**
+		 * Can the evaluation of foreign key constraints be deferred until commit:
+		 * - {@link DatabaseMetaData#importedKeyInitiallyDeferred} : see SQL92 for definition
+		 * - {@link DatabaseMetaData#importedKeyInitiallyImmediate} : see SQL92 for definition
+		 * - {@link DatabaseMetaData#importedKeyNotDeferrable} : see SQL92 for definition
+		 */
+		public final ColumnReader<Short> deferrability = new ColumnReader<>(addColumn("DEFERRABILITY", short.class), ResultSet::getShort);
 		
 		public ExportedKeysMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getExportedKeys() or DatabaseMetaData.getImportedKeys() ResultSet
@@ -532,30 +483,30 @@ public class DefaultMetadataReader implements MetadataReader {
 	 * Pseudo table representing columns given by {@link DatabaseMetaData#getPrimaryKeys(String, String, String)}
 	 * @author Guillaume Mary
 	 */
-	static class PrimaryKeysMetaDataPseudoTable extends Table<PrimaryKeysMetaDataPseudoTable> {
+	public static class PrimaryKeysMetaDataPseudoTable extends Table<PrimaryKeysMetaDataPseudoTable> {
 		
-		static final PrimaryKeysMetaDataPseudoTable INSTANCE = new PrimaryKeysMetaDataPseudoTable();
+		public static final PrimaryKeysMetaDataPseudoTable INSTANCE = new PrimaryKeysMetaDataPseudoTable();
 		
 		/** table catalog (may be null) */
-		private final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** table schema (may be null) */
-		private final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** table name */
-		private final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** column name */
-		private final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/**
 		 * sequence number within primary key( a value of 1 represents the first column of the primary key,
 		 * a value of 2 would represent the second column within the primary key).
 		 */
-		private final ColumnReader<String> columnIndex = new ColumnReader<>(addColumn("KEY_SEQ", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> columnIndex = new ColumnReader<>(addColumn("KEY_SEQ", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** primary key name (may be null) */
-		private final ColumnReader<String> name = new ColumnReader<>(addColumn("PK_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> name = new ColumnReader<>(addColumn("PK_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		
 		public PrimaryKeysMetaDataPseudoTable() {
@@ -568,43 +519,23 @@ public class DefaultMetadataReader implements MetadataReader {
 	 * Pseudo table representing columns given by {@link DatabaseMetaData#getColumns(String, String, String, String)}
 	 * @author Guillaume Mary
 	 */
-	static class SequenceMetaDataPseudoTable extends Table<SequenceMetaDataPseudoTable> {
+	public static class ColumnMetaDataPseudoTable extends Table<ColumnMetaDataPseudoTable> {
 		
-		static final SequenceMetaDataPseudoTable INSTANCE = new SequenceMetaDataPseudoTable();
+		public static final ColumnMetaDataPseudoTable INSTANCE = new ColumnMetaDataPseudoTable();
 		
-		private final ColumnReader<String> catalog = new ColumnReader<>(addColumn("SEQUENCE_CATALOG", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> schema = new ColumnReader<>(addColumn("SEQUENCE_SCHEMA", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		private final ColumnReader<String> name = new ColumnReader<>(addColumn("SEQUENCE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
-		public SequenceMetaDataPseudoTable() {
-			// This table has no real name, it's made to map query on information_schema to retrieve views
-			super("SequenceMetaData");
-		}
-	}
-	
-	/**
-	 * Pseudo table representing columns given by {@link DatabaseMetaData#getColumns(String, String, String, String)}
-	 * @author Guillaume Mary
-	 */
-	static class ColumnMetaDataPseudoTable extends Table<ColumnMetaDataPseudoTable> {
-		
-		static final ColumnMetaDataPseudoTable INSTANCE = new ColumnMetaDataPseudoTable();
-		
-		private final ColumnReader<String> catalog = new ColumnReader<>(addColumn("TABLE_CAT", String.class), DefaultResultSetReaders.STRING_READER);
-		
-		private final ColumnReader<String> schema = new ColumnReader<>(addColumn("TABLE_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
-		
-		private final ColumnReader<String> tableName = new ColumnReader<>(addColumn("TABLE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
-		
-		private final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** SQL type from {@link java.sql.Types} */
-		private final ColumnReader<Integer> type = new ColumnReader<>(addColumn("DATA_TYPE", int.class), DefaultResultSetReaders.INTEGER_PRIMITIVE_READER);
+		public final ColumnReader<Integer> type = new ColumnReader<>(addColumn("DATA_TYPE", int.class), DefaultResultSetReaders.INTEGER_PRIMITIVE_READER);
 		
 		/** Data source dependent type name, for a User-Defined-Type the type name is fully qualified */
-		private final ColumnReader<String> typeName = new ColumnReader<>(addColumn("TYPE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> typeName = new ColumnReader<>(addColumn("TYPE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/**
 		 * Specifies the column size for the given column.
@@ -616,80 +547,92 @@ public class DefaultMetadataReader implements MetadataReader {
 		 * - For the ROWID datatype, this is the length in bytes.
 		 * - Null is returned for data types where the column size is not applicable.
 		 */
-		private final ColumnReader<Integer> size = new ColumnReader<>(addColumn("COLUMN_SIZE", Integer.class), DefaultResultSetReaders.INTEGER_READER);
+		public final ColumnReader<Integer> size = new ColumnReader<>(addColumn("COLUMN_SIZE", Integer.class), DefaultResultSetReaders.INTEGER_READER);
 		
 		/** not used */
-		private final ColumnReader<Object> bufferLength = new ColumnReader<>(addColumn("BUFFER_LENGTH", Object.class), ResultSet::getObject);
+		public final ColumnReader<Object> bufferLength = new ColumnReader<>(addColumn("BUFFER_LENGTH", Object.class), ResultSet::getObject);
 		
 		/** the number of fractional digits. Null is returned for data types where DECIMAL_DIGITS is not applicable. */
-		private final ColumnReader<Integer> decimalDigits = new ColumnReader<>(addColumn("DECIMAL_DIGITS", Integer.class), DefaultResultSetReaders.INTEGER_READER);
+		public final ColumnReader<Integer> decimalDigits = new ColumnReader<>(addColumn("DECIMAL_DIGITS", Integer.class), DefaultResultSetReaders.INTEGER_READER);
 		
 		/** Radix (typically either 10 or 2) */
-		private final ColumnReader<Integer> radix = new ColumnReader<>(addColumn("NUM_PREC_RADIX", Integer.class), DefaultResultSetReaders.INTEGER_READER);
+		public final ColumnReader<Integer> radix = new ColumnReader<>(addColumn("NUM_PREC_RADIX", Integer.class), DefaultResultSetReaders.INTEGER_READER);
 		
 		/**
 		 * Is null allowed, possible values
 		 * {@link DatabaseMetaData#columnNoNulls}
 		 * {@link DatabaseMetaData#columnNullable}
 		 * {@link DatabaseMetaData#columnNullableUnknown}
+		 * Transformed as Boolean :
+		 * - true if {@link DatabaseMetaData#columnNullable}
+		 * - false otherwise
 		 */
-		private final ColumnReader<Boolean> nullable = new ColumnReader<>(addColumn("NULLABLE", boolean.class), (rs, col) -> rs.getInt(col) == DatabaseMetaData.columnNullable);
+		public final ColumnReader<Boolean> nullable = new ColumnReader<>(addColumn("NULLABLE", boolean.class), (rs, col) -> rs.getInt(col) == DatabaseMetaData.columnNullable);
 		
 		/** comment describing column (may be null) */
-		private final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** Default value for the column, which should be interpreted as a string when the value is enclosed in single quotes (may be null) */
-		private final ColumnReader<String> defaultValue = new ColumnReader<>(addColumn("COLUMN_DEF", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> defaultValue = new ColumnReader<>(addColumn("COLUMN_DEF", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** unused */
-		private final ColumnReader<Integer> sqlDataType = new ColumnReader<>(addColumn("SQL_DATA_TYPE", Integer.class), DefaultResultSetReaders.INTEGER_READER);
+		public final ColumnReader<Integer> sqlDataType = new ColumnReader<>(addColumn("SQL_DATA_TYPE", Integer.class), DefaultResultSetReaders.INTEGER_READER);
 		
 		/** unused */
-		private final ColumnReader<Integer> sqlDatetimeSub = new ColumnReader<>(addColumn("SQL_DATETIME_SUB", Integer.class), DefaultResultSetReaders.INTEGER_READER);
+		public final ColumnReader<Integer> sqlDatetimeSub = new ColumnReader<>(addColumn("SQL_DATETIME_SUB", Integer.class), DefaultResultSetReaders.INTEGER_READER);
 		
 		/** for char types the maximum number of bytes in the column */
-		private final ColumnReader<Integer> charOctetLength = new ColumnReader<>(addColumn("CHAR_OCTET_LENGTH", Integer.class), DefaultResultSetReaders.INTEGER_READER);
+		public final ColumnReader<Integer> charOctetLength = new ColumnReader<>(addColumn("CHAR_OCTET_LENGTH", Integer.class), DefaultResultSetReaders.INTEGER_READER);
 		
 		/**
 		 * index of column in table (starting at 1)
 		 */
-		private final ColumnReader<Integer> ordinalPosition = new ColumnReader<>(addColumn("ORDINAL_POSITION", Integer.class), DefaultResultSetReaders.INTEGER_PRIMITIVE_READER);
+		public final ColumnReader<Integer> ordinalPosition = new ColumnReader<>(addColumn("ORDINAL_POSITION", Integer.class), DefaultResultSetReaders.INTEGER_PRIMITIVE_READER);
 		
 		/**
-		 * ISO rules are used to determine the nullability for a column, possible values
+		 * ISO rules are used to determine the nullability for a column, possible original values
 		 * - YES : if the column can include NULLs
 		 * - NO : if the column cannot include NULLs
 		 * - empty string : if the nullability for the column is unknown
+		 * Transformed as Boolean :
+		 * - true if YES
+		 * - false otherwise
 		 */
-		private final ColumnReader<String> isNullable = new ColumnReader<>(addColumn("IS_NULLABLE", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<Boolean> isNullable = new ColumnReader<>(addColumn("IS_NULLABLE", boolean.class), (rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)));
 		
 		/** catalog of table that is the scope of a reference attribute (null if DATA_TYPE isn't REF) */
-		private final ColumnReader<String> scopeCatalog = new ColumnReader<>(addColumn("SCOPE_CATALOG", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> scopeCatalog = new ColumnReader<>(addColumn("SCOPE_CATALOG", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** schema of table that is the scope of a reference attribute (null if the DATA_TYPE isn't REF) */
-		private final ColumnReader<String> scopeSchema = new ColumnReader<>(addColumn("SCOPE_SCHEMA", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> scopeSchema = new ColumnReader<>(addColumn("SCOPE_SCHEMA", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** table name that this the scope of a reference attribute (null if the DATA_TYPE isn't REF) */
-		private final ColumnReader<String> scopeTable = new ColumnReader<>(addColumn("SCOPE_TABLE", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<String> scopeTable = new ColumnReader<>(addColumn("SCOPE_TABLE", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** source type of a distinct type or user-generated Ref type, SQL type from java.sql.Types (null if DATA_TYPE isn't DISTINCT or user-generated REF) */
-		private final ColumnReader<Short> sourceDataType = new ColumnReader<>(addColumn("SOURCE_DATA_TYPE", Short.class), ResultSet::getShort);
+		public final ColumnReader<Short> sourceDataType = new ColumnReader<>(addColumn("SOURCE_DATA_TYPE", Short.class), ResultSet::getShort);
 		
 		/**
-		 * Indicates whether this column is auto incremented, possible values
+		 * Indicates whether this column is auto incremented, possible original values :
 		 * - YES : if the column is auto incremented
 		 * - NO : if the column is not auto incremented
 		 * - empty string : if it cannot be determined whether the column is auto incremented
+		 * Transformed as Boolean :
+		 * - true if YES
+		 * - false otherwise
 		 */
-		private final ColumnReader<Boolean> isAutoIncrement = new ColumnReader<>(addColumn("IS_AUTOINCREMENT", boolean.class), (rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)));
+		public final ColumnReader<Boolean> isAutoIncrement = new ColumnReader<>(addColumn("IS_AUTOINCREMENT", boolean.class), (rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)));
 		
 		/**
-		 * Indicates whether this is a generated column
+		 * Indicates whether this is a generated column, possible original values :
 		 * - YES : if this a generated column
 		 * - NO : if this not a generated column
 		 * - empty string : if it cannot be determined whether this is a generated column
+		 * Transformed as Boolean :
+		 * - true if YES
+		 * - false otherwise
 		 */
-		private final ColumnReader<String> isGeneratedColumn = new ColumnReader<>(addColumn("IS_GENERATEDCOLUMN", String.class), DefaultResultSetReaders.STRING_READER);
+		public final ColumnReader<Boolean> isGeneratedColumn = new ColumnReader<>(addColumn("IS_GENERATEDCOLUMN", boolean.class), (rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)));
 		
 		public ColumnMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getColumns() ResultSet
@@ -699,7 +642,7 @@ public class DefaultMetadataReader implements MetadataReader {
 	
 	public static class ColumnReader<T> {
 		
-		private final Column<?, T> column;
+		public final Column<?, T> column;
 		private final ResultSetReader<T> reader;
 		
 		ColumnReader(Column<?, T> column, ResultSetReader<T> reader) {
