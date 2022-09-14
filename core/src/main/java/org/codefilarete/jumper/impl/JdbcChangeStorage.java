@@ -1,4 +1,4 @@
-package org.codefilarete.jumper;
+package org.codefilarete.jumper.impl;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codefilarete.jumper.ChangeId;
+import org.codefilarete.jumper.ChangeStorage;
+import org.codefilarete.jumper.Checksum;
+import org.codefilarete.jumper.NoopExecutionListener;
 import org.codefilarete.stalactite.engine.PersistenceContext;
 import org.codefilarete.stalactite.query.model.Operators;
 import org.codefilarete.stalactite.query.model.QueryEase;

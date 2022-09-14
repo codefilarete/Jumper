@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
+import org.codefilarete.jumper.impl.JdbcChangeStorage;
 import org.codefilarete.stalactite.sql.HSQLDBDialect;
 import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
@@ -18,7 +19,7 @@ import org.codefilarete.tool.collection.Maps;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.codefilarete.jumper.JdbcChangeStorage.DEFAULT_STORAGE_TABLE;
+import static org.codefilarete.jumper.impl.JdbcChangeStorage.DEFAULT_STORAGE_TABLE;
 
 /**
  * @author Guillaume Mary

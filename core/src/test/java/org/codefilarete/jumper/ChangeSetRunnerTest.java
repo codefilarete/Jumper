@@ -16,7 +16,6 @@ import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
-import org.codefilarete.jumper.impl.InMemoryChangeStorage;
 import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.collection.Arrays;

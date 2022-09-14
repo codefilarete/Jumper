@@ -1,14 +1,10 @@
-package org.codefilarete.jumper.impl;
+package org.codefilarete.jumper;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.codefilarete.jumper.ChangeStorage;
-import org.codefilarete.jumper.ChangeId;
-import org.codefilarete.jumper.Checksum;
 
 /**
  * @author Guillaume Mary

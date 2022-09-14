@@ -17,6 +17,8 @@ import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
 import org.codefilarete.jumper.impl.ChangeChecksumer;
+import org.codefilarete.jumper.impl.JdbcChangeStorage;
+import org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage;
 import org.codefilarete.jumper.impl.SupportedChange;
 import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.jumper.impl.StringChecksumer;
@@ -71,8 +73,7 @@ public class ChangeSetRunner {
 	public void processUpdate() throws ExecutionException {
 		executionListener.beforeProcess();
 		// note that we decouple lock acquisition from try-with-resource to avoid closing Lock on acquisition error
-		UpdateLock voluntarilyOutOfTryWithResource = acquireUpdateLock();
-		try (UpdateLock ignored = voluntarilyOutOfTryWithResource) {
+		try (UpdateLock ignored = acquireUpdateLock()) {
 			assertNonCompliantChanges();
 			
 			executionConnection = connectionProvider.giveConnection();

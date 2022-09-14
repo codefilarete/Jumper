@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.stalactite.sql.HSQLDBDialect;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
@@ -20,7 +21,7 @@ import org.codefilarete.tool.collection.Maps;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.codefilarete.jumper.JdbcUpdateProcessLockStorage.DEFAULT_STORAGE_TABLE;
+import static org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage.DEFAULT_STORAGE_TABLE;
 
 class JdbcUpdateProcessLockStorageTest {
 
