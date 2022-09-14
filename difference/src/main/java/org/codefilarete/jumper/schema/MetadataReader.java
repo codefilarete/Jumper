@@ -7,8 +7,6 @@ public interface MetadataReader {
 	
 	SortedSet<ColumnMetadata> giveColumns(String catalog, String schema, String tablePattern);
 	
-	Set<SequenceMetadata> giveSequences(String catalog, String schema);
-	
 	/**
 	 * Gives foreign keys exported by tables matching given pattern
 	 *

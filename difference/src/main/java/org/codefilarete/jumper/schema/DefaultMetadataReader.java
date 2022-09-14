@@ -1,7 +1,6 @@
 package org.codefilarete.jumper.schema;
 
 import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -53,41 +52,6 @@ public class DefaultMetadataReader implements MetadataReader {
 			SortedSet<ColumnMetadata> result = new TreeSet<>(Comparator.comparing(ColumnMetadata::getPosition));
 			result.addAll(resultSetIterator.convert());
 			return result;
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	@Override
-	public Set<SequenceMetadata> giveSequences(String catalog, String schema) {
-		String schemaCriteria = null;
-		if (schema != null) {
-			if (schema.contains("%")) {
-				schemaCriteria = "like '" + schema + "'";
-			} else {
-				schemaCriteria = " = '" + schema + "'";
-			}
-		}
-		if (schemaCriteria != null) {
-			schemaCriteria = "SEQUENCE_SCHEMA " + schemaCriteria;
-		}
-		String sequenceSql = "SELECT SEQUENCE_NAME, SEQUENCE_SCHEMA, SEQUENCE_CATALOG FROM INFORMATION_SCHEMA.SYSTEM_SEQUENCES";
-		if (schemaCriteria != null) {
-			sequenceSql += " WHERE " + schemaCriteria;
-		}
-		try (PreparedStatement selectSequenceStatement = metaData.getConnection().prepareStatement(sequenceSql);
-			 ResultSet tableResultSet = selectSequenceStatement.executeQuery()) {
-			ResultSetIterator<SequenceMetadata> resultSetIterator = new ResultSetIterator<SequenceMetadata>(tableResultSet) {
-				@Override
-				public SequenceMetadata convert(ResultSet resultSet) {
-					return new SequenceMetadata(
-							SequenceMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
-							SequenceMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
-							SequenceMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
-					);
-				}
-			};
-			return new HashSet<>(resultSetIterator.convert());
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -287,7 +251,6 @@ public class DefaultMetadataReader implements MetadataReader {
 	@Override
 	public Set<ProcedureMetadata> giveProcedures(String catalog, String schema, String procedurePatternName) {
 		try (ResultSet tableResultSet = metaData.getProcedures(catalog, schema, procedurePatternName)) {
-			Map<String, ProcedureMetadata> cache = new HashMap<>();
 			ResultSetIterator<ProcedureMetadata> resultSetIterator = new ResultSetIterator<ProcedureMetadata>(tableResultSet) {
 				@Override
 				public ProcedureMetadata convert(ResultSet resultSet) {
@@ -308,7 +271,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
-	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getProcedures(String, String, String)}
+	 * @author Guillaume Mary
+	 */
 	static class ProcedureMetaDataPseudoTable extends Table<ProcedureMetaDataPseudoTable> {
 		
 		static final ProcedureMetaDataPseudoTable INSTANCE = new ProcedureMetaDataPseudoTable();
@@ -342,6 +308,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)}
+	 * @author Guillaume Mary
+	 */
 	static class IndexMetaDataPseudoTable extends Table<IndexMetaDataPseudoTable> {
 		
 		static final IndexMetaDataPseudoTable INSTANCE = new IndexMetaDataPseudoTable();
@@ -397,6 +367,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getTables(String, String, String, String[])}
+	 * @author Guillaume Mary
+	 */
 	static class TableMetaDataPseudoTable extends Table<TableMetaDataPseudoTable> {
 		
 		static final TableMetaDataPseudoTable INSTANCE = new TableMetaDataPseudoTable();
@@ -447,6 +421,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getTypeInfo()}
+	 * @author Guillaume Mary
+	 */
 	static class TypeInfoMetaDataPseudoTable extends Table<TypeInfoMetaDataPseudoTable> {
 		
 		static final TypeInfoMetaDataPseudoTable INSTANCE = new TypeInfoMetaDataPseudoTable();
@@ -512,6 +490,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getExportedKeys(String, String, String)}
+	 * @author Guillaume Mary
+	 */
 	static class ExportedKeysMetaDataPseudoTable extends Table<ExportedKeysMetaDataPseudoTable> {
 		
 		// PKTABLE_CAT String => parent key table catalog (may be null)
@@ -570,6 +552,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getPrimaryKeys(String, String, String)}
+	 * @author Guillaume Mary
+	 */
 	static class PrimaryKeysMetaDataPseudoTable extends Table<PrimaryKeysMetaDataPseudoTable> {
 		
 		static final PrimaryKeysMetaDataPseudoTable INSTANCE = new PrimaryKeysMetaDataPseudoTable();
@@ -602,6 +588,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getColumns(String, String, String, String)}
+	 * @author Guillaume Mary
+	 */
 	static class SequenceMetaDataPseudoTable extends Table<SequenceMetaDataPseudoTable> {
 		
 		static final SequenceMetaDataPseudoTable INSTANCE = new SequenceMetaDataPseudoTable();
@@ -618,6 +608,10 @@ public class DefaultMetadataReader implements MetadataReader {
 		}
 	}
 	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getColumns(String, String, String, String)}
+	 * @author Guillaume Mary
+	 */
 	static class ColumnMetaDataPseudoTable extends Table<ColumnMetaDataPseudoTable> {
 		
 		static final ColumnMetaDataPseudoTable INSTANCE = new ColumnMetaDataPseudoTable();
