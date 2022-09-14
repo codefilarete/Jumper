@@ -139,10 +139,12 @@ public class SchemaBuilder {
 					c.isNullable()));
 		});
 		
-		Set<SequenceMetadata> sequenceMetadata = metadataReader.giveSequences(catalog, schema);
-		sequenceMetadata.forEach(row -> {
-			Sequence view = result.addSequence(row.getName());
-		});
+		if (metadataReader instanceof SequenceMetadataReader) {
+			Set<SequenceMetadata> sequenceMetadata = ((SequenceMetadataReader) metadataReader).giveSequences(catalog, schema);
+			sequenceMetadata.forEach(row -> {
+				Sequence view = result.addSequence(row.getName());
+			});
+		}
 		
 		return result;
 	}
