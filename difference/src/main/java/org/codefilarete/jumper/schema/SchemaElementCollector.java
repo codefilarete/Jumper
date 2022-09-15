@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.AscOrDesc;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Index;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table.Column;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.View;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.AscOrDesc;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.View;
 import org.codefilarete.jumper.schema.metadata.ColumnMetadata;
 import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
 import org.codefilarete.jumper.schema.metadata.ForeignKeyMetadata;
@@ -30,37 +30,57 @@ import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.codefilarete.tool.collection.PairIterator;
 
-public class SchemaBuilder {
+/**
+ * Collects database schema elements based on a {@link MetadataReader} to read DDL elements and build a structured
+ * version of them through a {@link Schema}.
+ *
+ * @see #collect()
+ * @author Guillaume Mary
+ */
+public class SchemaElementCollector {
 	
 	protected final MetadataReader metadataReader;
 	protected String catalog;
 	protected String schema;
 	protected String tableNamePattern;
 	
-	public SchemaBuilder(DatabaseMetaData databaseMetaData) {
+	/**
+	 * Constructor to create schema elements from given {@link DatabaseMetaData}.
+	 * Will use a {@link DefaultMetadataReader} to collect elements and create a {@link Schema} on {@link #collect()}
+	 * call.
+	 *
+	 * @param databaseMetaData
+	 */
+	public SchemaElementCollector(DatabaseMetaData databaseMetaData) {
 		this(new DefaultMetadataReader(databaseMetaData));
 	}
 	
-	public SchemaBuilder(MetadataReader metadataReader) {
+	/**
+	 * Generic constructor. Will create {@link Schema} elements from given {@link MetadataReader} on {@link #collect()}
+	 * call.
+	 *
+	 * @param metadataReader
+	 */
+	public SchemaElementCollector(MetadataReader metadataReader) {
 		this.metadataReader = metadataReader;
 	}
 	
-	public SchemaBuilder withCatalog(String catalog) {
+	public SchemaElementCollector withCatalog(String catalog) {
 		this.catalog = catalog;
 		return this;
 	}
 	
-	public SchemaBuilder withSchema(String schema) {
+	public SchemaElementCollector withSchema(String schema) {
 		this.schema = schema;
 		return this;
 	}
 	
-	public SchemaBuilder withTableNamePattern(String tableNamePattern) {
+	public SchemaElementCollector withTableNamePattern(String tableNamePattern) {
 		this.tableNamePattern = tableNamePattern;
 		return this;
 	}
 	
-	public Schema build() {
+	public Schema collect() {
 		StringAppender schemaName = new StringAppender();
 		schemaName.catIf(!Strings.isEmpty(catalog), catalog);
 		schemaName.catIf(schemaName.length() != 0 && !Strings.isEmpty(schema), "." + schema);

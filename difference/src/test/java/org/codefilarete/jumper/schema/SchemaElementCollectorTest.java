@@ -16,16 +16,16 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.AscOrDesc;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Index;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table.Column;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table.ForeignKey;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.View;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.View.PseudoColumn;
-import org.codefilarete.jumper.schema.SchemaBuilderTest.ComparisonChain.PropertyComparator;
-import org.codefilarete.jumper.schema.SchemaBuilderTest.ComparisonChain.PropertyComparator.PropertyDiff;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.AscOrDesc;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.ForeignKey;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.View;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.View.PseudoColumn;
+import org.codefilarete.jumper.schema.SchemaElementCollectorTest.ComparisonChain.PropertyComparator;
+import org.codefilarete.jumper.schema.SchemaElementCollectorTest.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.jumper.schema.difference.AbstractDiff;
 import org.codefilarete.jumper.schema.difference.CollectionDiffer;
 import org.codefilarete.jumper.schema.difference.Diff;
@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SchemaBuilderTest {
+class SchemaElementCollectorTest {
 	
 	@Test
 	void build_tables() throws SQLException {
@@ -56,11 +56,11 @@ class SchemaBuilderTest {
 		connection.prepareStatement("create table B(id BIGINT, aId BIGINT, dummyData VARCHAR(50), primary key (id));").execute();
 		connection.commit();
 		
-		SchemaBuilder testInstance = new SchemaBuilder(dataSourceReference.getConnection().getMetaData());
+		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
-				.build();
+				.collect();
 		
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
@@ -111,11 +111,11 @@ class SchemaBuilderTest {
 		connection.prepareStatement("create table B(id BIGINT, aId BIGINT, primary key (id), constraint fromBtoA foreign key (aId) references A(id));").execute();
 		connection.commit();
 		
-		SchemaBuilder testInstance = new SchemaBuilder(dataSourceReference.getConnection().getMetaData());
+		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
-				.build();
+				.collect();
 		
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
@@ -163,11 +163,11 @@ class SchemaBuilderTest {
 		connection.prepareStatement("create unique index toto on A(name asc);").execute();
 		connection.commit();
 		
-		SchemaBuilder testInstance = new SchemaBuilder(dataSourceReference.getConnection().getMetaData());
+		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
-				.build();
+				.collect();
 	
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
@@ -207,11 +207,11 @@ class SchemaBuilderTest {
 		connection.prepareStatement("create view DummyView as select a.id as x, a.name, b.dummyData from A a inner join B b on a.id = b.aId;").execute();
 		connection.commit();
 		
-		SchemaBuilder testInstance = new SchemaBuilder(dataSourceReference.getConnection().getMetaData());
+		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
-				.build();
+				.collect();
 	
 		// Checking views
 		Schema expectedResult = new Schema(null);
@@ -244,11 +244,11 @@ class SchemaBuilderTest {
 		connection.prepareStatement("create view TUTU as select a.id, a.name, b.dummyData from A a inner join B b on a.id = b.aId;").execute();
 		connection.commit();
 		
-		SchemaBuilder testInstance = new SchemaBuilder(dataSourceReference.getConnection().getMetaData());
+		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%");
-		Schema schema = testInstance.build();
+		Schema schema = testInstance.collect();
 	
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
@@ -347,16 +347,16 @@ class SchemaBuilderTest {
 		connection2.commit();
 		connection2.close();
 		
-		SchemaBuilder testInstance = new SchemaBuilder(dataSource.getConnection().getMetaData());
+		SchemaElementCollector testInstance = new SchemaElementCollector(dataSource.getConnection().getMetaData());
 		testInstance.withCatalog(null)
 				.withSchema("REFERENCE")
 				.withTableNamePattern("%");
-		Schema ddlElements1 = testInstance.build();
+		Schema ddlElements1 = testInstance.collect();
 		
 		testInstance.withCatalog(null)
 				.withSchema("COMPARISON")
 				.withTableNamePattern("%");
-		Schema ddlElements2 = testInstance.build();
+		Schema ddlElements2 = testInstance.collect();
 		
 		SetDiffer<Table, String> tableCollectionDiffer = new SetDiffer<>(Table::getName);
 		Set<Diff<Table>> tableDiffs = tableCollectionDiffer.diff(ddlElements1.getTables(), ddlElements2.getTables());

@@ -3,8 +3,8 @@ package org.codefilarete.jumper.schema;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.codefilarete.jumper.schema.HSQLDBSchemaBuilder.HSQLDBSchema;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Sequence;
+import org.codefilarete.jumper.schema.HSQLDBSchemaElementCollector.HSQLDBSchema;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Sequence;
 import org.codefilarete.stalactite.sql.UrlAwareDataSource;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.codefilarete.tool.function.Predicates;
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class HSQLDBSchemaBuilderTest {
+class HSQLDBSchemaElementCollectorTest {
 	
 	@Test
 	void build_sequences() throws SQLException {
@@ -24,11 +24,11 @@ class HSQLDBSchemaBuilderTest {
 		connection.prepareStatement("create sequence DUMMY_SEQUENCE start with 12 increment by 2").execute();
 		connection.commit();
 		
-		HSQLDBSchemaBuilder testInstance = new HSQLDBSchemaBuilder(dataSourceReference.getConnection().getMetaData());
+		HSQLDBSchemaElementCollector testInstance = new HSQLDBSchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		HSQLDBSchema schema = testInstance.withCatalog(null)
 				.withSchema("DUMMY%")
 				.withTableNamePattern("%")
-				.build();
+				.collect();
 	
 		// Checking sequences
 		HSQLDBSchema expectedResult = new HSQLDBSchema(null);

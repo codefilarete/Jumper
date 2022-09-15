@@ -9,27 +9,27 @@ import org.codefilarete.jumper.schema.metadata.MetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
 
-public class HSQLDBSchemaBuilder extends SchemaBuilder {
+public class HSQLDBSchemaElementCollector extends SchemaElementCollector {
 	
-	public HSQLDBSchemaBuilder(DatabaseMetaData databaseMetaData) {
+	public HSQLDBSchemaElementCollector(DatabaseMetaData databaseMetaData) {
 		this(new DefaultMetadataReader(databaseMetaData));
 	}
 	
-	public HSQLDBSchemaBuilder(MetadataReader metadataReader) {
+	public HSQLDBSchemaElementCollector(MetadataReader metadataReader) {
 		super(metadataReader);
 	}
 	
-	public HSQLDBSchemaBuilder withCatalog(String catalog) {
+	public HSQLDBSchemaElementCollector withCatalog(String catalog) {
 		super.withCatalog(catalog);
 		return this;
 	}
 	
-	public HSQLDBSchemaBuilder withSchema(String schema) {
+	public HSQLDBSchemaElementCollector withSchema(String schema) {
 		super.withSchema(schema);
 		return this;
 	}
 	
-	public HSQLDBSchemaBuilder withTableNamePattern(String tableNamePattern) {
+	public HSQLDBSchemaElementCollector withTableNamePattern(String tableNamePattern) {
 		super.withTableNamePattern(tableNamePattern);
 		return this;
 	}
@@ -45,8 +45,8 @@ public class HSQLDBSchemaBuilder extends SchemaBuilder {
 	// TODO: instantiate right schema type
 	
 	@Override
-	public HSQLDBSchema build() {
-		return (HSQLDBSchema) super.build();
+	public HSQLDBSchema collect() {
+		return (HSQLDBSchema) super.collect();
 	}
 	
 	public static class HSQLDBSchema extends Schema {
