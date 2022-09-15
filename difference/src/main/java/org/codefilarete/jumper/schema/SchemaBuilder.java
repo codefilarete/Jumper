@@ -11,7 +11,6 @@ import java.util.SortedSet;
 
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Index;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Sequence;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table.Column;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.View;
@@ -21,8 +20,6 @@ import org.codefilarete.jumper.schema.metadata.ForeignKeyMetadata;
 import org.codefilarete.jumper.schema.metadata.IndexMetadata;
 import org.codefilarete.jumper.schema.metadata.MetadataReader;
 import org.codefilarete.jumper.schema.metadata.PrimaryKeyMetadata;
-import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
-import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
 import org.codefilarete.jumper.schema.metadata.TableMetadata;
 import org.codefilarete.jumper.schema.metadata.ViewMetadata;
 import org.codefilarete.tool.Duo;
@@ -35,10 +32,10 @@ import org.codefilarete.tool.collection.PairIterator;
 
 public class SchemaBuilder {
 	
-	private final MetadataReader metadataReader;
-	private String catalog;
-	private String schema;
-	private String tableNamePattern;
+	protected final MetadataReader metadataReader;
+	protected String catalog;
+	protected String schema;
+	protected String tableNamePattern;
 	
 	public SchemaBuilder(DatabaseMetaData databaseMetaData) {
 		this(new DefaultMetadataReader(databaseMetaData));
@@ -110,16 +107,16 @@ public class SchemaBuilder {
 		tablePerName.values().forEach(table -> {
 			Set<ForeignKeyMetadata> foreignKeyMetadata = metadataReader.giveExportedKeys(catalog, schema, table.name);
 			foreignKeyMetadata.forEach(row -> {
-				ArrayList<Column> sourceColummns = new ArrayList<>();
-				ArrayList<Column> targetColummns = new ArrayList<>();
+				ArrayList<Column> sourceColumns = new ArrayList<>();
+				ArrayList<Column> targetColumns = new ArrayList<>();
 				row.getColumns().forEach(duo -> {
-					sourceColummns.add(columnCache.get(new Duo<>(row.getSourceTable().getTableName(), duo.getLeft())));
-					targetColummns.add(columnCache.get(new Duo<>(row.getTargetTable().getTableName(), duo.getRight())));
+					sourceColumns.add(columnCache.get(new Duo<>(row.getSourceTable().getTableName(), duo.getLeft())));
+					targetColumns.add(columnCache.get(new Duo<>(row.getTargetTable().getTableName(), duo.getRight())));
 				});
 				// setting foreign key to owning table
 				tablePerName.get(row.getSourceTable().getTableName())
 						.addForeignKey(row.getName(),
-								sourceColummns, tablePerName.get(row.getTargetTable().getTableName()), targetColummns);
+								sourceColumns, tablePerName.get(row.getTargetTable().getTableName()), targetColumns);
 			});
 		});
 		
@@ -153,14 +150,13 @@ public class SchemaBuilder {
 					c.isNullable()));
 		});
 		
-		if (metadataReader instanceof SequenceMetadataReader) {
-			Set<SequenceMetadata> sequenceMetadata = ((SequenceMetadataReader) metadataReader).giveSequences(catalog, schema);
-			sequenceMetadata.forEach(row -> {
-				Sequence view = result.addSequence(row.getName());
-			});
-		}
+		completeSchema(result);
 		
 		return result;
+	}
+	
+	protected void completeSchema(Schema result) {
+	
 	}
 	
 	public static class Schema {
@@ -172,8 +168,6 @@ public class SchemaBuilder {
 		private final Set<Index> indexes = new HashSet<>();
 		
 		private final Set<View> views = new HashSet<>();
-		
-		private final Set<Sequence> sequences = new HashSet<>();
 		
 		public Schema(String name) {
 			this.name = name;
@@ -212,18 +206,6 @@ public class SchemaBuilder {
 			this.views.add(result);
 			return result;
 		}
-		
-		public Set<Sequence> getSequences() {
-			return sequences;
-		}
-		
-		Sequence addSequence(String name) {
-			Sequence result = new Sequence(name);
-			this.sequences.add(result);
-			return result;
-		}
-		
-		
 		
 		protected class Table {
 			

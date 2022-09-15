@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Index;
-import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Sequence;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table.Column;
 import org.codefilarete.jumper.schema.SchemaBuilder.Schema.Table.ForeignKey;
@@ -29,9 +28,9 @@ import org.codefilarete.jumper.schema.SchemaBuilderTest.ComparisonChain.Property
 import org.codefilarete.jumper.schema.SchemaBuilderTest.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.jumper.schema.difference.AbstractDiff;
 import org.codefilarete.jumper.schema.difference.CollectionDiffer;
-import org.codefilarete.jumper.schema.difference.ListDiffer;
 import org.codefilarete.jumper.schema.difference.Diff;
 import org.codefilarete.jumper.schema.difference.IndexedDiff;
+import org.codefilarete.jumper.schema.difference.ListDiffer;
 import org.codefilarete.jumper.schema.difference.SetDiffer;
 import org.codefilarete.jumper.schema.difference.State;
 import org.codefilarete.reflection.AccessorByMethodReference;
@@ -232,32 +231,6 @@ class SchemaBuilderTest {
 		assertThat(actualView.getColumns())
 				.usingElementComparator(columnComparator)
 				.containsExactlyElementsOf(tutuView.getColumns());
-	}
-	
-	@Test
-	void build_sequences() throws SQLException {
-		
-		UrlAwareDataSource dataSourceReference = new HSQLDBInMemoryDataSource();
-		Connection connection = dataSourceReference.getConnection();
-		connection.prepareStatement("create schema dummy_schema").execute();
-		connection.prepareStatement("set schema dummy_schema").execute();
-		connection.prepareStatement("create sequence DUMMY_SEQUENCE start with 12 increment by 2").execute();
-		connection.commit();
-		
-		SchemaBuilder testInstance = new SchemaBuilder(dataSourceReference.getConnection().getMetaData());
-		Schema schema = testInstance.withCatalog(null)
-				.withSchema("DUMMY%")
-				.withTableNamePattern("%")
-				.build();
-	
-		// Checking sequences
-		Schema expectedResult = new Schema(null);
-		expectedResult.addSequence("DUMMY_SEQUENCE");
-		
-		java.util.Comparator<Sequence> sequenceComparator = Predicates.toComparator(Predicates.and(Sequence::getName));
-		assertThat(schema.getSequences())
-				.usingElementComparator(sequenceComparator)
-				.isEqualTo(expectedResult.getSequences());
 	}
 	
 	@Test
