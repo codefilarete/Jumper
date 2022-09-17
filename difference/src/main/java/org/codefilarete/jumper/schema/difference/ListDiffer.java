@@ -1,13 +1,14 @@
 package org.codefilarete.jumper.schema.difference;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import org.codefilarete.tool.Duo;
+import org.codefilarete.tool.bean.Objects;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
@@ -23,16 +24,18 @@ import static org.codefilarete.jumper.schema.difference.State.*;
  * @param <T> bean type
  * @author Guillaume Mary
  */
-public class ListDiffer<T> implements CollectionDiffer<T, List<T>, IndexedDiff<T>> {
+public class ListDiffer<T, I> implements CollectionDiffer<T, List<T>, IndexedDiff<T>> {
 	
-	private final Function<T, ?> idProvider;
+	private final Function<T, I> idProvider;
+	private final BiPredicate<T, T> elementPredicate;
 	
-	public ListDiffer(Function<T, ?> idProvider) {
+	public ListDiffer(Function<T, I> idProvider) {
 		this.idProvider = idProvider;
+		this.elementPredicate = (t1, t2) -> Objects.equals(this.idProvider.apply(t1), this.idProvider.apply(t2));
 	}
 	
 	/**
-	 * Computes the differences between 2 lists. Comparison between objects will be done onto instance equals() method
+	 * Computes the differences between 2 lists. Comparison between objects will be done through given idProvider result
 	 *
 	 * @param before the "source" List
 	 * @param after the modified List
@@ -42,20 +45,30 @@ public class ListDiffer<T> implements CollectionDiffer<T, List<T>, IndexedDiff<T
 	public KeepOrderSet<IndexedDiff<T>> diff(List<T> before, List<T> after) {
 		// building Map of indexes per object
 		Map<T, Set<Integer>> beforeIndexes = new KeepOrderMap<>();
+		Map<I, Set<Integer>> beforeIndexesPerId = new KeepOrderMap<>();
 		Map<T, Set<Integer>> afterIndexes = new KeepOrderMap<>();
+		Map<I, Set<Integer>> afterIndexesPerId = new KeepOrderMap<>();
 		ModifiableInt beforeIndex = new ModifiableInt(-1);	// because indexes should start at 0 as List does
-		before.forEach(o -> beforeIndexes.computeIfAbsent(o, k -> new HashSet<>()).add(beforeIndex.increment()));
-		ModifiableInt afterIndex = new ModifiableInt(-1);		// because indexes should start at 0 as List does
-		after.forEach(o -> afterIndexes.computeIfAbsent(o, k -> new HashSet<>()).add(afterIndex.increment()));
+		before.forEach(o -> {
+			int index = beforeIndex.increment();
+			beforeIndexes.computeIfAbsent(o, k -> new HashSet<>()).add(index);
+			beforeIndexesPerId.computeIfAbsent(idProvider.apply(o), k -> new HashSet<>()).add(index);
+		});
+		ModifiableInt afterIndex = new ModifiableInt(-1);	// because indexes should start at 0 as List does
+		after.forEach(o -> {
+			int index = afterIndex.increment();
+			afterIndexes.computeIfAbsent(o, k -> new HashSet<>()).add(index);
+			afterIndexesPerId.computeIfAbsent(idProvider.apply(o), k -> new HashSet<>()).add(index);
+		});
 		
 		KeepOrderSet<IndexedDiff<T>> result = new KeepOrderSet<>();
 		
 		// Removed instances are found with a simple minus
-		Set<T> removeds = Iterables.minus(beforeIndexes.keySet(), afterIndexes.keySet());
+		Set<T> removeds = Iterables.minus(beforeIndexes.keySet(), afterIndexes.keySet(), elementPredicate);
 		removeds.forEach(e -> result.add(new IndexedDiff<>(REMOVED, e, null, beforeIndexes.get(e), new HashSet<>())));
 		
 		// Added instances are found with a simple minus (reverse order of removed)
-		Set<T> addeds = Iterables.minus(afterIndexes.keySet(), beforeIndexes.keySet(), (Function<Collection<T>, KeepOrderSet<T>>) KeepOrderSet::new);
+		Set<T> addeds = Iterables.minus(afterIndexes.keySet(), beforeIndexes.keySet(), elementPredicate);
 		addeds.forEach(e -> result.add(new IndexedDiff<>(ADDED, null, e, new HashSet<>(), afterIndexes.get(e))));
 		
 		// There are several cases for "held" instances (those existing on both sides)
@@ -65,10 +78,12 @@ public class ListDiffer<T> implements CollectionDiffer<T, List<T>, IndexedDiff<T
 		// This principle is applied with an Iterator of pairs of indexes : pairs contain before and after index.
 		// - Pairs with a missing left or right value are declared added and removed, respectively
 		// - Pairs with both values are declared held
-		Set<T> helds = Iterables.intersect(afterIndexes.keySet(), beforeIndexes.keySet());
+		Set<T> helds = Iterables.intersect(afterIndexes.keySet(), beforeIndexes.keySet(), elementPredicate);
 		helds.forEach(e -> {
 			// NB: even if Integer can't be inherited, PairIterator is a Iterator<? extends X, ? extends X>
-			Iterable<Duo<Integer, Integer>> indexPairs = () -> new UntilBothIterator<>(beforeIndexes.get(e), afterIndexes.get(e));
+			Iterable<Duo<Integer, Integer>> indexPairs = () -> new UntilBothIterator<>(
+					beforeIndexesPerId.get(idProvider.apply(e)),
+					afterIndexesPerId.get(idProvider.apply(e)));
 			// NB: These instances may not be added to result, it depends on iteration
 			IndexedDiff<T> removed = new IndexedDiff<>(REMOVED, e, null);
 			Object id = idProvider.apply(e);

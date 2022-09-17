@@ -15,6 +15,7 @@ import static org.codefilarete.jumper.schema.difference.State.*;
  * A class to compute the differences between 2 collections of objects: addition, removal or held
  *
  * @param <T> bean type
+ * @param <I> the type of the payload onto comparison will be done
  * @author Guillaume Mary
  */
 public class SetDiffer<T, I> implements CollectionDiffer<T, Set<T>, Diff<T>> {
@@ -30,14 +31,13 @@ public class SetDiffer<T, I> implements CollectionDiffer<T, Set<T>, Diff<T>> {
 	 *
 	 * @param before the "source" Set
 	 * @param after the modified Set
-	 * @param <I> the type of the payload onto comparison will be done
 	 * @return a set of differences between the 2 sets, never null, empty if the 2 sets are empty. If no modification, all instances will be
 	 * {@link State#HELD}.
 	 */
 	@Override
 	public KeepOrderSet<Diff<T>> diff(Set<T> before, Set<T> after) {
-		Map<I, T> beforeMappedOnIdentifier = Iterables.map(before, (Function<T, I>) idProvider, Function.identity(), KeepOrderMap::new);
-		Map<I, T> afterMappedOnIdentifier = Iterables.map(after, (Function<T, I>) idProvider, Function.identity(), KeepOrderMap::new);
+		Map<I, T> beforeMappedOnIdentifier = Iterables.map(before, idProvider, Function.identity(), KeepOrderMap::new);
+		Map<I, T> afterMappedOnIdentifier = Iterables.map(after, idProvider, Function.identity(), KeepOrderMap::new);
 		
 		KeepOrderSet<Diff<T>> result = new KeepOrderSet<>();
 		
@@ -55,9 +55,4 @@ public class SetDiffer<T, I> implements CollectionDiffer<T, Set<T>, Diff<T>> {
 		}
 		return result;
 	}
-	
-//	@Override
-//	public KeepOrderSet<Diff<T>> diff(Set<T> before, Set<T> after) {
-//		return null;
-//	}
 }

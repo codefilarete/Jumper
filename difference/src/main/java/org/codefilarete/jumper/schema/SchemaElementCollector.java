@@ -2,6 +2,7 @@ package org.codefilarete.jumper.schema;
 
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -100,7 +101,7 @@ public class SchemaElementCollector {
 		Map<Duo<String, String>, Column> columnCache = new HashMap<>();
 		tablePerName.values().forEach(table -> {
 			Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, table.name);
-			columnMetadata.forEach(row -> {
+			columnMetadata.stream().sorted(Comparator.comparing(ColumnMetadata::getPosition)).forEach(row -> {
 				Column column = table.addColumn(row.getName(),
 						row.getVendorType(), row.getSize(), row.getPrecision(),
 						row.isNullable(), row.isAutoIncrement());
@@ -227,7 +228,7 @@ public class SchemaElementCollector {
 			return result;
 		}
 		
-		protected class Table {
+		public class Table {
 			
 			private final String name;
 			private final List<Column> columns = new ArrayList<>();
@@ -235,7 +236,7 @@ public class SchemaElementCollector {
 			private final Set<ForeignKey> foreignKeys = new HashSet<>();
 			private String comment;
 			
-			private Table(String name) {
+			protected Table(String name) {
 				this.name = name;
 			}
 			
@@ -288,7 +289,7 @@ public class SchemaElementCollector {
 						'}';
 			}
 			
-			protected class Column {
+			public class Column {
 				
 				private final String name;
 				private final String type;
@@ -297,7 +298,7 @@ public class SchemaElementCollector {
 				private final boolean nullable;
 				private final boolean autoIncrement;
 				
-				private Column(String name, String type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
+				protected Column(String name, String type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
 					this.name = name;
 					this.type = type;
 					this.size = size;
@@ -322,6 +323,18 @@ public class SchemaElementCollector {
 					return size;
 				}
 				
+				public Integer getPrecision() {
+					return precision;
+				}
+				
+				public boolean isNullable() {
+					return nullable;
+				}
+				
+				public boolean isAutoIncrement() {
+					return autoIncrement;
+				}
+				
 				@Override
 				public String toString() {
 					return "Column{" +
@@ -332,7 +345,7 @@ public class SchemaElementCollector {
 				}
 			}
 			
-			protected class PrimaryKey {
+			public class PrimaryKey {
 				
 				private final List<Column> columns;
 				
@@ -352,14 +365,14 @@ public class SchemaElementCollector {
 				}
 			}
 			
-			protected class ForeignKey {
+			public class ForeignKey {
 				
 				private final String name;
 				private final List<Column> columns;
 				private final Table targetTable;
 				private final List<Column> targetColumns;
 				
-				private ForeignKey(String name, List<Column> columns, Table targetTable, List<Column> targetColumns) {
+				protected ForeignKey(String name, List<Column> columns, Table targetTable, List<Column> targetColumns) {
 					this.name = name;
 					this.columns = columns;
 					this.targetTable = targetTable;
@@ -393,7 +406,7 @@ public class SchemaElementCollector {
 			}
 		}
 		
-		protected class Index {
+		public class Index {
 			
 			private final String name;
 			
@@ -449,6 +462,14 @@ public class SchemaElementCollector {
 			public void setIndexQualifier(String indexQualifier) {
 				this.indexQualifier = indexQualifier;
 			}
+			
+			@Override
+			public String toString() {
+				return "Index{" +
+						"name='" + name + '\'' +
+						", unique=" + unique +
+						'}';
+			}
 		}
 		
 		enum AscOrDesc {
@@ -456,7 +477,7 @@ public class SchemaElementCollector {
 			DESC
 		}
 		
-		protected class View {
+		public class View {
 			
 			private final String name;
 			private final KeepOrderSet<PseudoColumn> columns = new KeepOrderSet<>();
@@ -483,7 +504,7 @@ public class SchemaElementCollector {
 				return this.columns;
 			}
 			
-			protected class PseudoColumn {
+			public class PseudoColumn {
 				
 				private final String name;
 				private final String type;
@@ -491,7 +512,7 @@ public class SchemaElementCollector {
 				private final Integer precision;
 				private final boolean nullable;
 				
-				private PseudoColumn(String name, String type, Integer size, Integer precision, boolean nullable) {
+				protected PseudoColumn(String name, String type, Integer size, Integer precision, boolean nullable) {
 					this.name = name;
 					this.type = type;
 					this.size = size;
@@ -534,7 +555,7 @@ public class SchemaElementCollector {
 			}
 		}
 		
-		protected class Sequence {
+		public class Sequence {
 			
 			private final String name;
 			
