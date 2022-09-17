@@ -2,10 +2,15 @@ package org.codefilarete.jumper.schema.difference;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.SchemaElementCollector;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.reflection.AccessorByMethodReference;
@@ -13,6 +18,8 @@ import org.codefilarete.reflection.AccessorDefinition;
 import org.codefilarete.stalactite.sql.UrlAwareDataSource;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SchemaDifferTest {
 	
@@ -60,6 +67,12 @@ class SchemaDifferTest {
 		System.out.println("----------------------------------------------------------");
 		
 		System.out.println("Added in " + dataSource.getUrl());
+		Set<Object> addedElements = diffs.stream().filter(d -> d.getState() == State.ADDED).map(AbstractDiff::getReplacingInstance).collect(Collectors.toSet());
+		Map<String, Map<String, Column>> columnsPerTableNameAndColumnName = ddlElements2.getTables().stream().collect(
+				Collectors.toMap(Table::getName, t -> t.getColumns().stream().collect(
+						Collectors.toMap(Column::getName, Function.identity()))));
+		Column column = columnsPerTableNameAndColumnName.get("C").get("FIRSTNAME");
+		assertThat(addedElements).contains(column);
 		diffs.stream().filter(d -> d.getState() == State.ADDED).forEach(d -> {
 			System.out.println(d.getReplacingInstance());
 		});
