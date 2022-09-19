@@ -22,7 +22,7 @@ import org.codefilarete.tool.bean.Objects;
 
 public class DefaultMetadataReader implements MetadataReader {
 	
-	private final DatabaseMetaData metaData;
+	protected final DatabaseMetaData metaData;
 	
 	public DefaultMetadataReader(DatabaseMetaData metaData) {
 		this.metaData = metaData;
@@ -128,7 +128,10 @@ public class DefaultMetadataReader implements MetadataReader {
 				@Override
 				public PrimaryKeyMetadata convert(ResultSet resultSet) {
 					result.elseSet(new PrimaryKeyMetadata(
-							PrimaryKeysMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet), PrimaryKeysMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet), PrimaryKeysMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet), PrimaryKeysMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet),
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
 					));
 					result.get().addColumn(
 							PrimaryKeysMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet)

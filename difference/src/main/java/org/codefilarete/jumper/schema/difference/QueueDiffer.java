@@ -2,8 +2,8 @@ package org.codefilarete.jumper.schema.difference;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -24,25 +24,18 @@ import static org.codefilarete.jumper.schema.difference.State.*;
  * @param <T> bean type
  * @author Guillaume Mary
  */
-public class ListDiffer<T, I> implements CollectionDiffer<T, List<T>, IndexedDiff<T>> {
+public class QueueDiffer<T, I> implements CollectionDiffer<T, Queue<T>, IndexedDiff<T>> {
 	
 	private final Function<T, I> idProvider;
 	private final BiPredicate<T, T> elementPredicate;
 	
-	public ListDiffer(Function<T, I> idProvider) {
+	public QueueDiffer(Function<T, I> idProvider) {
 		this.idProvider = idProvider;
 		this.elementPredicate = (t1, t2) -> Objects.equals(this.idProvider.apply(t1), this.idProvider.apply(t2));
 	}
 	
-	/**
-	 * Computes the differences between 2 lists. Comparison between objects will be done through given idProvider result
-	 *
-	 * @param before the "source" List
-	 * @param after the modified List
-	 * @return a set of differences between the 2 sets, never null, empty if the 2 sets are empty. If no modification, all instances will be
-	 * {@link State#HELD}.
-	 */
-	public KeepOrderSet<IndexedDiff<T>> diff(List<T> before, List<T> after) {
+	@Override
+	public KeepOrderSet<IndexedDiff<T>> diff(Queue<T> before, Queue<T> after) {
 		// building Map of indexes per object
 		Map<T, Set<Integer>> beforeIndexes = new HashMap<>();
 		Map<I, Set<Integer>> beforeIndexesPerId = new HashMap<>();
@@ -86,10 +79,10 @@ public class ListDiffer<T, I> implements CollectionDiffer<T, List<T>, IndexedDif
 					afterIndexesPerId.get(id));
 			IndexedDiff<T> removed = new IndexedDiff<>(REMOVED, e, null);
 			IndexedDiff<T> held = new IndexedDiff<>(HELD,
-													// Is this can be more efficient ? shouldn't we compute a Map of i vs before/after instead of iterating on before/after for each held ?
-													// ... benchmark should be done
-													Iterables.find(before, t -> Predicates.equalOrNull(idProvider.apply(t), id)),
-													Iterables.find(after, t -> Predicates.equalOrNull(idProvider.apply(t), id)));
+					// Is this can be more efficient ? shouldn't we compute a Map of i vs before/after instead of iterating on before/after for each held ?
+					// ... benchmark should be done
+					Iterables.find(before, t -> Predicates.equalOrNull(idProvider.apply(t), id)),
+					Iterables.find(after, t -> Predicates.equalOrNull(idProvider.apply(t), id)));
 			IndexedDiff<T> added = new IndexedDiff<>(ADDED, null, e);
 			for (Duo<? extends Integer, ? extends Integer> indexPair : indexPairs) {
 				if (indexPair.getLeft() != null && indexPair.getRight() != null) {

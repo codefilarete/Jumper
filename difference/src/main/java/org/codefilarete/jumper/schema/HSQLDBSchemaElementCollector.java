@@ -4,15 +4,17 @@ import java.sql.DatabaseMetaData;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
+import org.codefilarete.jumper.schema.metadata.HSQLDBSequenceMetadataReader;
 import org.codefilarete.jumper.schema.metadata.MetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
+import org.codefilarete.tool.StringAppender;
+import org.codefilarete.tool.Strings;
 
 public class HSQLDBSchemaElementCollector extends SchemaElementCollector {
 	
 	public HSQLDBSchemaElementCollector(DatabaseMetaData databaseMetaData) {
-		this(new DefaultMetadataReader(databaseMetaData));
+		this(new HSQLDBSequenceMetadataReader(databaseMetaData));
 	}
 	
 	public HSQLDBSchemaElementCollector(MetadataReader metadataReader) {
@@ -42,11 +44,14 @@ public class HSQLDBSchemaElementCollector extends SchemaElementCollector {
 		}
 	}
 	
-	// TODO: instantiate right schema type
-	
 	@Override
 	public HSQLDBSchema collect() {
 		return (HSQLDBSchema) super.collect();
+	}
+	
+	@Override
+	protected HSQLDBSchema createSchema(StringAppender schemaName) {
+		return new HSQLDBSchema(Strings.preventEmpty(schemaName.toString(), null));
 	}
 	
 	public static class HSQLDBSchema extends Schema {

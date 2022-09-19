@@ -46,13 +46,13 @@ class SchemaElementCollectorTest {
 		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
 		Column columnA_name = tableA.addColumn("NAME", "VARCHAR", 200, null, false, false);
 		Column columnA_age = tableA.addColumn("AGE", "DOUBLE", 64, null, true, false);
-		tableA.setPrimaryKey(Arrays.asList(columnA_Id));
+		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Table tableB = expectedResult.addTable("B");
 		Column columnB_Id = tableB.addColumn("ID", "BIGINT", 64, 0, false, false);
 		Column columnB_aId = tableB.addColumn("AID", "BIGINT", 64, 0, true, false);
 		Column columnB_dummyData = tableB.addColumn("DUMMYDATA", "VARCHAR", 50, 0, false, false);
-		tableB.setPrimaryKey(Arrays.asList(columnB_Id));
+		tableB.setPrimaryKey("ID", Arrays.asList(columnB_Id));
 		tableB.addForeignKey("FROMBTOA", Arrays.asList(columnB_aId), tableA, Arrays.asList(columnA_Id));
 		
 		Index indexToto = expectedResult.new Index("TOTO");
@@ -99,12 +99,12 @@ class SchemaElementCollectorTest {
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
 		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
-		tableA.setPrimaryKey(Arrays.asList(columnA_Id));
+		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Table tableB = expectedResult.addTable("B");
 		Column columnB_Id = tableB.addColumn("ID", "BIGINT", 64, 0, false, false);
 		Column columnB_aId = tableB.addColumn("AID", "BIGINT", 64, 0, true, false);
-		tableB.setPrimaryKey(Arrays.asList(columnB_Id));
+		tableB.setPrimaryKey("ID", Arrays.asList(columnB_Id));
 		tableB.addForeignKey("FROMBTOA", Arrays.asList(columnB_aId), tableA, Arrays.asList(columnA_Id));
 		
 		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
@@ -153,7 +153,7 @@ class SchemaElementCollectorTest {
 		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
 		Column columnA_name = tableA.addColumn("NAME", "VARCHAR", 200, null, false, false);
 		Column columnA_age = tableA.addColumn("AGE", "DOUBLE", 64, null, true, false);
-		tableA.setPrimaryKey(Arrays.asList(columnA_Id));
+		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Index indexToto = expectedResult.new Index("TOTO");
 		indexToto.setUnique(true);
@@ -234,13 +234,13 @@ class SchemaElementCollectorTest {
 		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
 		Column columnA_name = tableA.addColumn("NAME", "VARCHAR", 200, null, false, false);
 		Column columnA_age = tableA.addColumn("AGE", "DOUBLE", 64, null, true, false);
-		tableA.setPrimaryKey(Arrays.asList(columnA_Id));
+		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Table tableB = expectedResult.addTable("B");
 		Column columnB_Id = tableB.addColumn("ID", "BIGINT", 64, 0, false, false);
 		Column columnB_aId = tableB.addColumn("AID", "BIGINT", 64, 0, true, false);
 		Column columnB_dummyData = tableB.addColumn("DUMMYDATA", "VARCHAR", 50, 0, false, false);
-		tableB.setPrimaryKey(Arrays.asList(columnB_Id));
+		tableB.setPrimaryKey("ID", Arrays.asList(columnB_Id));
 		tableB.addForeignKey("FROMBTOA", Arrays.asList(columnB_aId), tableA, Arrays.asList(columnA_Id));
 		
 		Index indexToto = expectedResult.new Index("TOTO");

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -14,6 +15,7 @@ import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.PrimaryKey;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.View;
 import org.codefilarete.jumper.schema.metadata.ColumnMetadata;
 import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
@@ -30,6 +32,8 @@ import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.codefilarete.tool.collection.PairIterator;
+
+import static org.codefilarete.tool.Nullable.nullable;
 
 /**
  * Collects database schema elements based on a {@link MetadataReader} to read DDL elements and build a structured
@@ -86,7 +90,7 @@ public class SchemaElementCollector {
 		schemaName.catIf(!Strings.isEmpty(catalog), catalog);
 		schemaName.catIf(schemaName.length() != 0 && !Strings.isEmpty(schema), "." + schema);
 		
-		Schema result = new Schema(Strings.preventEmpty(schemaName.toString(), null));
+		Schema result = createSchema(schemaName);
 		
 		// Collecting tables
 		Set<TableMetadata> tableMetadata = metadataReader.giveTables(catalog, schema, tableNamePattern);
@@ -113,7 +117,7 @@ public class SchemaElementCollector {
 				primaryKeyMetadata.getColumns().forEach(columnName -> {
 					primaryKeyColumns.add(columnCache.get(new Duo<>(table.name, columnName)));
 				});
-				table.setPrimaryKey(primaryKeyColumns);
+				table.setPrimaryKey(primaryKeyMetadata.getName(), primaryKeyColumns);
 			}
 		});
 		
@@ -145,20 +149,27 @@ public class SchemaElementCollector {
 		tablePerName.values().forEach(table -> {
 			Set<IndexMetadata> foreignKeyMetadata = metadataReader.giveIndexes(catalog, schema, table.name);
 			foreignKeyMetadata.forEach(row -> {
-				Index index = result.addIndex(row.getName());
-				index.setUnique(row.isUnique());
-				row.getColumns().forEach(duo -> {
-					Boolean aBoolean = duo.getRight();
-					AscOrDesc ascOrDesc;
-					if (aBoolean == null) {
-						ascOrDesc = null;
-					} else if (aBoolean) {
-						ascOrDesc = AscOrDesc.ASC;
-					} else {
-						ascOrDesc = AscOrDesc.DESC;
-					}
-					index.addColumn(columnCache.get(new Duo<>(row.getTableName(), duo.getLeft())), ascOrDesc);
-				});
+				// we don't take into account indexes that matches primaryKey names because some database vendors
+				// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
+				// as they are highly tied to primaryKey presence (can't be deleted without removing primaryKey)
+				Optional<String> matchingPkName = result.getTables().stream().map(t -> nullable(t.getPrimaryKey()).map(PrimaryKey::getName).getOr((String) null))
+						.filter(pkName -> row.getName().equals(pkName)).findFirst();
+				if (!matchingPkName.isPresent()) {
+					Index index = result.addIndex(row.getName());
+					index.setUnique(row.isUnique());
+					row.getColumns().forEach(duo -> {
+						Boolean aBoolean = duo.getRight();
+						AscOrDesc ascOrDesc;
+						if (aBoolean == null) {
+							ascOrDesc = null;
+						} else if (aBoolean) {
+							ascOrDesc = AscOrDesc.ASC;
+						} else {
+							ascOrDesc = AscOrDesc.DESC;
+						}
+						index.addColumn(columnCache.get(new Duo<>(row.getTableName(), duo.getLeft())), ascOrDesc);
+					});
+				}
 			});
 		});
 		
@@ -174,6 +185,10 @@ public class SchemaElementCollector {
 		completeSchema(result);
 		
 		return result;
+	}
+	
+	protected Schema createSchema(StringAppender schemaName) {
+		return new Schema(Strings.preventEmpty(schemaName.toString(), null));
 	}
 	
 	protected void completeSchema(Schema result) {
@@ -252,8 +267,8 @@ public class SchemaElementCollector {
 				return primaryKey;
 			}
 			
-			void setPrimaryKey(List<Column> columns) {
-				this.primaryKey = new PrimaryKey(columns);
+			void setPrimaryKey(String name, List<Column> columns) {
+				this.primaryKey = new PrimaryKey(name, columns);
 			}
 			
 			public Set<ForeignKey> getForeignKeys() {
@@ -347,10 +362,16 @@ public class SchemaElementCollector {
 			
 			public class PrimaryKey {
 				
+				private final String name;
 				private final List<Column> columns;
 				
-				private PrimaryKey(List<Column> columns) {
+				private PrimaryKey(String name, List<Column> columns) {
+					this.name = name;
 					this.columns = columns;
+				}
+				
+				public String getName() {
+					return name;
 				}
 				
 				public List<Column> getColumns() {
@@ -472,7 +493,7 @@ public class SchemaElementCollector {
 			}
 		}
 		
-		enum AscOrDesc {
+		public enum AscOrDesc {
 			ASC,
 			DESC
 		}

@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema;
+import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
@@ -31,7 +34,10 @@ public class SchemaDiffer {
 								.compareOn(Column::isAutoIncrement))
 						.compareOn(Table::getComment))
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
-						.compareOn(Index::isUnique));
+						.compareOn(Index::isUnique)
+						.compareOnMap(Index::getColumns, Column::getName, comparisonChain((Class<Map.Entry<Column, AscOrDesc>>) (Class) Map.Entry.class)
+								.compareOn(Entry::getValue))
+				);
 		
 		return comparisonChain.run(schema1, schema2);
 	}
@@ -58,6 +64,13 @@ public class SchemaDiffer {
 			return this;
 		}
 		
+		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(SerializableFunction<T, M> collectionAccessor, SerializableFunction<K, ?> keyAccessor, ComparisonChain<Map.Entry<K, V>> deeperComparison) {
+			MapComparator<T, K, V, M> collectionComparison = new MapComparator<>(collectionAccessor, keyAccessor);
+			this.propertiesToCompare.add(collectionComparison);
+			collectionComparison.next = deeperComparison;
+			return this;
+		}
+		
 		public <O> ComparisonChain<T> compareOn(SerializableFunction<T, O> propertyAccessor) {
 			this.propertiesToCompare.add(new PropertyComparator<>(propertyAccessor, Objects::equals));
 			return this;
@@ -68,6 +81,8 @@ public class SchemaDiffer {
 			propertiesToCompare.forEach(p -> {
 				if (p instanceof ComparisonChain.CollectionComparator) {
 					result.addAll(((CollectionComparator) p).compare(t1, t2));
+				} else if (p instanceof ComparisonChain.MapComparator) {
+					result.addAll(((MapComparator) p).compare(t1, t2));
 				} else if (p instanceof ComparisonChain.PropertyComparator) {
 					PropertyComparator<T, ?> propertyComparator = (PropertyComparator<T, ?>) p;
 					PropertyDiff<?, ?> diff = propertyComparator.compare(t1, t2);
@@ -77,6 +92,36 @@ public class SchemaDiffer {
 				}
 			});
 			return result;
+		}
+		
+		static class MapComparator<T, K, V, M extends Map<K, V>> {
+			
+			private final SerializableFunction<T, M> mapAccessor;
+			private final SerializableFunction<K, ?> keyAccessor;
+			private ComparisonChain<Map.Entry<K, V>> next;
+			
+			MapComparator(SerializableFunction<T, M> mapAccessor, SerializableFunction<K, ?> keyAccessor) {
+				this.mapAccessor = mapAccessor;
+				this.keyAccessor = keyAccessor;
+			}
+			
+			Set<AbstractDiff<?>> compare(T t1, T t2) {
+				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
+				MapDiffer<K, V, ?> collectionDiffer = new MapDiffer<>(keyAccessor);
+				KeepOrderSet<Diff<Entry<K, V>>> mapPresences = collectionDiffer.diff(this.mapAccessor.apply(t1), this.mapAccessor.apply(t2));
+				
+				result.addAll(mapPresences.stream()
+						.filter(d -> d.getState() != State.HELD).collect(Collectors.toList()));
+				if (next != null) {
+					List<AbstractDiff<?>> collect = mapPresences.stream()
+							.filter(d -> d.getState() == State.HELD)
+							.map(d -> next.run(d.getSourceInstance(), d.getReplacingInstance()))
+							.flatMap(Set<AbstractDiff<?>>::stream)
+							.collect(Collectors.toList());
+					result.addAll(collect);
+				}
+				return result;
+			}
 		}
 		
 		static class CollectionComparator<T, E, C extends Collection<E>> {
@@ -116,6 +161,41 @@ public class SchemaDiffer {
 				return result;
 			}
 		}
+		
+//		static class MapComparator<T, K, V, M extends Map<K, V>> {
+//
+//			private final SerializableFunction<T, M> mapAccessor;
+//
+//			private MapComparator(SerializableFunction<T, M> mapAccessor) {
+//				this.mapAccessor = mapAccessor;
+//			}
+//
+//			Set<AbstractDiff<?>> compare(T t1, T t2) {
+//				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
+//				CollectionDiffer<E, C, AbstractDiff<E>> collectionDiffer = null;
+//				C apply = mapAccessor.apply(t1);
+//				if (apply instanceof Set) {
+//					collectionDiffer = (CollectionDiffer) new SetDiffer<>(keyAccessor);
+//				} else if (apply instanceof List) {
+//					collectionDiffer = (CollectionDiffer) new ListDiffer<>(keyAccessor);
+//				}
+//				C apply1 = mapAccessor.apply(t2);
+//				KeepOrderSet<AbstractDiff<E>> collectionPresences = collectionDiffer.diff(apply, apply1);
+//
+//				result.addAll(collectionPresences.stream()
+//						.filter(d -> d.getState() != State.HELD).collect(Collectors.toList()));
+//				if (next != null) {
+//					List<AbstractDiff<?>> collect = collectionPresences.stream()
+//							.filter(d -> d.getState() == State.HELD)
+//							.map(d -> next.run(d.getSourceInstance(), d.getReplacingInstance()))
+//							.flatMap(Set<AbstractDiff<?>>::stream)
+//							.collect(Collectors.toList());
+//					result.addAll(collect);
+//				}
+//
+//				return result;
+//			}
+//		}
 		
 		/**
 		 * Comparator of a property between 2 objects of same type

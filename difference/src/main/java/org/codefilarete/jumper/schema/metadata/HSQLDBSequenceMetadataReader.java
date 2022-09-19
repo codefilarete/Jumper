@@ -7,17 +7,14 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader.ColumnReader;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
 
-public class HSQLDBSequenceMetadataReader implements SequenceMetadataReader {
-	
-	private final DatabaseMetaData metaData;
+public class HSQLDBSequenceMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
 	
 	public HSQLDBSequenceMetadataReader(DatabaseMetaData metaData) {
-		this.metaData = metaData;
+		super(metaData);
 	}
 	
 	@Override
