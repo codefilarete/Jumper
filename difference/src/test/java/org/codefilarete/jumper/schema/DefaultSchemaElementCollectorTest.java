@@ -8,14 +8,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiPredicate;
 
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.AscOrDesc;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Index;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.ForeignKey;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.View;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.View.PseudoColumn;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.ForeignKey;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View.PseudoColumn;
 import org.codefilarete.stalactite.sql.UrlAwareDataSource;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.codefilarete.tool.collection.Iterables;
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SchemaElementCollectorTest {
+class DefaultSchemaElementCollectorTest {
 	
 	@Test
 	void build_tables() throws SQLException {
@@ -35,7 +35,7 @@ class SchemaElementCollectorTest {
 		connection.prepareStatement("create table B(id BIGINT, aId BIGINT, dummyData VARCHAR(50), primary key (id));").execute();
 		connection.commit();
 		
-		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
+		DefaultSchemaElementCollector testInstance = new DefaultSchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
@@ -90,7 +90,7 @@ class SchemaElementCollectorTest {
 		connection.prepareStatement("create table B(id BIGINT, aId BIGINT, primary key (id), constraint fromBtoA foreign key (aId) references A(id));").execute();
 		connection.commit();
 		
-		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
+		DefaultSchemaElementCollector testInstance = new DefaultSchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
@@ -142,7 +142,7 @@ class SchemaElementCollectorTest {
 		connection.prepareStatement("create unique index toto on A(name asc);").execute();
 		connection.commit();
 		
-		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
+		DefaultSchemaElementCollector testInstance = new DefaultSchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
@@ -186,7 +186,7 @@ class SchemaElementCollectorTest {
 		connection.prepareStatement("create view DummyView as select a.id as x, a.name, b.dummyData from A a inner join B b on a.id = b.aId;").execute();
 		connection.commit();
 		
-		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
+		DefaultSchemaElementCollector testInstance = new DefaultSchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		Schema schema = testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%")
@@ -223,7 +223,7 @@ class SchemaElementCollectorTest {
 		connection.prepareStatement("create view TUTU as select a.id, a.name, b.dummyData from A a inner join B b on a.id = b.aId;").execute();
 		connection.commit();
 		
-		SchemaElementCollector testInstance = new SchemaElementCollector(dataSourceReference.getConnection().getMetaData());
+		DefaultSchemaElementCollector testInstance = new DefaultSchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		testInstance.withCatalog(null)
 				.withSchema(null)
 				.withTableNamePattern("%");

@@ -4,8 +4,6 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.Set;
 
-import org.codefilarete.jumper.schema.metadata.HSQLDBSequenceMetadataReader;
-import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.junit.jupiter.api.Test;
 

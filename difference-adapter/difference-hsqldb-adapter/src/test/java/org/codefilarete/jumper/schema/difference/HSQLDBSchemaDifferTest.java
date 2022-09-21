@@ -7,27 +7,26 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.codefilarete.jumper.schema.SchemaElementCollector;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Index;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.reflection.AccessorByMethodReference;
 import org.codefilarete.reflection.AccessorDefinition;
 import org.codefilarete.stalactite.sql.UrlAwareDataSource;
-import org.codefilarete.stalactite.sql.test.DerbyInMemoryDataSource;
+import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SchemaDifferTest {
+class HSQLDBSchemaDifferTest {
 	
 	@Test
 	void compare() throws SQLException {
-		// we use Derby because it has some subtleties on index as uniqueness and order
-		UrlAwareDataSource dataSource = new DerbyInMemoryDataSource();
+		UrlAwareDataSource dataSource = new HSQLDBInMemoryDataSource();
 		Connection connection1 = dataSource.getConnection();
 		connection1.prepareStatement("create schema REFERENCE").execute();
 		connection1.prepareStatement("set schema REFERENCE").execute();
@@ -52,7 +51,7 @@ class SchemaDifferTest {
 		connection2.commit();
 		connection2.close();
 		
-		SchemaElementCollector schemaElementCollector = new SchemaElementCollector(dataSource.getConnection().getMetaData());
+		DefaultSchemaElementCollector schemaElementCollector = new DefaultSchemaElementCollector(dataSource.getConnection().getMetaData());
 		schemaElementCollector.withCatalog(null)
 				.withSchema("REFERENCE")
 				.withTableNamePattern("%");
@@ -63,7 +62,7 @@ class SchemaDifferTest {
 				.withTableNamePattern("%");
 		Schema ddlElements2 = schemaElementCollector.collect();
 		
-		SchemaDiffer testInstance = new SchemaDiffer();
+		SchemaDiffer testInstance = new HSQLDBSchemaDiffer();
 		Set<AbstractDiff<?>> diffs = testInstance.compare(ddlElements1, ddlElements2);
 		
 		System.out.println("----------------------------------------------------------");
@@ -81,23 +80,22 @@ class SchemaDifferTest {
 			System.out.println(d.getReplacingInstance());
 		});
 		
-		System.out.println("Modifications between " + dataSource.getUrl() + " and " +dataSource.getUrl());
+		System.out.println("Modifications between " + dataSource.getUrl() + " and " + dataSource.getUrl());
 		diffs.stream().filter(d -> d.getState() == State.HELD).forEach(d -> {
 			if (d instanceof PropertyComparator.PropertyDiff) {
 				String propertyName = AccessorDefinition.giveDefinition(new AccessorByMethodReference<>(((PropertyDiff<?, ?>) d).getPropertyAccessor())).getName();
-				System.out.println(propertyName +": " + d.getSourceInstance() + " vs " + d.getReplacingInstance());
+				System.out.println(propertyName + ": " + d.getSourceInstance() + " vs " + d.getReplacingInstance());
 			}
 		});
 		assertThat(diffs.stream().filter(d -> d.getState() == State.HELD).filter(PropertyDiff.class::isInstance).map(PropertyDiff.class::cast)
 				.map(propertyDiff -> {
 					AccessorDefinition accessorDefinition = AccessorDefinition.giveDefinition(new AccessorByMethodReference<>(((PropertyDiff<?, ?>) propertyDiff).getPropertyAccessor()));
 					String propertyName = accessorDefinition.getName();
-					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName +": "
+					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName + ": "
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
 				"Index.unique: Index{name='TATA', unique=true} vs Index{name='TATA', unique=false}",
-				"Column.size: Column{name='LASTNAME', type='VARCHAR', size=50} vs Column{name='LASTNAME', type='VARCHAR', size=100}",
-				"Entry.value: Column{name='LASTNAME', type='VARCHAR', size=50}=DESC vs Column{name='LASTNAME', type='VARCHAR', size=100}=ASC"
+				"Column.size: Column{name='LASTNAME', type='VARCHAR', size=50} vs Column{name='LASTNAME', type='VARCHAR', size=100}"
 		);
 		
 		System.out.println("Missing in " + dataSource.getUrl());

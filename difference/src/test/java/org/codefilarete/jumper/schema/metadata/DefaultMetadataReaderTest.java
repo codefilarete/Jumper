@@ -5,12 +5,6 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Set;
 
-import org.codefilarete.jumper.schema.metadata.ColumnMetadata;
-import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
-import org.codefilarete.jumper.schema.metadata.ForeignKeyMetadata;
-import org.codefilarete.jumper.schema.metadata.PrimaryKeyMetadata;
-import org.codefilarete.jumper.schema.metadata.ProcedureMetadata;
-import org.codefilarete.jumper.schema.metadata.TableMetadata;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.junit.jupiter.api.Test;
 

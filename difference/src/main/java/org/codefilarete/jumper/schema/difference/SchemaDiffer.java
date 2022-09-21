@@ -11,38 +11,26 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.AscOrDesc;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Index;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
-public class SchemaDiffer {
+public abstract class SchemaDiffer {
 	
-	Set<AbstractDiff<?>> compare(Schema schema1, Schema schema2) {
-		ComparisonChain<Schema> comparisonChain = comparisonChain(Schema.class)
-				.compareOn(Schema::getName)
-				.compareOn(Schema::getTables, Table::getName, comparisonChain(Table.class)
-						.compareOn(Table::getColumns, Column::getName, comparisonChain(Column.class)
-								.compareOn(Column::getType)
-								.compareOn(Column::getSize)
-								.compareOn(Column::getPrecision)
-								.compareOn(Column::isNullable)
-								.compareOn(Column::isAutoIncrement))
-						.compareOn(Table::getComment))
-				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
-						.compareOn(Index::isUnique)
-						.compareOnMap(Index::getColumns, Column::getName, comparisonChain((Class<Map.Entry<Column, AscOrDesc>>) (Class) Map.Entry.class)
-								.compareOn(Entry::getValue))
-				);
-		
+	private final ComparisonChain<Schema> comparisonChain;
+	
+	public SchemaDiffer() {
+		this.comparisonChain = configure();
+	}
+	
+	protected abstract ComparisonChain<Schema> configure();
+	
+	public Set<AbstractDiff<?>> compare(Schema schema1, Schema schema2) {
 		return comparisonChain.run(schema1, schema2);
 	}
 	
-	<T> ComparisonChain<T> comparisonChain(Class<T> clazz) {
+	public <T> ComparisonChain<T> comparisonChain(Class<T> clazz) {
 		return new ComparisonChain<>(clazz);
 	}
 	
@@ -62,6 +50,10 @@ public class SchemaDiffer {
 			this.propertiesToCompare.add(collectionComparison);
 			collectionComparison.next = deeperComparison;
 			return this;
+		}
+		
+		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(SerializableFunction<T, M> collectionAccessor, SerializableFunction<K, ?> keyAccessor) {
+			return compareOnMap(collectionAccessor, keyAccessor, null);
 		}
 		
 		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(SerializableFunction<T, M> collectionAccessor, SerializableFunction<K, ?> keyAccessor, ComparisonChain<Map.Entry<K, V>> deeperComparison) {
@@ -161,41 +153,6 @@ public class SchemaDiffer {
 				return result;
 			}
 		}
-		
-//		static class MapComparator<T, K, V, M extends Map<K, V>> {
-//
-//			private final SerializableFunction<T, M> mapAccessor;
-//
-//			private MapComparator(SerializableFunction<T, M> mapAccessor) {
-//				this.mapAccessor = mapAccessor;
-//			}
-//
-//			Set<AbstractDiff<?>> compare(T t1, T t2) {
-//				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
-//				CollectionDiffer<E, C, AbstractDiff<E>> collectionDiffer = null;
-//				C apply = mapAccessor.apply(t1);
-//				if (apply instanceof Set) {
-//					collectionDiffer = (CollectionDiffer) new SetDiffer<>(keyAccessor);
-//				} else if (apply instanceof List) {
-//					collectionDiffer = (CollectionDiffer) new ListDiffer<>(keyAccessor);
-//				}
-//				C apply1 = mapAccessor.apply(t2);
-//				KeepOrderSet<AbstractDiff<E>> collectionPresences = collectionDiffer.diff(apply, apply1);
-//
-//				result.addAll(collectionPresences.stream()
-//						.filter(d -> d.getState() != State.HELD).collect(Collectors.toList()));
-//				if (next != null) {
-//					List<AbstractDiff<?>> collect = collectionPresences.stream()
-//							.filter(d -> d.getState() == State.HELD)
-//							.map(d -> next.run(d.getSourceInstance(), d.getReplacingInstance()))
-//							.flatMap(Set<AbstractDiff<?>>::stream)
-//							.collect(Collectors.toList());
-//					result.addAll(collect);
-//				}
-//
-//				return result;
-//			}
-//		}
 		
 		/**
 		 * Comparator of a property between 2 objects of same type

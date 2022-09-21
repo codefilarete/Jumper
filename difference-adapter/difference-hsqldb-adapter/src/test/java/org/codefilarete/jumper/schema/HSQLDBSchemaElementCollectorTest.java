@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.codefilarete.jumper.schema.HSQLDBSchemaElementCollector.HSQLDBSchema;
-import org.codefilarete.jumper.schema.SchemaElementCollector.Schema.Sequence;
+import org.codefilarete.jumper.schema.HSQLDBSchemaElementCollector.HSQLDBSchema.Sequence;
 import org.codefilarete.stalactite.sql.UrlAwareDataSource;
 import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.codefilarete.tool.function.Predicates;

@@ -14,7 +14,8 @@
 	<modules>
 		<module>core</module>
 		<module>difference</module>
-	</modules>
+        <module>difference-adapter</module>
+    </modules>
 
 	<properties>
 		<maven.compiler.source>8</maven.compiler.source>

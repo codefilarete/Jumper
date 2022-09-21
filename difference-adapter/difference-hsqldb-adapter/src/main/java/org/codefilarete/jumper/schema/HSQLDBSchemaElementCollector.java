@@ -11,7 +11,7 @@ import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 
-public class HSQLDBSchemaElementCollector extends SchemaElementCollector {
+public class HSQLDBSchemaElementCollector extends DefaultSchemaElementCollector {
 	
 	public HSQLDBSchemaElementCollector(DatabaseMetaData databaseMetaData) {
 		this(new HSQLDBSequenceMetadataReader(databaseMetaData));
@@ -56,18 +56,18 @@ public class HSQLDBSchemaElementCollector extends SchemaElementCollector {
 	
 	public static class HSQLDBSchema extends Schema {
 		
-		private final Set<Schema.Sequence> sequences = new HashSet<>();
+		private final Set<HSQLDBSchema.Sequence> sequences = new HashSet<>();
 		
 		public HSQLDBSchema(String name) {
 			super(name);
 		}
 		
-		public Set<Schema.Sequence> getSequences() {
+		public Set<HSQLDBSchema.Sequence> getSequences() {
 			return sequences;
 		}
 		
-		Schema.Sequence addSequence(String name) {
-			Schema.Sequence result = new Schema.Sequence(name);
+		HSQLDBSchema.Sequence addSequence(String name) {
+			HSQLDBSchema.Sequence result = new HSQLDBSchema.Sequence(name);
 			this.sequences.add(result);
 			return result;
 		}
