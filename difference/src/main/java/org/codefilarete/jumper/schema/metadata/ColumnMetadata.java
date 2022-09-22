@@ -1,11 +1,13 @@
 package org.codefilarete.jumper.schema.metadata;
 
+import java.sql.JDBCType;
+
 import org.codefilarete.jumper.schema.metadata.MetadataElement.TableNamespaceElementSupport;
 
 public class ColumnMetadata extends TableNamespaceElementSupport implements MetadataElement {
 	
 	private String name;
-	private int sqlType;
+	private JDBCType sqlType;
 	private String vendorType;
 	private Integer size;
 	private Integer precision;
@@ -25,11 +27,11 @@ public class ColumnMetadata extends TableNamespaceElementSupport implements Meta
 		this.name = name;
 	}
 	
-	public int getSqlType() {
+	public JDBCType getSqlType() {
 		return sqlType;
 	}
 	
-	public void setSqlType(int sqlType) {
+	public void setSqlType(JDBCType sqlType) {
 		this.sqlType = sqlType;
 	}
 	

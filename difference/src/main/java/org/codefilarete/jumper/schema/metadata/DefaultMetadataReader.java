@@ -1,6 +1,7 @@
 package org.codefilarete.jumper.schema.metadata;
 
 import java.sql.DatabaseMetaData;
+import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -535,7 +536,7 @@ public class DefaultMetadataReader implements MetadataReader {
 		public final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** SQL type from {@link java.sql.Types} */
-		public final ColumnReader<Integer> type = new ColumnReader<>(addColumn("DATA_TYPE", int.class), DefaultResultSetReaders.INTEGER_PRIMITIVE_READER);
+		public final ColumnReader<JDBCType> type = new ColumnReader<>(addColumn("DATA_TYPE", JDBCType.class), (rs, col) -> JDBCType.valueOf(rs.getInt(col)));
 		
 		/** Data source dependent type name, for a User-Defined-Type the type name is fully qualified */
 		public final ColumnReader<String> typeName = new ColumnReader<>(addColumn("TYPE_NAME", String.class), DefaultResultSetReaders.STRING_READER);

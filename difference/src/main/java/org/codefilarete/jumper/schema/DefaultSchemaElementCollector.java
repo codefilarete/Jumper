@@ -1,6 +1,7 @@
 package org.codefilarete.jumper.schema;
 
 import java.sql.DatabaseMetaData;
+import java.sql.JDBCType;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -106,7 +107,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, table.name);
 			columnMetadata.stream().sorted(Comparator.comparing(ColumnMetadata::getPosition)).forEach(row -> {
 				Column column = table.addColumn(row.getName(),
-						row.getVendorType(), row.getSize(), row.getPrecision(),
+						row.getSqlType(), row.getSize(), row.getPrecision(),
 						row.isNullable(), row.isAutoIncrement());
 				columnCache.put(new Duo<>(table.name, row.getName()), column);
 			});
@@ -177,7 +178,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			View view = result.addView(row.getName());
 			SortedSet<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, row.getName());
 			columnMetadata.forEach(c -> view.addColumn(c.getName(),
-					c.getVendorType(), c.getSize(), c.getPrecision(),
+					c.getSqlType(), c.getSize(), c.getPrecision(),
 					c.isNullable()));
 		});
 		
@@ -278,7 +279,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				this.foreignKeys.add(new ForeignKey(name, columns, targetTable, targetColumns));
 			}
 			
-			Column addColumn(String name, String type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
+			Column addColumn(String name, JDBCType type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
 				Column column = new Column(name, type, size, precision, nullable, autoIncrement);
 				this.columns.add(column);
 				return column;
@@ -306,13 +307,13 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			public class Column {
 				
 				private final String name;
-				private final String type;
+				private final JDBCType type;
 				private final Integer size;
 				private final Integer precision;
 				private final boolean nullable;
 				private final boolean autoIncrement;
 				
-				protected Column(String name, String type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
+				protected Column(String name, JDBCType type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
 					this.name = name;
 					this.type = type;
 					this.size = size;
@@ -329,7 +330,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					return name;
 				}
 				
-				public String getType() {
+				public JDBCType getType() {
 					return type;
 				}
 				
@@ -514,7 +515,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				return name;
 			}
 			
-			View addColumn(String name, String type, Integer size, Integer precision, boolean nullable) {
+			View addColumn(String name, JDBCType type, Integer size, Integer precision, boolean nullable) {
 				PseudoColumn column = new PseudoColumn(name, type, size, precision, nullable);
 				this.columns.add(column);
 				return this;
@@ -527,12 +528,12 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			public class PseudoColumn {
 				
 				private final String name;
-				private final String type;
+				private final JDBCType type;
 				private final Integer size;
 				private final Integer precision;
 				private final boolean nullable;
 				
-				protected PseudoColumn(String name, String type, Integer size, Integer precision, boolean nullable) {
+				protected PseudoColumn(String name, JDBCType type, Integer size, Integer precision, boolean nullable) {
 					this.name = name;
 					this.type = type;
 					this.size = size;
@@ -548,7 +549,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					return name;
 				}
 				
-				public String getType() {
+				public JDBCType getType() {
 					return type;
 				}
 				

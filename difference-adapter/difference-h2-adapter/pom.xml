@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>difference-derby-adapter</artifactId>
+    <artifactId>difference-h2-adapter</artifactId>
 
     <dependencies>
         <dependency>
@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>org.codefilarete.stalactite</groupId>
-            <artifactId>sql-derby-adapter</artifactId>
+            <artifactId>sql-h2-adapter</artifactId>
             <version>${stalactite.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

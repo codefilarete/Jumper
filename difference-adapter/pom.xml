@@ -16,6 +16,7 @@
     <modules>
         <module>difference-derby-adapter</module>
         <module>difference-hsqldb-adapter</module>
+        <module>difference-h2-adapter</module>
     </modules>
 
 </project>

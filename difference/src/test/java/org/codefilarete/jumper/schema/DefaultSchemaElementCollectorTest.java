@@ -2,6 +2,7 @@ package org.codefilarete.jumper.schema;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.JDBCType;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
@@ -43,15 +44,15 @@ class DefaultSchemaElementCollectorTest {
 		
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
-		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
-		Column columnA_name = tableA.addColumn("NAME", "VARCHAR", 200, null, false, false);
-		Column columnA_age = tableA.addColumn("AGE", "DOUBLE", 64, null, true, false);
+		Column columnA_Id = tableA.addColumn("ID", JDBCType.BIGINT, 64, 0, false, true);
+		Column columnA_name = tableA.addColumn("NAME", JDBCType.VARCHAR, 200, null, false, false);
+		Column columnA_age = tableA.addColumn("AGE", JDBCType.DOUBLE, 64, null, true, false);
 		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Table tableB = expectedResult.addTable("B");
-		Column columnB_Id = tableB.addColumn("ID", "BIGINT", 64, 0, false, false);
-		Column columnB_aId = tableB.addColumn("AID", "BIGINT", 64, 0, true, false);
-		Column columnB_dummyData = tableB.addColumn("DUMMYDATA", "VARCHAR", 50, 0, false, false);
+		Column columnB_Id = tableB.addColumn("ID", JDBCType.BIGINT, 64, 0, false, false);
+		Column columnB_aId = tableB.addColumn("AID", JDBCType.BIGINT, 64, 0, true, false);
+		Column columnB_dummyData = tableB.addColumn("DUMMYDATA", JDBCType.VARCHAR, 50, 0, false, false);
 		tableB.setPrimaryKey("ID", Arrays.asList(columnB_Id));
 		tableB.addForeignKey("FROMBTOA", Arrays.asList(columnB_aId), tableA, Arrays.asList(columnA_Id));
 		
@@ -98,12 +99,12 @@ class DefaultSchemaElementCollectorTest {
 		
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
-		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
+		Column columnA_Id = tableA.addColumn("ID", JDBCType.BIGINT, 64, 0, false, true);
 		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Table tableB = expectedResult.addTable("B");
-		Column columnB_Id = tableB.addColumn("ID", "BIGINT", 64, 0, false, false);
-		Column columnB_aId = tableB.addColumn("AID", "BIGINT", 64, 0, true, false);
+		Column columnB_Id = tableB.addColumn("ID", JDBCType.BIGINT, 64, 0, false, false);
+		Column columnB_aId = tableB.addColumn("AID", JDBCType.BIGINT, 64, 0, true, false);
 		tableB.setPrimaryKey("ID", Arrays.asList(columnB_Id));
 		tableB.addForeignKey("FROMBTOA", Arrays.asList(columnB_aId), tableA, Arrays.asList(columnA_Id));
 		
@@ -150,9 +151,9 @@ class DefaultSchemaElementCollectorTest {
 	
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
-		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
-		Column columnA_name = tableA.addColumn("NAME", "VARCHAR", 200, null, false, false);
-		Column columnA_age = tableA.addColumn("AGE", "DOUBLE", 64, null, true, false);
+		Column columnA_Id = tableA.addColumn("ID", JDBCType.BIGINT, 64, 0, false, true);
+		Column columnA_name = tableA.addColumn("NAME", JDBCType.VARCHAR, 200, null, false, false);
+		Column columnA_age = tableA.addColumn("AGE", JDBCType.DOUBLE, 64, null, true, false);
 		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Index indexToto = expectedResult.new Index("TOTO");
@@ -195,10 +196,10 @@ class DefaultSchemaElementCollectorTest {
 		// Checking views
 		Schema expectedResult = new Schema(null);
 		View tutuView = expectedResult.addView("DUMMYVIEW");
-		tutuView.addColumn("X", "BIGINT", 64, 0, true)
+		tutuView.addColumn("X", JDBCType.BIGINT, 64, 0, true)
 				// note that NAME column is nullable in view whereas it's not in original table
-				.addColumn("NAME", "VARCHAR", 200, null, true)
-				.addColumn("DUMMYDATA", "VARCHAR", 50, null, true);
+				.addColumn("NAME", JDBCType.VARCHAR, 200, null, true)
+				.addColumn("DUMMYDATA", JDBCType.VARCHAR, 50, null, true);
 		
 		Map<String, View> viewPerName = Iterables.map(schema.getViews(), View::getName);
 		View actualView = viewPerName.get("DUMMYVIEW");
@@ -231,15 +232,15 @@ class DefaultSchemaElementCollectorTest {
 	
 		Schema expectedResult = new Schema(null);
 		Table tableA = expectedResult.addTable("A");
-		Column columnA_Id = tableA.addColumn("ID", "BIGINT", 64, 0, false, true);
-		Column columnA_name = tableA.addColumn("NAME", "VARCHAR", 200, null, false, false);
-		Column columnA_age = tableA.addColumn("AGE", "DOUBLE", 64, null, true, false);
+		Column columnA_Id = tableA.addColumn("ID", JDBCType.BIGINT, 64, 0, false, true);
+		Column columnA_name = tableA.addColumn("NAME", JDBCType.VARCHAR, 200, null, false, false);
+		Column columnA_age = tableA.addColumn("AGE", JDBCType.DOUBLE, 64, null, true, false);
 		tableA.setPrimaryKey("ID", Arrays.asList(columnA_Id));
 		
 		Table tableB = expectedResult.addTable("B");
-		Column columnB_Id = tableB.addColumn("ID", "BIGINT", 64, 0, false, false);
-		Column columnB_aId = tableB.addColumn("AID", "BIGINT", 64, 0, true, false);
-		Column columnB_dummyData = tableB.addColumn("DUMMYDATA", "VARCHAR", 50, 0, false, false);
+		Column columnB_Id = tableB.addColumn("ID", JDBCType.BIGINT, 64, 0, false, false);
+		Column columnB_aId = tableB.addColumn("AID", JDBCType.BIGINT, 64, 0, true, false);
+		Column columnB_dummyData = tableB.addColumn("DUMMYDATA", JDBCType.VARCHAR, 50, 0, false, false);
 		tableB.setPrimaryKey("ID", Arrays.asList(columnB_Id));
 		tableB.addForeignKey("FROMBTOA", Arrays.asList(columnB_aId), tableA, Arrays.asList(columnA_Id));
 		
