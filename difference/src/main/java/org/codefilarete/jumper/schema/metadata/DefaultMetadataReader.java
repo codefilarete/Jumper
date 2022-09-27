@@ -149,7 +149,11 @@ public class DefaultMetadataReader implements MetadataReader {
 	
 	@Override
 	public Set<TableMetadata> giveTables(String catalog, String schema, String tableNamePattern) {
-		try (ResultSet tableResultSet = metaData.getTables(catalog, schema, tableNamePattern, new String[] { "TABLE" })) {
+		return giveTables(catalog, schema, tableNamePattern, new String[] { "TABLE" });
+	}
+	
+	protected Set<TableMetadata> giveTables(String catalog, String schema, String tableNamePattern, String[] tableTypes) {
+		try (ResultSet tableResultSet = metaData.getTables(catalog, schema, tableNamePattern, tableTypes)) {
 			ResultSetIterator<TableMetadata> resultSetIterator = new ResultSetIterator<TableMetadata>(tableResultSet) {
 				@Override
 				public TableMetadata convert(ResultSet resultSet) {

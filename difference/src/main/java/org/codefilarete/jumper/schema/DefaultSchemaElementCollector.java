@@ -149,12 +149,8 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		tablePerName.values().forEach(table -> {
 			Set<IndexMetadata> foreignKeyMetadata = metadataReader.giveIndexes(catalog, schema, table.name);
 			foreignKeyMetadata.forEach(row -> {
-				// we don't take into account indexes that matches primaryKey names because some database vendors
-				// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
-				// as they are highly tied to primaryKey presence (can't be deleted without removing primaryKey)
-				Optional<String> matchingPkName = result.getTables().stream().map(t -> nullable(t.getPrimaryKey()).map(PrimaryKey::getName).getOr((String) null))
-						.filter(pkName -> row.getName().equals(pkName)).findFirst();
-				if (!matchingPkName.isPresent()) {
+				boolean addIndex = shouldAddIndex(result, row);
+				if (addIndex) {
 					Index index = result.addIndex(row.getName());
 					index.setUnique(row.isUnique());
 					row.getColumns().forEach(duo -> {
@@ -185,6 +181,15 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		completeSchema(result);
 		
 		return result;
+	}
+	
+	protected boolean shouldAddIndex(Schema result, IndexMetadata row) {
+		// we don't take into account indexes that matches primaryKey names because some database vendors
+		// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
+		// as they are highly tied to primaryKey presence (can't be deleted without removing primaryKey)
+		Optional<String> matchingPkName = result.getTables().stream().map(t -> nullable(t.getPrimaryKey()).map(PrimaryKey::getName).getOr((String) null))
+				.filter(pkName -> row.getName().equals(pkName)).findFirst();
+		return !matchingPkName.isPresent();
 	}
 	
 	protected Schema createSchema(StringAppender schemaName) {
@@ -241,6 +246,13 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			View result = new View(name);
 			this.views.add(result);
 			return result;
+		}
+		
+		@Override
+		public String toString() {
+			return "Schema{" +
+					"name='" + name + '\'' +
+					'}';
 		}
 		
 		public class Table {

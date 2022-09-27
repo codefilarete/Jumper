@@ -8,15 +8,15 @@
 	<artifactId>parent</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-
+	
 	<name>Jumper</name>
-
+	
 	<modules>
 		<module>core</module>
 		<module>difference</module>
-        <module>difference-adapter</module>
-    </modules>
-
+		<module>difference-adapter</module>
+	</modules>
+	
 	<properties>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
@@ -28,7 +28,7 @@
 		<stalactite.version>1.0.1-SNAPSHOT</stalactite.version>
 		<assertj.version>3.23.1</assertj.version>
 	</properties>
-
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -59,7 +59,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
+	
 	<build>
 		<plugins>
 			<plugin>
