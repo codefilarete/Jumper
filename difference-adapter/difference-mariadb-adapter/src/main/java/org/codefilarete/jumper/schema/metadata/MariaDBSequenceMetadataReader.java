@@ -71,35 +71,38 @@ public class MariaDBSequenceMetadataReader extends DefaultMetadataReader impleme
 			throw new RuntimeException(e);
 		}
 		
-		String sequencesDetailsSql = sequenceNames.stream().map(sequenceName -> "SELECT" +
-						" '" + sequenceName.schema + "' AS SEQUENCE_SCHEMA," +
-						" '" + sequenceName.name + "' AS SEQUENCE_NAME," +
-						" START_VALUE AS START_VALUE," +
-						" MINIMUM_VALUE AS MIN_VALUE," +
-						" MAXIMUM_VALUE AS MAX_VALUE," +
-						" INCREMENT AS INCREMENT_BY," +
-						" CYCLE_OPTION AS WILL_CYCLE" +
-						" FROM " + sequenceName.schema + "." + sequenceName.name)
-				.collect(Collectors.joining(" union "));
-		
-		try (PreparedStatement selectSequenceStatement = metaData.getConnection().prepareStatement(sequencesDetailsSql);
-			 ResultSet tableResultSet = selectSequenceStatement.executeQuery()) {
-			ResultSetIterator<SequenceMetadata> resultSetIterator = new ResultSetIterator<SequenceMetadata>(tableResultSet) {
-				@Override
-				public SequenceMetadata convert(ResultSet resultSet) {
-					return new SequenceMetadata(
-							catalog,
-							SequenceNameMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
-							SequenceNameMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
-					);
-				}
-			};
+		Set<SequenceMetadata> result = new HashSet<>();
+		if (!sequenceNames.isEmpty()) {
+			String sequencesDetailsSql = sequenceNames.stream().map(sequenceName -> "SELECT" +
+							" '" + sequenceName.schema + "' AS SEQUENCE_SCHEMA," +
+							" '" + sequenceName.name + "' AS SEQUENCE_NAME," +
+							" START_VALUE AS START_VALUE," +
+							" MINIMUM_VALUE AS MIN_VALUE," +
+							" MAXIMUM_VALUE AS MAX_VALUE," +
+							" INCREMENT AS INCREMENT_BY," +
+							" CYCLE_OPTION AS WILL_CYCLE" +
+							" FROM " + sequenceName.schema + "." + sequenceName.name)
+					.collect(Collectors.joining(" union "));
 			
-			return new HashSet<>(resultSetIterator.convert());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			try (PreparedStatement selectSequenceStatement = metaData.getConnection().prepareStatement(sequencesDetailsSql);
+				 ResultSet tableResultSet = selectSequenceStatement.executeQuery()) {
+				ResultSetIterator<SequenceMetadata> resultSetIterator = new ResultSetIterator<SequenceMetadata>(tableResultSet) {
+					@Override
+					public SequenceMetadata convert(ResultSet resultSet) {
+						return new SequenceMetadata(
+								catalog,
+								SequenceNameMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+								SequenceNameMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
+						);
+					}
+				};
+				
+				result.addAll(resultSetIterator.convert());
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
 		}
-		
+		return result;
 	}
 	
 	/**
