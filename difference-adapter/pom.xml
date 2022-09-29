@@ -19,6 +19,7 @@
 		<module>difference-h2-adapter</module>
 		<module>difference-mariadb-adapter</module>
 		<module>difference-mysql-adapter</module>
+		<module>difference-postgresql-adapter</module>
 	</modules>
 
 </project>
