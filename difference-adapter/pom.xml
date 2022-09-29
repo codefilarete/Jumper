@@ -18,6 +18,7 @@
 		<module>difference-hsqldb-adapter</module>
 		<module>difference-h2-adapter</module>
 		<module>difference-mariadb-adapter</module>
+		<module>difference-mysql-adapter</module>
 	</modules>
 
 </project>
