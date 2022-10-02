@@ -24,7 +24,31 @@ public abstract class SchemaDiffer {
 		this.comparisonChain = configure();
 	}
 	
-	protected abstract ComparisonChain<Schema> configure();
+	/**
+	 * Implemented as such :
+	 * - doesn't compare schema name
+	 * - compares table presence by (strict) name
+	 * - compares table columns by name, type, size, precision, nullity, auto-increment
+	 * - compares index presence by (strict) name
+	 * - compares index uniqueness and columns
+	 *
+	 * @return a {@link ComparisonChain} that can be completed or asked to {@link ComparisonChain#compare(Schema, Schema)} some schemas
+	 */
+	protected ComparisonChain<Schema> configure() {
+		return comparisonChain(Schema.class)
+				.compareOn(Schema::getTables, Table::getName, comparisonChain(Table.class)
+						.compareOn(Table::getColumns, Column::getName, comparisonChain(Column.class)
+								.compareOn(Column::getType)
+								.compareOn(Column::getSize)
+								.compareOn(Column::getPrecision)
+								.compareOn(Column::isNullable)
+								.compareOn(Column::isAutoIncrement))
+						)
+				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
+						.compareOn(Index::isUnique)
+						.compareOnMap(Index::getColumns, Column::getName)
+				);
+	}
 	
 	public Set<AbstractDiff<?>> compare(Schema schema1, Schema schema2) {
 		return comparisonChain.run(schema1, schema2);

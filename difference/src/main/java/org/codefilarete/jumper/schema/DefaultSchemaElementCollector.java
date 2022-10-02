@@ -222,7 +222,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			return tables;
 		}
 		
-		Table addTable(String name) {
+		public Table addTable(String name) {
 			Table table = new Table(name);
 			this.tables.add(table);
 			return table;
@@ -232,7 +232,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			return indexes;
 		}
 		
-		Index addIndex(String name) {
+		public Index addIndex(String name) {
 			Index result = new Index(name);
 			this.indexes.add(result);
 			return result;
@@ -242,7 +242,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			return views;
 		}
 		
-		View addView(String name) {
+		public View addView(String name) {
 			View result = new View(name);
 			this.views.add(result);
 			return result;
@@ -275,26 +275,27 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				return columns;
 			}
 			
+			public Column addColumn(String name, JDBCType type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
+				Column column = new Column(name, type, size, precision, nullable, autoIncrement);
+				this.columns.add(column);
+				return column;
+			}
+			
 			public PrimaryKey getPrimaryKey() {
 				return primaryKey;
 			}
 			
-			void setPrimaryKey(String name, List<Column> columns) {
+			public PrimaryKey setPrimaryKey(String name, List<Column> columns) {
 				this.primaryKey = new PrimaryKey(name, columns);
+				return primaryKey;
 			}
 			
 			public Set<ForeignKey> getForeignKeys() {
 				return foreignKeys;
 			}
 			
-			void addForeignKey(String name, List<Column> columns, Table targetTable, List<Column> targetColumns) {
+			public void addForeignKey(String name, List<Column> columns, Table targetTable, List<Column> targetColumns) {
 				this.foreignKeys.add(new ForeignKey(name, columns, targetTable, targetColumns));
-			}
-			
-			Column addColumn(String name, JDBCType type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
-				Column column = new Column(name, type, size, precision, nullable, autoIncrement);
-				this.columns.add(column);
-				return column;
 			}
 			
 			public String getName() {
