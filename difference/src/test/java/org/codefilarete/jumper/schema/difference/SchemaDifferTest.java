@@ -9,6 +9,7 @@ import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.reflection.AccessorDefinition;
 import org.codefilarete.reflection.Accessors;
@@ -75,6 +76,47 @@ class SchemaDifferTest {
 				.containsExactlyInAnyOrder(
 						new IndexedDiff<>(State.REMOVED, missingColumn, null, Arrays.asHashSet(1), Arrays.asHashSet()),
 						new IndexedDiff<>(State.ADDED, null, extraColumn, Arrays.asHashSet(), Arrays.asHashSet(1)));
+	}
+	
+	@Test
+	void compare_tablesWithPrimaryKeyDifference_returnsPrimaryKeyDifferences() {
+		SchemaDiffer testInstance = new SchemaDiffer();
+		Schema schema1 = new Schema("schema1");
+		Table dummyTable1 = schema1.addTable("DummyTable");
+		Column column = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		PrimaryKey primary = dummyTable1.setPrimaryKey("PRIMARY", Arrays.asList(column));
+		Schema schema2 = new Schema("schema2");
+		Table dummyTable2 = schema2.addTable("DummyTable");
+		dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
+		
+		assertThat(compare)
+				.usingRecursiveFieldByFieldElementComparator(RECURSIVE_COMPARISON_CONFIGURATION)	// because Diff class doesn't implement equals() and we don't want it to
+				.containsExactlyInAnyOrder(
+						new PropertyDiff<>(Table::getPrimaryKey, dummyTable1, dummyTable2));
+	}
+	
+	
+	@Test
+	void compare_tablesWithPrimaryKeyDifference_returnsPrimaryKeyDifferences2() {
+		SchemaDiffer testInstance = new SchemaDiffer();
+		Schema schema1 = new Schema("schema1");
+		Table dummyTable1 = schema1.addTable("DummyTable");
+		Column dummyColumn1 = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		dummyTable1.addColumn("otherDummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		PrimaryKey primaryKey1 = dummyTable1.setPrimaryKey("PRIMARY", Arrays.asList(dummyColumn1));
+		Schema schema2 = new Schema("schema2");
+		Table dummyTable2 = schema2.addTable("DummyTable");
+		Column dummyColumn2 = dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		Column otherDummyColumn = dummyTable2.addColumn("otherDummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		PrimaryKey primaryKey2 = dummyTable2.setPrimaryKey("PRIMARY", Arrays.asList(otherDummyColumn));
+		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
+		
+		assertThat(compare)
+				.usingRecursiveFieldByFieldElementComparator(RECURSIVE_COMPARISON_CONFIGURATION)	// because Diff class doesn't implement equals() and we don't want it to
+				.containsExactlyInAnyOrder(
+						new IndexedDiff<>(State.REMOVED, dummyColumn1, null, Arrays.asHashSet(0), Arrays.asHashSet()),
+						new IndexedDiff<>(State.ADDED, null, otherDummyColumn, Arrays.asHashSet(), Arrays.asHashSet(0)));
 	}
 	
 	@Nested

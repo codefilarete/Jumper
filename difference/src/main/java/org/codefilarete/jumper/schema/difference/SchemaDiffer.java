@@ -2,6 +2,7 @@ package org.codefilarete.jumper.schema.difference;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,14 +10,29 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
-import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
+import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
-public abstract class SchemaDiffer {
+public class SchemaDiffer {
+	
+	public static <I, O> BiPredicate<I, I> biPredicate(Function<I, O> mapper) {
+		return (o1, o2) -> {
+			if (o1 != null && o2 != null) {
+				return Objects.equals(mapper.apply(o1), mapper.apply(o2));
+			} else {
+				return o1 == null && o2 == null;
+			}
+		};
+	}
 	
 	private final ComparisonChain<Schema> comparisonChain;
 	
@@ -43,6 +59,8 @@ public abstract class SchemaDiffer {
 								.compareOn(Column::getPrecision)
 								.compareOn(Column::isNullable)
 								.compareOn(Column::isAutoIncrement))
+						.compareOn(Table::getPrimaryKey, biPredicate(PrimaryKey::getName), comparisonChain(PrimaryKey.class)
+								.compareOn(PrimaryKey::getColumns, Column::getName))
 						)
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
@@ -92,22 +110,37 @@ public abstract class SchemaDiffer {
 			return this;
 		}
 		
+		public <O> ComparisonChain<T> compareOn(SerializableFunction<T, O> propertyAccessor, BiPredicate<O, O> predicate, ComparisonChain<O> deeperComparison) {
+			PropertyComparator<T, O> propertyComparator = new PropertyComparator<>(propertyAccessor, predicate);
+			this.propertiesToCompare.add(propertyComparator);
+			propertyComparator.next = deeperComparison;
+			return this;
+		}
+		
 		public Set<AbstractDiff<?>> run(T t1, T t2) {
-			Set<AbstractDiff<?>> result = new HashSet<>();
-			propertiesToCompare.forEach(p -> {
-				if (p instanceof ComparisonChain.CollectionComparator) {
-					result.addAll(((CollectionComparator) p).compare(t1, t2));
-				} else if (p instanceof ComparisonChain.MapComparator) {
-					result.addAll(((MapComparator) p).compare(t1, t2));
-				} else if (p instanceof ComparisonChain.PropertyComparator) {
-					PropertyComparator<T, ?> propertyComparator = (PropertyComparator<T, ?>) p;
-					PropertyDiff<?, ?> diff = propertyComparator.compare(t1, t2);
-					if (diff != null) {
-						result.add(diff);
+			if (t1 == null && t2 == null) {
+				return Collections.emptySet();
+			} else if (t1 == null) {
+				return Arrays.asHashSet(new Diff<>(State.ADDED, null, t2));
+			} else if (t2 == null) {
+				return Arrays.asHashSet(new Diff<>(State.REMOVED, t1, null));
+			} else {
+				Set<AbstractDiff<?>> result = new HashSet<>();
+				propertiesToCompare.forEach(p -> {
+					if (p instanceof ComparisonChain.CollectionComparator) {
+						result.addAll(((CollectionComparator) p).compare(t1, t2));
+					} else if (p instanceof ComparisonChain.MapComparator) {
+						result.addAll(((MapComparator) p).compare(t1, t2));
+					} else if (p instanceof ComparisonChain.PropertyComparator) {
+						PropertyComparator<T, ?> propertyComparator = (PropertyComparator<T, ?>) p;
+						Set<AbstractDiff<?>> diffs = propertyComparator.compare(t1, t2);
+						if (diffs != null) {
+							result.addAll(diffs);
+						}
 					}
-				}
-			});
-			return result;
+				});
+				return result;
+			}
 		}
 		
 		static class MapComparator<T, K, V, M extends Map<K, V>> {
@@ -190,18 +223,21 @@ public abstract class SchemaDiffer {
 			private final SerializableFunction<T, O> propertyAccessor;
 			
 			private final BiPredicate<O, O> predicate;
+			public ComparisonChain<O> next;
 			
 			private PropertyComparator(SerializableFunction<T, O> propertyAccessor, BiPredicate<O, O> predicate) {
 				this.propertyAccessor = propertyAccessor;
 				this.predicate = predicate;
 			}
 			
-			PropertyDiff<T, O> compare(T t1, T t2) {
+			Set<AbstractDiff<?>> compare(T t1, T t2) {
 				O v1 = propertyAccessor.apply(t1);
 				O v2 = propertyAccessor.apply(t2);
 				boolean comparison = predicate.test(v1, v2);
 				if (!comparison) {
-					return new PropertyDiff<>(propertyAccessor, t1, t2);
+					return Arrays.asHashSet(new PropertyDiff<>(propertyAccessor, t1, t2));
+				} else if (next != null) {
+					return next.run(v1, v2);
 				}
 				return null;
 			}
