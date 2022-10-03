@@ -59,7 +59,8 @@ public class SchemaDiffer {
 								.compareOn(Column::getPrecision)
 								.compareOn(Column::isNullable)
 								.compareOn(Column::isAutoIncrement))
-						.compareOn(Table::getPrimaryKey, biPredicate(PrimaryKey::getName), comparisonChain(PrimaryKey.class)
+						.compareOn(Table::getPrimaryKey, comparisonChain(PrimaryKey.class)
+								.compareOn(PrimaryKey::getName)
 								.compareOn(PrimaryKey::getColumns, Column::getName))
 						)
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
@@ -110,10 +111,10 @@ public class SchemaDiffer {
 			return this;
 		}
 		
-		public <O> ComparisonChain<T> compareOn(SerializableFunction<T, O> propertyAccessor, BiPredicate<O, O> predicate, ComparisonChain<O> deeperComparison) {
-			PropertyComparator<T, O> propertyComparator = new PropertyComparator<>(propertyAccessor, predicate);
+		public <O> ComparisonChain<T> compareOn(SerializableFunction<T, O> propertyAccessor, ComparisonChain<O> deeperComparison) {
+			PropertyComparator<T, O> propertyComparator = new PropertyComparator<>(propertyAccessor);
 			this.propertiesToCompare.add(propertyComparator);
-			propertyComparator.next = deeperComparison;
+			propertyComparator.deepComparator = deeperComparison;
 			return this;
 		}
 		
@@ -222,22 +223,29 @@ public class SchemaDiffer {
 			
 			private final SerializableFunction<T, O> propertyAccessor;
 			
-			private final BiPredicate<O, O> predicate;
-			public ComparisonChain<O> next;
+			private final BiPredicate<O, O> propertyPredicate;
+			public ComparisonChain<O> deepComparator;
 			
-			private PropertyComparator(SerializableFunction<T, O> propertyAccessor, BiPredicate<O, O> predicate) {
+			private PropertyComparator(SerializableFunction<T, O> propertyAccessor) {
+				// Predicate explanation : if property is null on both instances then they are considered equal, and
+				// if both properties are not null, then they are considered equal too because we'll chain with
+				// deepComparator, hence we don't considered them equal only if one of them is null and the other is not.
+				this(propertyAccessor, (o1, o2) -> (o1 != null) == (o2 != null));
+			}
+			
+			private PropertyComparator(SerializableFunction<T, O> propertyAccessor, BiPredicate<O, O> propertyPredicate) {
 				this.propertyAccessor = propertyAccessor;
-				this.predicate = predicate;
+				this.propertyPredicate = propertyPredicate;
 			}
 			
 			Set<AbstractDiff<?>> compare(T t1, T t2) {
 				O v1 = propertyAccessor.apply(t1);
 				O v2 = propertyAccessor.apply(t2);
-				boolean comparison = predicate.test(v1, v2);
+				boolean comparison = propertyPredicate.test(v1, v2);
 				if (!comparison) {
 					return Arrays.asHashSet(new PropertyDiff<>(propertyAccessor, t1, t2));
-				} else if (next != null) {
-					return next.run(v1, v2);
+				} else if (deepComparator != null) {
+					return deepComparator.run(v1, v2);
 				}
 				return null;
 			}
