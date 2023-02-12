@@ -11,7 +11,7 @@ import static org.codefilarete.jumper.ddl.engine.NewTableHandler.MARIADB_KEYWORD
  * @author Guillaume Mary
  */
 public class Dialect {
-
+	
 	private final NewTableGenerator newTableHandler;
 	private final NewForeignKeyGenerator newForeignKeyHandler;
 	private final NewIndexGenerator newIndexHandler;
@@ -19,7 +19,7 @@ public class Dialect {
 	private final ModifyColumnGenerator modifyColumnHandler;
 	private final AddColumnGenerator addColumnHandler;
 	private final NewUniqueConstraintGenerator newUniqueConstraintHandler;
-
+	
 	public Dialect() {
 		this(new NewTableHandler(MARIADB_KEYWORDS),
 				new NewForeignKeyHandler(),
@@ -28,9 +28,9 @@ public class Dialect {
 				new ModifyColumnHandler(MARIADB_KEYWORDS),
 				new AddColumnHandler(MARIADB_KEYWORDS),
 				new NewUniqueConstraintHandler(MARIADB_KEYWORDS)
-				);
+		);
 	}
-
+	
 	private Dialect(NewTableGenerator newTableHandler,
 					NewForeignKeyGenerator newForeignKeyHandler,
 					NewIndexGenerator newIndexHandler,
@@ -38,7 +38,7 @@ public class Dialect {
 					ModifyColumnGenerator modifyColumnHandler,
 					AddColumnGenerator addColumnHandler,
 					NewUniqueConstraintGenerator newUniqueConstraintHandler
-					) {
+	) {
 		this.newTableHandler = newTableHandler;
 		this.newForeignKeyHandler = newForeignKeyHandler;
 		this.newIndexHandler = newIndexHandler;
@@ -47,7 +47,7 @@ public class Dialect {
 		this.addColumnHandler = addColumnHandler;
 		this.newUniqueConstraintHandler = newUniqueConstraintHandler;
 	}
-
+	
 	public String generateScript(SupportedChange supportedChange) {
 		String ddl;
 		if (supportedChange instanceof NewTable) {
@@ -69,9 +69,9 @@ public class Dialect {
 		}
 		return ddl;
 	}
-
+	
 	public static class DialectBuilder {
-
+		
 		private NewTableGenerator newTableHandler;
 		private NewForeignKeyGenerator newForeignKeyHandler;
 		private NewIndexGenerator newIndexHandler;
@@ -79,10 +79,10 @@ public class Dialect {
 		private ModifyColumnGenerator modifyColumnHandler;
 		private AddColumnGenerator addColumnHandler;
 		private NewUniqueConstraintGenerator newUniqueConstraintHandler;
-
+		
 		public DialectBuilder() {
 		}
-
+		
 		public DialectBuilder(Dialect dialect) {
 			this.newTableHandler = dialect.newTableHandler;
 			this.newForeignKeyHandler = dialect.newForeignKeyHandler;
@@ -92,27 +92,27 @@ public class Dialect {
 			this.addColumnHandler = dialect.addColumnHandler;
 			this.newUniqueConstraintHandler = dialect.newUniqueConstraintHandler;
 		}
-
+		
 		public DialectBuilder withNewTableHandler(NewTableGenerator newTableHandler) {
 			this.newTableHandler = newTableHandler;
 			return this;
 		}
-
+		
 		public DialectBuilder withNewForeignKeyHandler(NewForeignKeyGenerator newForeignKeyHandler) {
 			this.newForeignKeyHandler = newForeignKeyHandler;
 			return this;
 		}
-
+		
 		public DialectBuilder withNewIndexHandler(NewIndexGenerator newIndexHandler) {
 			this.newIndexHandler = newIndexHandler;
 			return this;
 		}
-
+		
 		public DialectBuilder withDropTableHandler(DropTableGenerator dropTableHandler) {
 			this.dropTableHandler = dropTableHandler;
 			return this;
 		}
-
+		
 		Dialect build() {
 			return new Dialect(newTableHandler, newForeignKeyHandler, newIndexHandler, dropTableHandler, modifyColumnHandler, addColumnHandler, newUniqueConstraintHandler);
 		}

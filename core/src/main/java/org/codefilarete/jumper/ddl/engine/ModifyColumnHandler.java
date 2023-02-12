@@ -1,21 +1,21 @@
 package org.codefilarete.jumper.ddl.engine;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.codefilarete.jumper.ddl.dsl.support.ModifyColumn;
 import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 import org.codefilarete.tool.collection.Arrays;
 
-import java.util.Collections;
-import java.util.Set;
-
 /**
  * Default implementation of {@link NewTableGenerator}
- * 
+ *
  * @author Guillaume Mary
  */
 public class ModifyColumnHandler implements ModifyColumnGenerator {
-
+	
 	private static final Set<String> MARIADB_KEYWORDS = Arrays.asTreeSet(String.CASE_INSENSITIVE_ORDER,
 			"ACCESSIBLE", "ANALYZE", "ASENSITIVE",
 			"BEFORE", "BIGINT", "BINARY", "BLOB",
@@ -46,17 +46,17 @@ public class ModifyColumnHandler implements ModifyColumnGenerator {
 			"RESIGNAL",
 			"SIGNAL",
 			"SLOW");
-
+	
 	private final Set<String> keywords;
-
+	
 	public ModifyColumnHandler() {
 		this(Collections.emptySet());
 	}
-
+	
 	public ModifyColumnHandler(Set<String> keywords) {
 		this.keywords = keywords;
 	}
-
+	
 	@Override
 	public String generateScript(ModifyColumn modifyColumn) {
 		DDLAppender sqlAlterTable = new DDLAppender("alter table ");
@@ -76,17 +76,17 @@ public class ModifyColumnHandler implements ModifyColumnGenerator {
 				.catIf(column.getDefaultValue() != null, " default ", column.getDefaultValue())
 		;
 	}
-
-
+	
+	
 	/**
 	 * A {@link StringAppender} that automatically escapes {@link Table} and {@link ModifyColumn} names against reserved words
 	 */
 	private class DDLAppender extends StringAppender {
-
+		
 		public DDLAppender(Object... o) {
 			super(o);
 		}
-
+		
 		/**
 		 * Overridden to append {@link DDLAppender} names
 		 *

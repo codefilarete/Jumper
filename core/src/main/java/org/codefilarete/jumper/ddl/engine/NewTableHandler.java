@@ -1,5 +1,9 @@
 package org.codefilarete.jumper.ddl.engine;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewColumn;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewPrimaryKey;
@@ -8,13 +12,9 @@ import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 import org.codefilarete.tool.collection.Arrays;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 /**
  * Default implementation of {@link NewTableGenerator}
- * 
+ *
  * @author Guillaume Mary
  */
 public class NewTableHandler implements NewTableGenerator {

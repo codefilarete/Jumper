@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  * @author Guillaume Mary
  */
 public class ChangeSet {
-
+	
 	public static ChangeSet changeSet(String changeSetId, ChangeBuilder... changes) {
 		return new ChangeSet(changeSetId).addChanges(changes);
 	}
@@ -45,16 +45,17 @@ public class ChangeSet {
 		this.changes.addAll(Arrays.stream(changes).map(ChangeBuilder::build).collect(Collectors.toList()));
 		return this;
 	}
-
+	
 	/**
 	 * Indicates if this {@link ChangeSet} must be executed even if it was already ran. Default is no (false).
 	 */
 	public boolean shouldAlwaysRun() {
 		return shouldAlwaysRun;
 	}
-
+	
 	/**
 	 * Marks this {@link ChangeSet} to be executed even if it was already ran or not.
+	 *
 	 * @param yeOrNo true for changeSet to be executed even if it was already ran, false to run only once.
 	 */
 	public ChangeSet alwaysRun(boolean yeOrNo) {
@@ -77,9 +78,9 @@ public class ChangeSet {
 	Set<Checksum> getCompatibleChecksums() {
 		return Collections.EMPTY_SET;
 	}
-
+	
 	public interface ChangeBuilder {
-
+		
 		Change build();
 	}
 }

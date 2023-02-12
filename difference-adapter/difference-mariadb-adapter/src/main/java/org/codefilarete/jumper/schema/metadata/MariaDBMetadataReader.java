@@ -1,12 +1,20 @@
 package org.codefilarete.jumper.schema.metadata;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
-
-import java.sql.*;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class MariaDBMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
 	

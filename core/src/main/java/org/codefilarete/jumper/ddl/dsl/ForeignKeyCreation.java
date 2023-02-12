@@ -29,7 +29,7 @@ public interface ForeignKeyCreation {
 	interface ForeignKeyPostTargetColumnOptions extends ChangeSet.ChangeBuilder {
 		
 		ForeignKeyPostTargetColumnOptions addTargetColumn(String name);
-
+		
 		NewForeignKey build();
 	}
 }

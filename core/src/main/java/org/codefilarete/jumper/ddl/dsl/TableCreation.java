@@ -33,7 +33,7 @@ public interface TableCreation extends ChangeSet.ChangeBuilder {
 		
 		@Override
 		TableCreationColumnOption primaryKey();
-
+		
 		@Override
 		TableCreationColumnOption uniqueConstraint(String name);
 	}

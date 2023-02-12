@@ -1,12 +1,16 @@
 package org.codefilarete.jumper.schema;
 
-import org.codefilarete.jumper.schema.metadata.*;
-import org.codefilarete.tool.StringAppender;
-import org.codefilarete.tool.Strings;
-
 import java.sql.DatabaseMetaData;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.codefilarete.jumper.schema.metadata.IndexMetadata;
+import org.codefilarete.jumper.schema.metadata.MariaDBMetadataReader;
+import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
+import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
+import org.codefilarete.tool.StringAppender;
+import org.codefilarete.tool.Strings;
 
 public class MariaDBSchemaElementCollector extends DefaultSchemaElementCollector {
 	

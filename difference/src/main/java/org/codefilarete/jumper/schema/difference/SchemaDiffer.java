@@ -1,5 +1,17 @@
 package org.codefilarete.jumper.schema.difference;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
+
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
@@ -9,23 +21,7 @@ import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 public class SchemaDiffer {
-	
-	public static <I, O> BiPredicate<I, I> biPredicate(Function<I, O> mapper) {
-		return (o1, o2) -> {
-			if (o1 != null && o2 != null) {
-				return Objects.equals(mapper.apply(o1), mapper.apply(o2));
-			} else {
-				return o1 == null && o2 == null;
-			}
-		};
-	}
 	
 	private final ComparisonChain<Schema> comparisonChain;
 	

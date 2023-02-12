@@ -1,10 +1,27 @@
 package org.codefilarete.jumper;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
-import org.codefilarete.jumper.impl.*;
+import org.codefilarete.jumper.impl.AbstractJavaChange;
+import org.codefilarete.jumper.impl.ChangeChecksumer;
+import org.codefilarete.jumper.impl.JdbcChangeStorage;
+import org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage;
+import org.codefilarete.jumper.impl.SQLChange;
+import org.codefilarete.jumper.impl.StringChecksumer;
+import org.codefilarete.jumper.impl.SupportedChange;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.VisibleForTesting;
@@ -12,12 +29,6 @@ import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.codefilarete.tool.sql.TransactionSupport;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Guillaume Mary
@@ -33,7 +44,7 @@ public class ChangeSetRunner {
 		result.addExecutionListener(changeHistoryStorage.getChangeHistoryTableEnsurer());
 		return result;
 	}
-
+	
 	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, ChangeSet... changes) {
 		return forJdbcStorage(connectionProvider, Arrays.asList(changes));
 	}

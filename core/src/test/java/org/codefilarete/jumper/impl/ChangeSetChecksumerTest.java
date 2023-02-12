@@ -1,16 +1,20 @@
 package org.codefilarete.jumper.impl;
 
+import java.nio.charset.StandardCharsets;
+
 import org.assertj.core.api.Assertions;
 import org.codefilarete.jumper.ChangeSet;
-import org.codefilarete.jumper.ddl.dsl.support.*;
+import org.codefilarete.jumper.ddl.dsl.support.DropTable;
+import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
+import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
+import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewColumn;
+import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.jumper.impl.ChangeChecksumer.ByteBuffer;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -105,9 +109,9 @@ class ChangeSetChecksumerTest {
 	void giveSignature() {
 		ChangeChecksumer testInstance = new ChangeChecksumer();
 		Assertions.assertThatCode(() -> {
-			testInstance.giveSignature(new SupportedChange() {
-			});
-		}).isInstanceOf(NotImplementedException.class)
+					testInstance.giveSignature(new SupportedChange() {
+					});
+				}).isInstanceOf(NotImplementedException.class)
 				.hasMessageStartingWith("Signature computation is not implemented for ");
 	}
 	

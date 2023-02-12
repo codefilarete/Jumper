@@ -1,20 +1,26 @@
 package org.codefilarete.jumper.impl;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.Checksum;
 import org.codefilarete.jumper.Checksumer.ByteChecksumer;
-import org.codefilarete.jumper.ddl.dsl.support.*;
+import org.codefilarete.jumper.ddl.dsl.support.AddColumn;
+import org.codefilarete.jumper.ddl.dsl.support.DropTable;
+import org.codefilarete.jumper.ddl.dsl.support.ModifyColumn;
+import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
+import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
+import org.codefilarete.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.jumper.ddl.dsl.support.NewUniqueConstraint;
 import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.codefilarete.tool.io.IOs;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
 
 public class ChangeChecksumer {
 	
@@ -144,7 +150,7 @@ public class ChangeChecksumer {
 						" ")
 				.toString();
 	}
-
+	
 	protected String giveSignature(AddColumn modifyColumn) {
 		StringAppender result = new StringAppender("AddColumn");
 		return result.ccat(
@@ -158,12 +164,12 @@ public class ChangeChecksumer {
 						" ")
 				.toString();
 	}
-
+	
 	protected String giveSignature(NewUniqueConstraint newUniqueConstraint) {
 		StringAppender result = new StringAppender();
 		return result.cat("UK ", newUniqueConstraint.getName(), " ").ccat(newUniqueConstraint.getColumns(), " ").toString();
 	}
-
+	
 	/**
 	 * Bytes array that auto-expends if necessary appending some bytes to it
 	 *

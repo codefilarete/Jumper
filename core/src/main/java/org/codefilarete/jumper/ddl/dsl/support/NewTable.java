@@ -1,10 +1,10 @@
 package org.codefilarete.jumper.ddl.dsl.support;
 
-import org.codefilarete.jumper.impl.SupportedChange;
-import org.codefilarete.tool.collection.KeepOrderSet;
-
 import java.util.Arrays;
 import java.util.Set;
+
+import org.codefilarete.jumper.impl.SupportedChange;
+import org.codefilarete.tool.collection.KeepOrderSet;
 
 /**
  * @author Guillaume Mary
@@ -89,7 +89,7 @@ public class NewTable implements SupportedChange {
 		private String defaultValue;
 		private boolean autoIncrement = false;
 		private String uniqueConstraintName;
-
+		
 		/**
 		 * Creates a statement for column creation
 		 *
@@ -99,14 +99,14 @@ public class NewTable implements SupportedChange {
 		public NewColumn(String name, String sqlType) {
 			this(name, sqlType, null);
 		}
-
+		
 		/**
 		 * Creates a statement for column creation
 		 *
 		 * @param name column name to be created
 		 * @param sqlType type of column to be created
 		 * @param extraArguments extra column creation argument, like collation or unknown one specific to database vendor,
-		 *                       which will come hereafter sql type
+		 * which will come hereafter sql type
 		 */
 		public NewColumn(String name, String sqlType, String extraArguments) {
 			this.name = name;
@@ -121,11 +121,11 @@ public class NewTable implements SupportedChange {
 		public String getSqlType() {
 			return sqlType;
 		}
-
+		
 		public String getExtraArguments() {
 			return extraArguments;
 		}
-
+		
 		public boolean isNullable() {
 			return nullable;
 		}
