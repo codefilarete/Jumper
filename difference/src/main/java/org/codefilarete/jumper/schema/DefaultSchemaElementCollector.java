@@ -1,31 +1,11 @@
 package org.codefilarete.jumper.schema;
 
-import java.sql.DatabaseMetaData;
-import java.sql.JDBCType;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
-import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View;
-import org.codefilarete.jumper.schema.metadata.ColumnMetadata;
-import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
-import org.codefilarete.jumper.schema.metadata.ForeignKeyMetadata;
-import org.codefilarete.jumper.schema.metadata.IndexMetadata;
-import org.codefilarete.jumper.schema.metadata.MetadataReader;
-import org.codefilarete.jumper.schema.metadata.PrimaryKeyMetadata;
-import org.codefilarete.jumper.schema.metadata.TableMetadata;
-import org.codefilarete.jumper.schema.metadata.ViewMetadata;
+import org.codefilarete.jumper.schema.metadata.*;
 import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
@@ -33,6 +13,10 @@ import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.codefilarete.tool.collection.PairIterator;
+
+import java.sql.DatabaseMetaData;
+import java.sql.JDBCType;
+import java.util.*;
 
 import static org.codefilarete.tool.Nullable.nullable;
 
@@ -103,14 +87,24 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		
 		// Collecting columns and sewing them with tables
 		Map<Duo<String, String>, Column> columnCache = new HashMap<>();
+		Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, "%");
+		columnMetadata.stream().filter(c -> tablePerName.containsKey(c.getTableName()))
+				.sorted(Comparator.comparing(ColumnMetadata::getPosition)).forEach(row -> {
+			Table table = tablePerName.get(row.getTableName());
+			Column column = table.addColumn(row.getName(),
+					row.getSqlType(), row.getSize(), row.getPrecision(),
+					row.isNullable(), row.isAutoIncrement());
+			columnCache.put(new Duo<>(table.name, row.getName()), column);
+		});
+
 		tablePerName.values().forEach(table -> {
-			Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, table.name);
-			columnMetadata.stream().sorted(Comparator.comparing(ColumnMetadata::getPosition)).forEach(row -> {
-				Column column = table.addColumn(row.getName(),
-						row.getSqlType(), row.getSize(), row.getPrecision(),
-						row.isNullable(), row.isAutoIncrement());
-				columnCache.put(new Duo<>(table.name, row.getName()), column);
-			});
+//			Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, table.name);
+//			columnMetadata.stream().sorted(Comparator.comparing(ColumnMetadata::getPosition)).forEach(row -> {
+//				Column column = table.addColumn(row.getName(),
+//						row.getSqlType(), row.getSize(), row.getPrecision(),
+//						row.isNullable(), row.isAutoIncrement());
+//				columnCache.put(new Duo<>(table.name, row.getName()), column);
+//			});
 			PrimaryKeyMetadata primaryKeyMetadata = metadataReader.givePrimaryKey(catalog, schema, table.name);
 			if (primaryKeyMetadata != null) {
 				List<Column> primaryKeyColumns = new ArrayList<>();
@@ -120,7 +114,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				table.setPrimaryKey(primaryKeyMetadata.getName(), primaryKeyColumns);
 			}
 		});
-		
+
 		// Collecting Foreign Keys
 		// Some databases support table name pattern in getExportedKeys(..), some not. Since giving a pattern is not
 		// possible according to getExportedKeys(..) specification, we have to iterate over found table names to build
@@ -168,15 +162,19 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				}
 			});
 		});
+
+//		SortedSet<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, "%");
+//		Set<ViewMetadata> viewMetadata = metadataReader.giveViews(catalog, schema, tableNamePattern);
+
 		
-		Set<ViewMetadata> viewMetadata = metadataReader.giveViews(catalog, schema, tableNamePattern);
-		viewMetadata.forEach(row -> {
-			View view = result.addView(row.getName());
-			SortedSet<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, row.getName());
-			columnMetadata.forEach(c -> view.addColumn(c.getName(),
-					c.getSqlType(), c.getSize(), c.getPrecision(),
-					c.isNullable()));
-		});
+//		Set<ViewMetadata> viewMetadata = metadataReader.giveViews(catalog, schema, tableNamePattern);
+//		viewMetadata.forEach(row -> {
+//			View view = result.addView(row.getName());
+//			SortedSet<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, row.getName());
+//			columnMetadata.forEach(c -> view.addColumn(c.getName(),
+//					c.getSqlType(), c.getSize(), c.getPrecision(),
+//					c.isNullable()));
+//		});
 		
 		completeSchema(result);
 		

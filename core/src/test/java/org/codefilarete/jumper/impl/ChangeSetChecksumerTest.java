@@ -1,20 +1,16 @@
 package org.codefilarete.jumper.impl;
 
-import java.nio.charset.StandardCharsets;
-
 import org.assertj.core.api.Assertions;
 import org.codefilarete.jumper.ChangeSet;
-import org.codefilarete.jumper.ddl.dsl.support.DropTable;
-import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
-import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
-import org.codefilarete.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.jumper.ddl.dsl.support.*;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewColumn;
-import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.jumper.impl.ChangeChecksumer.ByteBuffer;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -25,7 +21,7 @@ class ChangeSetChecksumerTest {
 	void buildChecksum_handleNewTable() {
 		ChangeChecksumer testInstance = Mockito.spy(new ChangeChecksumer());
 		NewTable newTable = new NewTable("x");
-		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(newTable));
+		testInstance.buildChecksum(new ChangeSet("x").addChanges(newTable));
 		verify(testInstance).giveSignature(newTable);
 	}
 	
@@ -33,7 +29,7 @@ class ChangeSetChecksumerTest {
 	void buildChecksum_handleDropTable() {
 		ChangeChecksumer testInstance = Mockito.spy(new ChangeChecksumer());
 		DropTable dropTable = new DropTable("x");
-		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(dropTable));
+		testInstance.buildChecksum(new ChangeSet("x").addChanges(dropTable));
 		verify(testInstance).giveSignature(dropTable);
 	}
 	
@@ -43,7 +39,7 @@ class ChangeSetChecksumerTest {
 		NewForeignKey newForeignKey = new NewForeignKey("x", new Table("y"));
 		newForeignKey.addTargetColumn("a");
 		newForeignKey.setTargetTable(new Table("b"));
-		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(newForeignKey));
+		testInstance.buildChecksum(new ChangeSet("x").addChanges(newForeignKey));
 		verify(testInstance).giveSignature(newForeignKey);
 	}
 	
@@ -51,7 +47,7 @@ class ChangeSetChecksumerTest {
 	void buildChecksum_handleNewIndex() {
 		ChangeChecksumer testInstance = Mockito.spy(new ChangeChecksumer());
 		NewIndex newIndex = new NewIndex("x", new Table("y"));
-		testInstance.buildChecksum(new ChangeSet("x", false).addChanges(newIndex));
+		testInstance.buildChecksum(new ChangeSet("x").addChanges(newIndex));
 		verify(testInstance).giveSignature(newIndex);
 	}
 	

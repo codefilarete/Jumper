@@ -1,12 +1,12 @@
 package org.codefilarete.jumper.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.codefilarete.jumper.ChangeSet;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.CHAR_SEQUENCE;
@@ -32,7 +32,7 @@ class LoggingExecutionListenerTest {
 		
 		LoggingExecutionListener testInstance = new LoggingExecutionListener(logger);
 		testInstance.beforeProcess();
-		ChangeSet change = new ChangeSet("x", false);
+		ChangeSet change = new ChangeSet("x");
 		testInstance.beforeRun(change);
 		Thread.sleep(50);
 		testInstance.afterRun(change);

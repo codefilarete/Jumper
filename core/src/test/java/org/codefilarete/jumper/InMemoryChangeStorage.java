@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  */
 public class InMemoryChangeStorage implements ChangeStorage {
 	
-	private final Map<ChangeId, StoredUpdate> storage = new HashMap<>();
+	private final Map<ChangeSetId, StoredUpdate> storage = new HashMap<>();
 	
 	@Override
 	public void persist(ChangeSignet change) {
@@ -19,12 +19,12 @@ public class InMemoryChangeStorage implements ChangeStorage {
 	}
 	
 	@Override
-	public Set<ChangeId> giveRanIdentifiers() {
+	public Set<ChangeSetId> giveRanIdentifiers() {
 		return storage.keySet();
 	}
 	
 	@Override
-	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> changes) {
+	public Map<ChangeSetId, Checksum> giveChecksum(Iterable<ChangeSetId> changes) {
 		return storage.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getChecksum()));
 	}
 	

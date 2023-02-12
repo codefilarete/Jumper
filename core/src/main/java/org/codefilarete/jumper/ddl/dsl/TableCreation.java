@@ -1,11 +1,12 @@
 package org.codefilarete.jumper.ddl.dsl;
 
+import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 
 /**
  * @author Guillaume Mary
  */
-public interface TableCreation {
+public interface TableCreation extends ChangeSet.ChangeBuilder {
 	
 	TableCreationColumnOption addColumn(String name, String sqlType);
 	

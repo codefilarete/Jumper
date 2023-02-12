@@ -1,16 +1,16 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import java.util.Map.Entry;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
 import org.codefilarete.jumper.DialectResolver;
 import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.Strings;
 import org.codefilarete.tool.VisibleForTesting;
 import org.codefilarete.tool.collection.Iterables;
+
+import java.util.Map.Entry;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link ServiceLoaderDialectResolver} that gets its registered {@link Dialect}s through JVM Service Provider and looks for the most compatible
@@ -31,7 +31,7 @@ import org.codefilarete.tool.collection.Iterables;
  * @author Guillaume Mary
  */
 public class ServiceLoaderDialectResolver implements DialectResolver {
-	
+
 	public Dialect determineDialect(DatabaseSignet databaseSignet) {
 		ServiceLoader<DialectResolverEntry> dialects = ServiceLoader.load(DialectResolverEntry.class);
 		return determineDialect(dialects, databaseSignet);
@@ -39,14 +39,15 @@ public class ServiceLoaderDialectResolver implements DialectResolver {
 	
 	Dialect determineDialect(Iterable<? extends DialectResolverEntry> dialects, DatabaseSignet databaseSignet) {
 		Nullable<DialectResolverEntry> matchingDialect = Nullable.nullable(giveMatchingEntry(dialects, databaseSignet));
-		return matchingDialect.map(DialectResolver.DialectResolverEntry::getDialect).getOrThrow(
-				() -> new IllegalStateException(
-						"Unable to determine dialect to use for database \""
-								+ databaseSignet.getProductName()
-								+ " " + databaseSignet.getMajorVersion()
-								+ "." + databaseSignet.getMinorVersion()
-								+ "\" among " + Iterables.collectToList(dialects, o -> "{" + Strings.footPrint(o.getCompatibility(),
-								DialectResolver.DatabaseSignet::toString) + "}")));
+		return matchingDialect.map(DialectResolver.DialectResolverEntry::getDialect).getOr(new Dialect());
+//		return matchingDialect.map(DialectResolver.DialectResolverEntry::getDialect).getOrThrow(
+//				() -> new IllegalStateException(
+//						"Unable to determine dialect to use for database \""
+//								+ databaseSignet.getProductName()
+//								+ " " + databaseSignet.getMajorVersion()
+//								+ "." + databaseSignet.getMinorVersion()
+//								+ "\" among " + Iterables.collectToList(dialects, o -> "{" + Strings.footPrint(o.getCompatibility(),
+//								DialectResolver.DatabaseSignet::toString) + "}")));
 	}
 	
 	@VisibleForTesting

@@ -1,27 +1,10 @@
 package org.codefilarete.jumper;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
-import org.codefilarete.jumper.impl.AbstractJavaChange;
-import org.codefilarete.jumper.impl.ChangeChecksumer;
-import org.codefilarete.jumper.impl.JdbcChangeStorage;
-import org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage;
-import org.codefilarete.jumper.impl.SupportedChange;
-import org.codefilarete.jumper.impl.SQLChange;
-import org.codefilarete.jumper.impl.StringChecksumer;
+import org.codefilarete.jumper.impl.*;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.VisibleForTesting;
@@ -30,19 +13,29 @@ import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.codefilarete.tool.sql.TransactionSupport;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * @author Guillaume Mary
  */
 public class ChangeSetRunner {
 	
-	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, ChangeSet... changes) {
+	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, List<ChangeSet> changes) {
 		JdbcChangeStorage changeHistoryStorage = new JdbcChangeStorage(connectionProvider);
 		JdbcUpdateProcessLockStorage processLockStorage = new JdbcUpdateProcessLockStorage(connectionProvider);
-		ChangeSetRunner result = new ChangeSetRunner(Arrays.asList(changes), connectionProvider, changeHistoryStorage, processLockStorage);
+		ChangeSetRunner result = new ChangeSetRunner(changes, connectionProvider, changeHistoryStorage, processLockStorage);
 		// we add storage listeners so they can create their tables at very beginning of the process
 		result.addExecutionListener(processLockStorage.getLockTableEnsurer());
 		result.addExecutionListener(changeHistoryStorage.getChangeHistoryTableEnsurer());
 		return result;
+	}
+
+	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, ChangeSet... changes) {
+		return forJdbcStorage(connectionProvider, Arrays.asList(changes));
 	}
 	
 	private final List<ChangeSet> changes;
@@ -128,7 +121,7 @@ public class ChangeSetRunner {
 	private void assertNonCompliantChanges() {
 		// NB: we store current update Checksum in a Map to avoid its computation twice
 		Map<ChangeSet, Checksum> nonCompliantUpdates = new LinkedHashMap<>(changes.size());
-		Map<ChangeId, Checksum> currentlyStoredChecksums = changeStorage.giveChecksum(Iterables.collectToList(changes, ChangeSet::getIdentifier));
+		Map<ChangeSetId, Checksum> currentlyStoredChecksums = changeStorage.giveChecksum(Iterables.collectToList(changes, ChangeSet::getIdentifier));
 		changes.forEach(change -> {
 			Checksum currentlyStoredChecksum = currentlyStoredChecksums.get(change.getIdentifier());
 			if (currentlyStoredChecksum != null) {
@@ -146,7 +139,7 @@ public class ChangeSetRunner {
 	}
 	
 	private List<ChangeSet> keepChangesToRun(List<ChangeSet> changes, Context context) {
-		Set<ChangeId> ranIdentifiers = changeStorage.giveRanIdentifiers();
+		Set<ChangeSetId> ranIdentifiers = changeStorage.giveRanIdentifiers();
 		return changes.stream()
 				.filter(u -> shouldRun(u, ranIdentifiers, context))
 				.collect(Collectors.toList());
@@ -159,8 +152,8 @@ public class ChangeSetRunner {
 	 * @param ranIdentifiers the already ran identifiers
 	 * @return true to plan it for running
 	 */
-	protected boolean shouldRun(ChangeSet change, Set<ChangeId> ranIdentifiers, Context context) {
-		boolean isAuthorizedToRun = !ranIdentifiers.contains(change.getIdentifier()) || change.alwaysRun();
+	protected boolean shouldRun(ChangeSet change, Set<ChangeSetId> ranIdentifiers, Context context) {
+		boolean isAuthorizedToRun = !ranIdentifiers.contains(change.getIdentifier()) || change.shouldAlwaysRun();
 		return isAuthorizedToRun && change.shouldRun(context);
 	}
 	
@@ -226,6 +219,7 @@ public class ChangeSetRunner {
 		private void runSqlOrders(List<String> sqlOrders, Connection connection) throws SQLException {
 			for (String sqlOrder : sqlOrders) {
 				try {
+					System.out.println(sqlOrder);
 					runSqlOrder(sqlOrder, connection);
 				} catch (SQLException e) {
 					throw new SQLException("Error executing " + sqlOrder, e);

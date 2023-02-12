@@ -1,23 +1,70 @@
 package org.codefilarete.jumper.schema.metadata;
 
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
 
-public class MariaDBSequenceMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
+import java.sql.*;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class MariaDBMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
 	
-	public MariaDBSequenceMetadataReader(DatabaseMetaData metaData) {
+	public MariaDBMetadataReader(DatabaseMetaData metaData) {
 		super(metaData);
 	}
-	
+
+	@Override
+	public SortedSet<ColumnMetadata> giveColumns(String catalog, String schema, String tablePattern) {
+		try (Connection connection = metaData.getConnection();
+			 ResultSet tableResultSet = connection.prepareStatement("select" +
+							 " c.TABLE_SCHEMA as " + ColumnMetaDataPseudoTable.INSTANCE.schema.column.getName() + "," +
+							 " c.TABLE_CATALOG as " + ColumnMetaDataPseudoTable.INSTANCE.catalog.column.getName() + "," +
+							 " c.TABLE_NAME as " + ColumnMetaDataPseudoTable.INSTANCE.tableName.column.getName() + "," +
+							 " c.COLUMN_NAME," +
+							 " c.COLUMN_TYPE," +
+							 " c.TABLE_NAME," +
+							 " c.DATA_TYPE," +
+							 " coalesce(c.CHARACTER_MAXIMUM_LENGTH, c.NUMERIC_SCALE) as size," +
+							 " c.COLUMN_TYPE," +
+							 " c.IS_NULLABLE," +
+							 " c.IS_GENERATED," +
+							 " c.NUMERIC_PRECISION as decimalDigits," +
+							 " c.ORDINAL_POSITION" +
+							 " from information_schema.COLUMNS c" +""
+//							 " where c.TABLE_CATALOG " + (catalog == null || "".equals(catalog) ? "like '%'" : ("= '" + schema +"'")) +
+//					 (schema == null ? "" : " and c.TABLE_SCHEMA like '%" + schema + "%'") +
+//							 " and c.TABLE_NAME like '%" + tablePattern + "%'"
+					 )
+					 .executeQuery()) {
+//		try (ResultSet tableResultSet = metaData.getColumns(catalog, schema, tablePattern, "%")) {
+			ResultSetIterator<ColumnMetadata> resultSetIterator = new ResultSetIterator<ColumnMetadata>(tableResultSet) {
+				@Override
+				public ColumnMetadata convert(ResultSet resultSet) {
+					ColumnMetadata result = new ColumnMetadata(
+							ColumnMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+							ColumnMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+							ColumnMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
+					);
+					ColumnMetaDataPseudoTable.INSTANCE.columnName.apply(resultSet, result::setName);
+					ColumnMetaDataPseudoTable.INSTANCE.type.apply(resultSet, result::setSqlType);
+					ColumnMetaDataPseudoTable.INSTANCE.typeName.apply(resultSet, result::setVendorType);
+					ColumnMetaDataPseudoTable.INSTANCE.size.apply(resultSet, result::setSize);
+					ColumnMetaDataPseudoTable.INSTANCE.decimalDigits.apply(resultSet, result::setPrecision);
+					ColumnMetaDataPseudoTable.INSTANCE.nullable.apply(resultSet, result::setNullable);
+					ColumnMetaDataPseudoTable.INSTANCE.isAutoIncrement.apply(resultSet, result::setAutoIncrement);
+					ColumnMetaDataPseudoTable.INSTANCE.ordinalPosition.apply(resultSet, result::setPosition);
+					return result;
+				}
+			};
+			SortedSet<ColumnMetadata> result = new TreeSet<>(Comparator.comparing(ColumnMetadata::getPosition));
+			result.addAll(resultSetIterator.convert());
+			return result;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Override
 	public Set<SequenceMetadata> giveSequences(String catalog, String schema) {
 		String schemaCriteria = null;

@@ -1,18 +1,5 @@
 package org.codefilarete.jumper.schema.difference;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
@@ -21,6 +8,12 @@ import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table
 import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.danekja.java.util.function.serializable.SerializableFunction;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class SchemaDiffer {
 	
@@ -219,7 +212,7 @@ public class SchemaDiffer {
 		 * @param <O> property value type
 		 * @author Guillaume Mary
 		 */
-		static class PropertyComparator<T, O> {
+		public static class PropertyComparator<T, O> {
 			
 			private final SerializableFunction<T, O> propertyAccessor;
 			
@@ -257,7 +250,7 @@ public class SchemaDiffer {
 			 * @param <O> property value type
 			 * @author Guillaume Mary
 			 */
-			static class PropertyDiff<T, O> extends AbstractDiff<T> {
+			public static class PropertyDiff<T, O> extends AbstractDiff<T> {
 				
 				private final SerializableFunction<T, O> propertyAccessor;
 				

@@ -1,23 +1,20 @@
 package org.codefilarete.jumper.impl;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
 import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.Checksum;
 import org.codefilarete.jumper.Checksumer.ByteChecksumer;
-import org.codefilarete.jumper.ddl.dsl.support.DropTable;
-import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
-import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
-import org.codefilarete.jumper.ddl.dsl.support.NewTable;
+import org.codefilarete.jumper.ddl.dsl.support.*;
 import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.codefilarete.tool.io.IOs;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 public class ChangeChecksumer {
 	
@@ -58,6 +55,12 @@ public class ChangeChecksumer {
 			return giveSignature(((NewForeignKey) supportedChange));
 		} else if (supportedChange instanceof NewIndex) {
 			return giveSignature(((NewIndex) supportedChange));
+		} else if (supportedChange instanceof ModifyColumn) {
+			return giveSignature(((ModifyColumn) supportedChange));
+		} else if (supportedChange instanceof AddColumn) {
+			return giveSignature(((AddColumn) supportedChange));
+		} else if (supportedChange instanceof NewUniqueConstraint) {
+			return giveSignature(((NewUniqueConstraint) supportedChange));
 		} else {
 			throw new NotImplementedException("Signature computation is not implemented for " + Reflections.toString(supportedChange.getClass()));
 		}
@@ -128,6 +131,39 @@ public class ChangeChecksumer {
 				.toString();
 	}
 	
+	protected String giveSignature(ModifyColumn modifyColumn) {
+		StringAppender result = new StringAppender("ModifyColumn");
+		return result.ccat(
+						modifyColumn.getTable().getName(),
+						modifyColumn.getName(),
+						modifyColumn.getSqlType(),
+						modifyColumn.getExtraArguments(),
+						modifyColumn.isNullable(),
+						modifyColumn.getDefaultValue(),
+						modifyColumn.isAutoIncrement(),
+						" ")
+				.toString();
+	}
+
+	protected String giveSignature(AddColumn modifyColumn) {
+		StringAppender result = new StringAppender("AddColumn");
+		return result.ccat(
+						modifyColumn.getTable().getName(),
+						modifyColumn.getName(),
+						modifyColumn.getSqlType(),
+						modifyColumn.getExtraArguments(),
+						modifyColumn.isNullable(),
+						modifyColumn.getDefaultValue(),
+						modifyColumn.isAutoIncrement(),
+						" ")
+				.toString();
+	}
+
+	protected String giveSignature(NewUniqueConstraint newUniqueConstraint) {
+		StringAppender result = new StringAppender();
+		return result.cat("UK ", newUniqueConstraint.getName(), " ").ccat(newUniqueConstraint.getColumns(), " ").toString();
+	}
+
 	/**
 	 * Bytes array that auto-expends if necessary appending some bytes to it
 	 *

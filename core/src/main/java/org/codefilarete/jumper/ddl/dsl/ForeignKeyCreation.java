@@ -1,5 +1,6 @@
 package org.codefilarete.jumper.ddl.dsl;
 
+import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ddl.dsl.support.NewForeignKey;
 
 /**
@@ -25,10 +26,10 @@ public interface ForeignKeyCreation {
 		ForeignKeyPostTargetColumnOptions addTargetColumn(String name);
 	}
 	
-	interface ForeignKeyPostTargetColumnOptions {
+	interface ForeignKeyPostTargetColumnOptions extends ChangeSet.ChangeBuilder {
 		
 		ForeignKeyPostTargetColumnOptions addTargetColumn(String name);
-		
+
 		NewForeignKey build();
 	}
 }

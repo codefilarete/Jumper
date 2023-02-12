@@ -1,11 +1,12 @@
 package org.codefilarete.jumper.ddl.dsl;
 
+import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
 
 /**
  * @author Guillaume Mary
  */
-public interface IndexCreation {
+public interface IndexCreation extends ChangeSet.ChangeBuilder {
 	
 	IndexCreation addColumn(String name);
 	

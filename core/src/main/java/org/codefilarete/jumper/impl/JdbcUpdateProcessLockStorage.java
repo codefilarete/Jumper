@@ -1,13 +1,5 @@
 package org.codefilarete.jumper.impl;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.time.Instant;
-
 import org.codefilarete.jumper.NoopExecutionListener;
 import org.codefilarete.jumper.UpdateProcessLockStorage;
 import org.codefilarete.stalactite.engine.PersistenceContext;
@@ -24,6 +16,14 @@ import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.exception.Exceptions;
 import org.codefilarete.tool.sql.TransactionSupport;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.Instant;
 
 public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 	
@@ -75,7 +75,8 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 	
 	@Override
 	public void insertRow(String lockIdentifier) {
-		try (Connection currentConnection = connectionProvider.giveConnection()) {
+		Connection currentConnection = connectionProvider.giveConnection();
+		try {
 			TransactionSupport transactionSupport = new TransactionSupport(currentConnection);
 			transactionSupport.runAtomically(c -> {
 				persistenceContext.insert(storageTable)
@@ -137,10 +138,11 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 			SimpleConnectionProvider localConnectionProvider = new SimpleConnectionProvider(connection);
 			DDLDeployer ddlDeployer = new DDLDeployer(dialect.getSqlTypeRegistry(), localConnectionProvider);
 			ddlDeployer.getDdlGenerator().addTables(storageTable);
-			try (Connection ignored = localConnectionProvider.giveConnection()) {
+			Connection connection = localConnectionProvider.giveConnection();
+			try {
 				TransactionSupport.runAtomically(c -> {
 					ddlDeployer.deployDDL();
-				}, ignored);
+				}, connection);
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}

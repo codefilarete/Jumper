@@ -6,11 +6,11 @@ package org.codefilarete.jumper;
  * 
  * @author Guillaume Mary
  */
-public class ChangeId {
+public class ChangeSetId {
 	
 	private final String identifier;
 	
-	public ChangeId(String identifier) {
+	public ChangeSetId(String identifier) {
 		this.identifier = identifier;
 	}
 	
@@ -18,8 +18,8 @@ public class ChangeId {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		ChangeId changeId = (ChangeId) o;
-		return identifier.equals(changeId.identifier);
+		ChangeSetId changeSetId = (ChangeSetId) o;
+		return identifier.equals(changeSetId.identifier);
 	}
 	
 	@Override

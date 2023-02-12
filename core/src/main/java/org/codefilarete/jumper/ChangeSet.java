@@ -5,35 +5,31 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Guillaume Mary
  */
 public class ChangeSet {
+
+	public static ChangeSet changeSet(String changeSetId, ChangeBuilder... changes) {
+		return new ChangeSet(changeSetId).addChanges(changes);
+	}
 	
-	private final ChangeId changeId;
-	private final boolean shouldAlwaysRun;
+	private final ChangeSetId changeSetId;
+	private boolean shouldAlwaysRun = false;
 	private final List<Change> changes = new ArrayList<>();
 	
-	public ChangeSet(ChangeId changeId) {
-		this(changeId, false);
+	public ChangeSet(ChangeSetId changeSetId) {
+		this.changeSetId = changeSetId;
 	}
 	
 	public ChangeSet(String identifier) {
-		this(identifier, false);
+		this(new ChangeSetId(identifier));
 	}
 	
-	public ChangeSet(ChangeId changeId, boolean shouldAlwaysRun) {
-		this.changeId = changeId;
-		this.shouldAlwaysRun = shouldAlwaysRun;
-	}
-	
-	public ChangeSet(String identifier, boolean shouldAlwaysRun) {
-		this(new ChangeId(identifier), shouldAlwaysRun);
-	}
-	
-	public ChangeId getIdentifier() {
-		return changeId;
+	public ChangeSetId getIdentifier() {
+		return changeSetId;
 	}
 	
 	public List<Change> getChanges() {
@@ -45,12 +41,25 @@ public class ChangeSet {
 		return this;
 	}
 	
+	public ChangeSet addChanges(ChangeBuilder... changes) {
+		this.changes.addAll(Arrays.stream(changes).map(ChangeBuilder::build).collect(Collectors.toList()));
+		return this;
+	}
+
 	/**
 	 * Indicates if this {@link ChangeSet} must be executed even if it was already ran. Default is no (false).
-	 * May be overridden according to task.
 	 */
-	public boolean alwaysRun() {
+	public boolean shouldAlwaysRun() {
 		return shouldAlwaysRun;
+	}
+
+	/**
+	 * Marks this {@link ChangeSet} to be executed even if it was already ran or not.
+	 * @param yeOrNo true for changeSet to be executed even if it was already ran, false to run only once.
+	 */
+	public ChangeSet alwaysRun(boolean yeOrNo) {
+		shouldAlwaysRun = yeOrNo;
+		return this;
 	}
 	
 	/**
@@ -67,5 +76,10 @@ public class ChangeSet {
 	 */
 	Set<Checksum> getCompatibleChecksums() {
 		return Collections.EMPTY_SET;
+	}
+
+	public interface ChangeBuilder {
+
+		Change build();
 	}
 }

@@ -1,15 +1,6 @@
 package org.codefilarete.jumper.impl;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.codefilarete.jumper.ChangeId;
+import org.codefilarete.jumper.ChangeSetId;
 import org.codefilarete.jumper.ChangeStorage;
 import org.codefilarete.jumper.Checksum;
 import org.codefilarete.jumper.NoopExecutionListener;
@@ -30,6 +21,15 @@ import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.sql.TransactionSupport;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Change that deploys Jumper's history table.
@@ -86,20 +86,20 @@ public class JdbcChangeStorage implements ChangeStorage {
 	}
 	
 	@Override
-	public Set<ChangeId> giveRanIdentifiers() {
+	public Set<ChangeSetId> giveRanIdentifiers() {
 		return new HashSet<>(persistenceContext.newQuery(QueryEase.select(storageTable.id)
-						.from(storageTable), ChangeId.class)
-				.mapKey(ChangeId::new, storageTable.id)
+						.from(storageTable), ChangeSetId.class)
+				.mapKey(ChangeSetId::new, storageTable.id)
 				.execute());
 	}
 	
 	@Override
-	public Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> changes) {
+	public Map<ChangeSetId, Checksum> giveChecksum(Iterable<ChangeSetId> changes) {
 		List<Duo> changeIds = persistenceContext.newQuery(QueryEase.select(storageTable.id, storageTable.checksum)
-						.from(storageTable).where(storageTable.id, Operators.in(Iterables.collectToList(changes, ChangeId::toString))), Duo.class)
+						.from(storageTable).where(storageTable.id, Operators.in(Iterables.collectToList(changes, ChangeSetId::toString))), Duo.class)
 				.mapKey(Duo::new, storageTable.id, storageTable.checksum)
 				.execute();
-		return Iterables.map((List<Duo<String, Checksum>>) (List) changeIds, duo -> new ChangeId(duo.getLeft()), Duo::getRight);
+		return Iterables.map((List<Duo<String, Checksum>>) (List) changeIds, duo -> new ChangeSetId(duo.getLeft()), Duo::getRight);
 	}
 	
 	protected class ChangeHistoryTableEnsurer extends NoopExecutionListener {
@@ -129,10 +129,11 @@ public class JdbcChangeStorage implements ChangeStorage {
 			SimpleConnectionProvider localConnectionProvider = new SimpleConnectionProvider(connection);
 			DDLDeployer ddlDeployer = new DDLDeployer(dialect.getSqlTypeRegistry(), localConnectionProvider);
 			ddlDeployer.getDdlGenerator().addTables(storageTable);
-			try (Connection ignored = localConnectionProvider.giveConnection()) {
+			Connection connection = localConnectionProvider.giveConnection();
+			try {
 				TransactionSupport.runAtomically(c -> {
 					ddlDeployer.deployDDL();
-				}, ignored);
+				}, connection);
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}

@@ -1,15 +1,12 @@
 package org.codefilarete.jumper.ddl.engine;
 
-import org.codefilarete.jumper.ddl.dsl.support.NewTable;
-import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewColumn;
-import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewPrimaryKey;
-import org.codefilarete.jumper.ddl.dsl.support.NewTable.NewUniqueConstraint;
+import org.codefilarete.jumper.ddl.dsl.support.ModifyColumn;
+import org.codefilarete.jumper.ddl.dsl.support.Table;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 import org.codefilarete.tool.collection.Arrays;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -17,9 +14,9 @@ import java.util.Set;
  * 
  * @author Guillaume Mary
  */
-public class NewTableHandler implements NewTableGenerator {
-	
-	public static final Set<String> MARIADB_KEYWORDS = Arrays.asTreeSet(String.CASE_INSENSITIVE_ORDER,
+public class ModifyColumnHandler implements ModifyColumnGenerator {
+
+	private static final Set<String> MARIADB_KEYWORDS = Arrays.asTreeSet(String.CASE_INSENSITIVE_ORDER,
 			"ACCESSIBLE", "ANALYZE", "ASENSITIVE",
 			"BEFORE", "BIGINT", "BINARY", "BLOB",
 			"CALL", "CHANGE", "CONDITION",
@@ -49,93 +46,67 @@ public class NewTableHandler implements NewTableGenerator {
 			"RESIGNAL",
 			"SIGNAL",
 			"SLOW");
-	
+
 	private final Set<String> keywords;
-	
-	public NewTableHandler() {
+
+	public ModifyColumnHandler() {
 		this(Collections.emptySet());
 	}
-	
-	public NewTableHandler(Set<String> keywords) {
+
+	public ModifyColumnHandler(Set<String> keywords) {
 		this.keywords = keywords;
 	}
-	
+
 	@Override
-	public String generateScript(NewTable table) {
-		DDLAppender sqlCreateTable = new DDLAppender("create table ");
-		sqlCreateTable.catIf(!Strings.isEmpty(table.getCatalogName()), table.getCatalogName(), ".")
-				.catIf(!Strings.isEmpty(table.getSchemaName()), table.getSchemaName(), ".");
+	public String generateScript(ModifyColumn modifyColumn) {
+		DDLAppender sqlAlterTable = new DDLAppender("alter table ");
+		sqlAlterTable.catIf(!Strings.isEmpty(modifyColumn.getCatalogName()), modifyColumn.getCatalogName(), ".")
+				.catIf(!Strings.isEmpty(modifyColumn.getSchemaName()), modifyColumn.getSchemaName(), ".");
 		
-		sqlCreateTable.cat(table.getName(), "(");
-		Set<NewColumn> uniqueKeyConstraints = new LinkedHashSet<>();
-		for (NewColumn column : table.getColumns()) {
-			generateCreateColumn(column, sqlCreateTable);
-			sqlCreateTable.cat(", ");
-			if (column.getUniqueConstraintName() != null) {
-				uniqueKeyConstraints.add(column);
-			}
-		}
-		sqlCreateTable.cutTail(2);
-		if (table.getPrimaryKey() != null) {
-			generateCreatePrimaryKey(table.getPrimaryKey(), sqlCreateTable);
-		}
-		uniqueKeyConstraints.forEach(columnWithUKConstraint -> generateUniqueConstraint(columnWithUKConstraint, sqlCreateTable));
-		table.getUniqueConstraints().forEach(uk -> generateUniqueConstraint(uk, sqlCreateTable));
-		sqlCreateTable.cat(")");
-		return sqlCreateTable.toString();
+		sqlAlterTable.cat(modifyColumn.getTable(), " modify column ");
+		generateCreateColumn(modifyColumn, sqlAlterTable);
+		return sqlAlterTable.toString();
 	}
 	
-	protected void generateUniqueConstraint(NewColumn columnWithUKConstraint, DDLAppender sqlCreateTable) {
-		sqlCreateTable.cat(", constraint ",
-				columnWithUKConstraint.getUniqueConstraintName(),
-				" unique (", columnWithUKConstraint, ")");
-	}
-	
-	protected void generateUniqueConstraint(NewUniqueConstraint uniqueConstraint, DDLAppender sqlCreateTable) {
-		sqlCreateTable.cat(", constraint ",
-				uniqueConstraint.getName(),
-				" unique (").ccat(uniqueConstraint.getColumns(), ", ").cat(")");
-	}
-	
-	protected void generateCreatePrimaryKey(NewPrimaryKey primaryKey, DDLAppender sqlCreateTable) {
-		sqlCreateTable.cat(", primary key (")
-				.ccat(primaryKey.getColumns(), ", ")
-				.cat(")");
-	}
-	
-	protected void generateCreateColumn(NewColumn column, DDLAppender sqlCreateTable) {
-		sqlCreateTable.cat(column, " ", column.getSqlType())
+	protected void generateCreateColumn(ModifyColumn column, DDLAppender sqlAlterTable) {
+		sqlAlterTable.cat(column, " ", column.getSqlType())
 				.catIf(column.getExtraArguments() != null, " ", column.getExtraArguments())
 				.catIf(!column.isNullable(), " not null")
 				.catIf(column.isAutoIncrement(), " auto_increment")
 				.catIf(column.getDefaultValue() != null, " default ", column.getDefaultValue())
 		;
 	}
-	
-	
+
+
 	/**
-	 * A {@link StringAppender} that automatically appends {@link NewColumn} names
+	 * A {@link StringAppender} that automatically escapes {@link Table} and {@link ModifyColumn} names against reserved words
 	 */
 	private class DDLAppender extends StringAppender {
-		
+
 		public DDLAppender(Object... o) {
 			super(o);
 		}
-		
+
 		/**
-		 * Overridden to append {@link NewColumn} names
+		 * Overridden to append {@link DDLAppender} names
 		 *
 		 * @param o any object
 		 * @return this
 		 */
 		@Override
 		public StringAppender cat(Object o) {
-			if (o instanceof NewColumn) {
-				String columnName = ((NewColumn) o).getName();
+			if (o instanceof ModifyColumn) {
+				String columnName = ((ModifyColumn) o).getName();
 				if (keywords.contains(columnName)) {
 					columnName = "`" + columnName + "`";
 				}
 				return super.cat(columnName);
+			} else if (o instanceof Table) {
+				String tableName = ((Table) o).getName();
+				if (keywords.contains(tableName)) {
+					tableName = "`" + tableName + "`";
+				}
+				return super.cat(tableName);
 			} else {
 				return super.cat(o);
 			}

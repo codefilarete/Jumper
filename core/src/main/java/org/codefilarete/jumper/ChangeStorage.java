@@ -17,15 +17,15 @@ public interface ChangeStorage {
 	 *
 	 * @return all {@link ChangeSet} identifiers stored in this storage
 	 */
-	Set<ChangeId> giveRanIdentifiers();
+	Set<ChangeSetId> giveRanIdentifiers();
 	
 	/**
-	 * Gives checksums stored in this storage for given {@link ChangeId}
+	 * Gives checksums stored in this storage for given {@link ChangeSetId}
 	 *
-	 * @param changes {@link ChangeId}s for which {@link Checksum} must be returned
-	 * @return checksums stored in this storage for given {@link ChangeId}
+	 * @param changes {@link ChangeSetId}s for which {@link Checksum} must be returned
+	 * @return checksums stored in this storage for given {@link ChangeSetId}
 	 */
-	Map<ChangeId, Checksum> giveChecksum(Iterable<ChangeId> changes);
+	Map<ChangeSetId, Checksum> giveChecksum(Iterable<ChangeSetId> changes);
 	
 	/**
 	 * A {@link ChangeSet} signature
@@ -34,20 +34,20 @@ public interface ChangeStorage {
 	 */
 	class ChangeSignet {
 		
-		private final ChangeId changeId;
+		private final ChangeSetId changeSetId;
 		private final Checksum checksum;
 		
 		public ChangeSignet(String identifier, Checksum checksum) {
-			this(new ChangeId(identifier), checksum);
+			this(new ChangeSetId(identifier), checksum);
 		}
 		
-		public ChangeSignet(ChangeId changeId, Checksum checksum) {
-			this.changeId = changeId;
+		public ChangeSignet(ChangeSetId changeSetId, Checksum checksum) {
+			this.changeSetId = changeSetId;
 			this.checksum = checksum;
 		}
 		
-		public ChangeId getChangeId() {
-			return changeId;
+		public ChangeSetId getChangeId() {
+			return changeSetId;
 		}
 		
 		public Checksum getChecksum() {

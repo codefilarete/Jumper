@@ -7,7 +7,7 @@ import java.util.Objects;
  * 
  * This will help to warn user about conflicting signature between two updates of same id : on one hand the already executed one, on the other hand
  * the one planed to be executed. Conflicts can result of:
- * - reused {@link ChangeId} between two {@link ChangeSet}s
+ * - reused {@link ChangeSetId} between two {@link ChangeSet}s
  * - code changes made by developers on {@link ChangeSet}s that were already run on target environment
  * 
  * @author Guillaume Mary
