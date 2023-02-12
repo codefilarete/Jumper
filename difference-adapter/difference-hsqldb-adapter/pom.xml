@@ -29,5 +29,10 @@
 			<artifactId>hsqldb</artifactId>
 			<version>${hsqldb.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.codefilarete.stalactite</groupId>
+			<artifactId>sql</artifactId>
+			<version>${stalactite.version}</version>
+		</dependency>
 	</dependencies>
 </project>
