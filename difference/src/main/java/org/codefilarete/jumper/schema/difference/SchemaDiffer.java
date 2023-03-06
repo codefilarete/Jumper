@@ -3,6 +3,7 @@ package org.codefilarete.jumper.schema.difference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,13 @@ import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.SchemaElement;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.TableElement;
+import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator;
+import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
+import org.codefilarete.reflection.AccessorByMethodReference;
+import org.codefilarete.reflection.AccessorDefinition;
+import org.codefilarete.reflection.MethodReferences;
 import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.danekja.java.util.function.serializable.SerializableFunction;
@@ -62,7 +70,86 @@ public class SchemaDiffer {
 		return comparisonChain.run(schema1, schema2);
 	}
 	
-	public <T> ComparisonChain<T> comparisonChain(Class<T> clazz) {
+	public void compareAndPrint(Schema schema1, Schema schema2) {
+		Set<AbstractDiff<?>> diffs = comparisonChain.run(schema1, schema2);
+		
+		System.out.println("Added in " + schema1.getName());
+		
+		Map<? extends Class<?>, List<AbstractDiff<?>>> addedPerType = diffs.stream()
+				.filter(d -> d.getState() == State.ADDED)
+				.collect(Collectors.groupingBy(diff -> diff.getReplacingInstance().getClass()));
+		
+		addedPerType.forEach((key, value) -> {
+			System.out.println(key.getSimpleName());
+			Comparator<AbstractDiff<SchemaElement>> comparing = Comparator
+					.comparing((AbstractDiff<SchemaElement> diff) -> diff.getReplacingInstance().getSchema().getName())
+					.thenComparing((AbstractDiff<SchemaElement> d) -> {
+						if (d instanceof TableElement) {
+							return ((TableElement) d.getReplacingInstance()).getTable().getName();
+						} else {
+							return d.getReplacingInstance().toString();
+						}
+					});
+			value.stream().map(o -> (AbstractDiff<SchemaElement>) o)
+					.sorted(comparing)
+					.forEach(d -> {
+						System.out.println(d.getReplacingInstance());
+					});
+		});
+		
+		System.out.println("Modifications between " + schema1.getName() + " and " + schema2.getName());
+		Map<? extends Class<?>, List<AbstractDiff<?>>> heldPerType = diffs.stream()
+				.filter(d -> d.getState() == State.HELD)
+				.collect(Collectors.groupingBy(diff -> diff.getReplacingInstance().getClass()));
+		
+		heldPerType.forEach((key, value) -> {
+			System.out.println(key.getSimpleName());
+			Comparator<AbstractDiff<SchemaElement>> comparing = Comparator
+					.comparing((AbstractDiff<SchemaElement> diff) -> diff.getReplacingInstance().getSchema().getName())
+					.thenComparing((AbstractDiff<SchemaElement> d) -> {
+						if (d instanceof TableElement) {
+							return ((TableElement) d.getReplacingInstance()).getTable().getName();
+						} else {
+							return d.getReplacingInstance().toString();
+						}
+					});
+			value.stream().map(o -> (AbstractDiff<SchemaElement>) o)
+					.sorted(comparing)
+					.forEach(d -> {
+						if (d instanceof PropertyComparator.PropertyDiff) {
+							String propertyName = AccessorDefinition.giveDefinition(new AccessorByMethodReference<>(((PropertyDiff<?, ?>) d).getPropertyAccessor())).getName();
+							System.out.println(propertyName + ": " + d.getSourceInstance() + " vs " + d.getReplacingInstance());
+						} else {
+							System.out.println(d.getReplacingInstance());
+						}
+					});
+		});
+		
+		System.out.println("Missing in " + schema2.getName());
+		Map<? extends Class<?>, List<AbstractDiff<?>>> removedPerType = diffs.stream()
+				.filter(d -> d.getState() == State.REMOVED)
+				.collect(Collectors.groupingBy(diff -> diff.getSourceInstance().getClass()));
+		
+		removedPerType.forEach((key, value) -> {
+			System.out.println(key.getSimpleName());
+			Comparator<AbstractDiff<SchemaElement>> comparing = Comparator
+					.comparing((AbstractDiff<SchemaElement> diff) -> diff.getSourceInstance().getSchema().getName())
+					.thenComparing((AbstractDiff<SchemaElement> d) -> {
+						if (d instanceof TableElement) {
+							return ((TableElement) d.getSourceInstance()).getTable().getName();
+						} else {
+							return d.getSourceInstance().toString();
+						}
+					});
+			value.stream().map(o -> (AbstractDiff<SchemaElement>) o)
+					.sorted(comparing)
+					.forEach(d -> {
+						System.out.println(d.getSourceInstance());
+					});
+		});
+	}
+	
+	protected <T> ComparisonChain<T> comparisonChain(Class<T> clazz) {
 		return new ComparisonChain<>(clazz);
 	}
 	
@@ -107,6 +194,13 @@ public class SchemaDiffer {
 			return this;
 		}
 		
+		@Override
+		public String toString() {
+			return "ComparisonChain{" +
+					"propertiesToCompare=" + propertiesToCompare +
+					'}';
+		}
+		
 		public Set<AbstractDiff<?>> run(T t1, T t2) {
 			if (t1 == null && t2 == null) {
 				return Collections.emptySet();
@@ -146,8 +240,8 @@ public class SchemaDiffer {
 			
 			Set<AbstractDiff<?>> compare(T t1, T t2) {
 				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
-				MapDiffer<K, V, ?> collectionDiffer = new MapDiffer<>(keyAccessor);
-				KeepOrderSet<Diff<Entry<K, V>>> mapPresences = collectionDiffer.diff(this.mapAccessor.apply(t1), this.mapAccessor.apply(t2));
+				MapDiffer<K, V, ?> mapDiffer = new MapDiffer<>(keyAccessor);
+				KeepOrderSet<Diff<Entry<K, V>>> mapPresences = mapDiffer.diff(this.mapAccessor.apply(t1), this.mapAccessor.apply(t2));
 				
 				result.addAll(mapPresences.stream()
 						.filter(d -> d.getState() != State.HELD).collect(Collectors.toList()));
@@ -160,6 +254,15 @@ public class SchemaDiffer {
 					result.addAll(collect);
 				}
 				return result;
+			}
+			
+			@Override
+			public String toString() {
+				return "MapComparator{" +
+						"mapAccessor=" + MethodReferences.toMethodReferenceString(mapAccessor) +
+						", keyAccessor=" + MethodReferences.toMethodReferenceString(keyAccessor) +
+						", next=" + next +
+						'}';
 			}
 		}
 		
@@ -177,14 +280,14 @@ public class SchemaDiffer {
 			Set<AbstractDiff<?>> compare(T t1, T t2) {
 				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
 				CollectionDiffer<E, C, AbstractDiff<E>> collectionDiffer = null;
-				C apply = collectionAccessor.apply(t1);
-				if (apply instanceof Set) {
+				C collection1 = collectionAccessor.apply(t1);
+				if (collection1 instanceof Set) {
 					collectionDiffer = (CollectionDiffer) new SetDiffer<>(keyAccessor);
-				} else if (apply instanceof List) {
+				} else if (collection1 instanceof List) {
 					collectionDiffer = (CollectionDiffer) new ListDiffer<>(keyAccessor);
 				}
-				C apply1 = collectionAccessor.apply(t2);
-				KeepOrderSet<AbstractDiff<E>> collectionPresences = collectionDiffer.diff(apply, apply1);
+				C collection2 = collectionAccessor.apply(t2);
+				KeepOrderSet<AbstractDiff<E>> collectionPresences = collectionDiffer.diff(collection1, collection2);
 				
 				result.addAll(collectionPresences.stream()
 						.filter(d -> d.getState() != State.HELD).collect(Collectors.toList()));
@@ -198,6 +301,15 @@ public class SchemaDiffer {
 				}
 				
 				return result;
+			}
+			
+			@Override
+			public String toString() {
+				return "CollectionComparator{" +
+						"collectionAccessor=" + MethodReferences.toMethodReferenceString(collectionAccessor) +
+						", keyAccessor=" + MethodReferences.toMethodReferenceString(keyAccessor) +
+						", next=" + next +
+						'}';
 			}
 		}
 		
@@ -225,6 +337,15 @@ public class SchemaDiffer {
 			private PropertyComparator(SerializableFunction<T, O> propertyAccessor, BiPredicate<O, O> propertyPredicate) {
 				this.propertyAccessor = propertyAccessor;
 				this.propertyPredicate = propertyPredicate;
+			}
+			
+			@Override
+			public String toString() {
+				return "PropertyComparator{" +
+						"propertyAccessor=" + MethodReferences.toMethodReferenceString(propertyAccessor) +
+//						", propertyPredicate=" + propertyPredicate +
+						", deepComparator=" + deepComparator +
+						'}';
 			}
 			
 			Set<AbstractDiff<?>> compare(T t1, T t2) {

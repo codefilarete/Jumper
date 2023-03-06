@@ -5,41 +5,30 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.codefilarete.jumper.schema.metadata.PreparedCriteria.Like;
+import org.codefilarete.jumper.schema.metadata.ColumnMetadataReader.Like;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
 import org.codefilarete.tool.Nullable;
 
-public class MariaDBMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
+public class MySQLMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
 	
 	private final ColumnMetadataReader columnMetadataReader;
 	
-	private final IndexMetadataReader indexMetadataReader;
-	
-	private final ExportedKeysMetadataReader exportedKeysMetadataReader;
-	
-	public MariaDBMetadataReader(DatabaseMetaData metaData) {
+	public MySQLMetadataReader(DatabaseMetaData metaData) {
 		super(metaData);
 		this.columnMetadataReader = new ColumnMetadataReader(metaData);
-		this.indexMetadataReader = new IndexMetadataReader(metaData);
-		this.exportedKeysMetadataReader = new ExportedKeysMetadataReader(metaData);
 	}
 	
 	@Override
 	public SortedSet<ColumnMetadata> giveColumns(String catalog, String schema, String tablePattern) {
-		try (ResultSet tableResultSet = columnMetadataReader.giveMetaData(
-				Nullable.nullable(schema).map(Like::new).get(),
-				Nullable.nullable(tablePattern).map(Like::new).get(),
-				null)) {
+		try (ResultSet tableResultSet = columnMetadataReader.buildGiveColumnsStatement(Nullable.nullable(schema).map(Like::new).get(), new Like<>(tablePattern), null)) {
 			ResultSetIterator<ColumnMetadata> resultSetIterator = new ResultSetIterator<ColumnMetadata>(tableResultSet) {
 				@Override
 				public ColumnMetadata convert(ResultSet resultSet) {
@@ -68,69 +57,7 @@ public class MariaDBMetadataReader extends DefaultMetadataReader implements Sequ
 			throw new RuntimeException(e);
 		}
 	}
-	
-	@Override
-	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern) {
-		try (ResultSet tableResultSet = indexMetadataReader.giveMetaData(Nullable.nullable(schema).map(Like::new).get(), new Like<>(tablePattern))) {
-			Map<String, IndexMetadata> cache = new HashMap<>();
-			ResultSetIterator<IndexMetadata> resultSetIterator = new ResultSetIterator<IndexMetadata>(tableResultSet) {
-				@Override
-				public IndexMetadata convert(ResultSet resultSet) {
-					String name = IndexMetaDataPseudoTable.INSTANCE.indexName.giveValue(resultSet);
-					IndexMetadata result = cache.computeIfAbsent(name, k -> {
-						IndexMetadata newInstance = new IndexMetadata(
-								IndexMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
-								IndexMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
-								IndexMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
-						);
-						IndexMetaDataPseudoTable.INSTANCE.indexName.apply(resultSet, newInstance::setName);
-						IndexMetaDataPseudoTable.INSTANCE.nonUnique.apply(resultSet, nonUnique -> newInstance.setUnique(!nonUnique));
-						return newInstance;
-					});
-					result.addColumn(
-							IndexMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet),
-							IndexMetaDataPseudoTable.INSTANCE.ascOrDesc.giveValue(resultSet)
-					);
-					return result;
-				}
-			};
-			return new HashSet<>(resultSetIterator.convert());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	@Override
-	public Set<ForeignKeyMetadata> giveExportedKeys(String catalog, String schema, String tablePattern) {
-		try (ResultSet tableResultSet = exportedKeysMetadataReader.giveMetaData(Nullable.nullable(schema).map(Like::new).get(), new Like<>(tablePattern))) {
-			Map<String, ForeignKeyMetadata> cache = new HashMap<>();
-			ResultSetIterator<ForeignKeyMetadata> resultSetIterator = new ResultSetIterator<ForeignKeyMetadata>(tableResultSet) {
-				@Override
-				public ForeignKeyMetadata convert(ResultSet resultSet) {
-					String name = ExportedKeysMetaDataPseudoTable.INSTANCE.fkName.giveValue(resultSet);
-					ForeignKeyMetadata result = cache.computeIfAbsent(name, k ->
-							new ForeignKeyMetadata(
-									k,
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkCatalog.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkSchema.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkTableName.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkCatalog.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkSchema.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkTableName.giveValue(resultSet)
-							));
-					result.addColumn(
-							ExportedKeysMetaDataPseudoTable.INSTANCE.fkColumnName.giveValue(resultSet),
-							ExportedKeysMetaDataPseudoTable.INSTANCE.pkColumnName.giveValue(resultSet)
-					);
-					return result;
-				}
-			};
-			return new HashSet<>(resultSetIterator.convert());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
+
 	@Override
 	public Set<SequenceMetadata> giveSequences(String catalog, String schema) {
 		String schemaCriteria = null;

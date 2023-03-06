@@ -11,6 +11,7 @@
 	</parent>
 
 	<artifactId>core</artifactId>
+	<name>core</name>
 
 	<properties>
 		<hsqldb.version>2.3.2</hsqldb.version>

@@ -42,6 +42,7 @@ public class ListDiffer<T, I> implements CollectionDiffer<T, List<T>, IndexedDif
 	 * @return a set of differences between the 2 sets, never null, empty if the 2 sets are empty. If no modification, all instances will be
 	 * {@link State#HELD}.
 	 */
+	@Override
 	public KeepOrderSet<IndexedDiff<T>> diff(List<T> before, List<T> after) {
 		// building Map of indexes per object
 		Map<T, Set<Integer>> beforeIndexes = new HashMap<>();
@@ -80,7 +81,7 @@ public class ListDiffer<T, I> implements CollectionDiffer<T, List<T>, IndexedDif
 		// - Pairs with both values are declared held
 		Set<T> helds = Iterables.intersect(afterIndexes.keySet(), beforeIndexes.keySet(), elementPredicate);
 		helds.forEach(e -> {
-			Object id = idProvider.apply(e);
+			I id = idProvider.apply(e);
 			Iterable<Duo<Integer, Integer>> indexPairs = () -> new UntilBothIterator<>(
 					beforeIndexesPerId.get(id),
 					afterIndexesPerId.get(id));

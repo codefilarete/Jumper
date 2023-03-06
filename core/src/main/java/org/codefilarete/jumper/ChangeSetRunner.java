@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
@@ -34,6 +35,10 @@ import org.codefilarete.tool.sql.TransactionSupport;
  * @author Guillaume Mary
  */
 public class ChangeSetRunner {
+	
+	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, Stream<ChangeSet> changes) {
+		return forJdbcStorage(connectionProvider, changes.collect(Collectors.toList()));
+	}
 	
 	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, List<ChangeSet> changes) {
 		JdbcChangeStorage changeHistoryStorage = new JdbcChangeStorage(connectionProvider);
@@ -91,6 +96,7 @@ public class ChangeSetRunner {
 	}
 	
 	private UpdateLock acquireUpdateLock() {
+		// we create a lock based on changes content, hence current process can't be run twice at same time
 		String allChangesSignature = changes.stream().map(checksumer::buildChecksum).map(Object::toString).collect(Collectors.toList()).toString();
 		Checksum allChangesChecksum = new StringChecksumer().checksum(allChangesSignature);
 		processLockStorage.insertRow(allChangesChecksum.toString());
@@ -230,7 +236,6 @@ public class ChangeSetRunner {
 		private void runSqlOrders(List<String> sqlOrders, Connection connection) throws SQLException {
 			for (String sqlOrder : sqlOrders) {
 				try {
-					System.out.println(sqlOrder);
 					runSqlOrder(sqlOrder, connection);
 				} catch (SQLException e) {
 					throw new SQLException("Error executing " + sqlOrder, e);

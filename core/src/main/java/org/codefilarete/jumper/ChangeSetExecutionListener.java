@@ -46,7 +46,7 @@ public interface ChangeSetExecutionListener {
 	 *
 	 * @author Guillaume Mary
 	 */
-	interface FineGrainExecutionListener extends ChangeSetExecutionListener {
+	interface StatementExecutionListener extends ChangeSetExecutionListener {
 		
 		/**
 		 * Is called after each sql statement run by the processor

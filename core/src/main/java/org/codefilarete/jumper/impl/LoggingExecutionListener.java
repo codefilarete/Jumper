@@ -6,7 +6,7 @@ import java.time.Instant;
 import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ChangeSetRunner;
-import org.codefilarete.jumper.ChangeSetExecutionListener.FineGrainExecutionListener;
+import org.codefilarete.jumper.ChangeSetExecutionListener.StatementExecutionListener;
 import org.codefilarete.tool.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Guillaume Mary
  */
-public class LoggingExecutionListener implements FineGrainExecutionListener {
+public class LoggingExecutionListener implements StatementExecutionListener {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ChangeSetRunner.class);
 	

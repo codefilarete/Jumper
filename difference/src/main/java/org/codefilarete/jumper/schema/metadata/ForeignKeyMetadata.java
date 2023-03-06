@@ -42,8 +42,9 @@ public class ForeignKeyMetadata implements MetadataElement {
 		return columns;
 	}
 	
-	void addColumn(String sourceColumnName, String targetColumnName) {
+	ForeignKeyMetadata addColumn(String sourceColumnName, String targetColumnName) {
 		this.columns.add(new Duo<>(sourceColumnName, targetColumnName));
+		return this;
 	}
 	
 	@Override

@@ -23,75 +23,88 @@ public class ColumnMetadata extends TableNamespaceElementSupport implements Meta
 		return name;
 	}
 	
-	public void setName(String name) {
+	public ColumnMetadata setName(String name) {
 		this.name = name;
+		return this;
 	}
 	
 	public JDBCType getSqlType() {
 		return sqlType;
 	}
 	
-	public void setSqlType(JDBCType sqlType) {
+	public ColumnMetadata setSqlType(JDBCType sqlType) {
 		this.sqlType = sqlType;
+		return this;
 	}
 	
 	public String getVendorType() {
 		return vendorType;
 	}
 	
-	public void setVendorType(String vendorType) {
+	public ColumnMetadata setVendorType(String vendorType) {
 		this.vendorType = vendorType;
+		return this;
 	}
 	
 	public Integer getSize() {
 		return size;
 	}
 	
-	public void setSize(Integer size) {
+	public ColumnMetadata setSize(Integer size) {
 		this.size = size;
+		return this;
 	}
 	
 	public Integer getPrecision() {
 		return precision;
 	}
 	
-	public void setPrecision(Integer precision) {
+	public ColumnMetadata setPrecision(Integer precision) {
 		this.precision = precision;
+		return this;
 	}
 	
 	public boolean isNullable() {
 		return nullable;
 	}
 	
-	public void setNullable(boolean nullable) {
+	public ColumnMetadata setNullable(boolean nullable) {
 		this.nullable = nullable;
+		return this;
 	}
 	
 	public boolean isAutoIncrement() {
 		return autoIncrement;
 	}
 	
-	public void setAutoIncrement(boolean autoIncrement) {
+	public ColumnMetadata setAutoIncrement(boolean autoIncrement) {
 		this.autoIncrement = autoIncrement;
+		return this;
 	}
 	
 	public int getPosition() {
 		return position;
 	}
 	
-	public void setPosition(int position) {
+	public ColumnMetadata setPosition(int position) {
 		this.position = position;
+		return this;
 	}
 	
 	@Override
 	public String toString() {
 		return "Column{" +
-				"name='" + name + '\'' +
+				"catalog='" + getCatalog() + '\'' +
+				", schema='" + getSchema() + '\'' +
+				", table='" + getTableName() + '\'' +
+				", name='" + name + '\'' +
 				", sqlType=" + sqlType +
 				", vendorType='" + vendorType + '\'' +
 				", size=" + size +
+				", precision=" + precision +
 				", nullable=" + nullable +
 				", autoIncrement=" + autoIncrement +
+				", position=" + position +
 				'}';
 	}
 }

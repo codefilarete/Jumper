@@ -21,16 +21,19 @@ public class PostgreSQLSchemaElementCollector extends DefaultSchemaElementCollec
 		super(metadataReader);
 	}
 	
+	@Override
 	public PostgreSQLSchemaElementCollector withCatalog(String catalog) {
 		super.withCatalog(catalog);
 		return this;
 	}
 	
+	@Override
 	public PostgreSQLSchemaElementCollector withSchema(String schema) {
 		super.withSchema(schema);
 		return this;
 	}
 	
+	@Override
 	public PostgreSQLSchemaElementCollector withTableNamePattern(String tableNamePattern) {
 		super.withTableNamePattern(tableNamePattern);
 		return this;

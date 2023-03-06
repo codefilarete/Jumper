@@ -67,16 +67,19 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		super(metadataReader);
 	}
 	
+	@Override
 	public DefaultSchemaElementCollector withCatalog(String catalog) {
 		this.catalog = catalog;
 		return this;
 	}
 	
+	@Override
 	public DefaultSchemaElementCollector withSchema(String schema) {
 		this.schema = schema;
 		return this;
 	}
 	
+	@Override
 	public DefaultSchemaElementCollector withTableNamePattern(String tableNamePattern) {
 		this.tableNamePattern = tableNamePattern;
 		return this;
@@ -85,7 +88,9 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 	public Schema collect() {
 		StringAppender schemaName = new StringAppender();
 		schemaName.catIf(!Strings.isEmpty(catalog), catalog);
-		schemaName.catIf(schemaName.length() != 0 && !Strings.isEmpty(schema), "." + schema);
+		if (!Strings.isEmpty(schema)) {
+			schemaName.catIf(schemaName.length() != 0, ".").cat(schema);
+		}
 		
 		Schema result = createSchema(schemaName);
 		
@@ -100,24 +105,17 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		
 		// Collecting columns and sewing them with tables
 		Map<Duo<String, String>, Column> columnCache = new HashMap<>();
-		Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, "%");
+		Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, tableNamePattern);
 		columnMetadata.stream().filter(c -> tablePerName.containsKey(c.getTableName()))
-				.sorted(Comparator.comparing(ColumnMetadata::getPosition)).forEach(row -> {
+				.sorted(Comparator.comparing(ColumnMetadata::getTableName).thenComparing(ColumnMetadata::getPosition)).forEach(row -> {
 			Table table = tablePerName.get(row.getTableName());
 			Column column = table.addColumn(row.getName(),
 					row.getSqlType(), row.getSize(), row.getPrecision(),
 					row.isNullable(), row.isAutoIncrement());
-			columnCache.put(new Duo<>(table.name, row.getName()), column);
+			columnCache.put(new Duo<>(table.getName(), row.getName()), column);
 		});
 
 		tablePerName.values().forEach(table -> {
-//			Set<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, table.name);
-//			columnMetadata.stream().sorted(Comparator.comparing(ColumnMetadata::getPosition)).forEach(row -> {
-//				Column column = table.addColumn(row.getName(),
-//						row.getSqlType(), row.getSize(), row.getPrecision(),
-//						row.isNullable(), row.isAutoIncrement());
-//				columnCache.put(new Duo<>(table.name, row.getName()), column);
-//			});
 			PrimaryKeyMetadata primaryKeyMetadata = metadataReader.givePrimaryKey(catalog, schema, table.name);
 			if (primaryKeyMetadata != null) {
 				List<Column> primaryKeyColumns = new ArrayList<>();
@@ -136,9 +134,11 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		// as we iterate to build Tables.
 		// For database vendors supporting pattern, this could be done without going over each table (and maybe enhance
 		// performances)
+		Set<ForeignKeyMetadata> foreignKeyMetadata = metadataReader.giveExportedKeys(catalog, schema, tableNamePattern);
+		Map<String, ForeignKeyMetadata> foreignKeyPerSourceTableName = Iterables.map(foreignKeyMetadata, fk -> fk.getSourceTable().getTableName());
 		tablePerName.values().forEach(table -> {
-			Set<ForeignKeyMetadata> foreignKeyMetadata = metadataReader.giveExportedKeys(catalog, schema, table.name);
-			foreignKeyMetadata.forEach(row -> {
+			ForeignKeyMetadata row = foreignKeyPerSourceTableName.get(table.getName());
+			if (row != null) {
 				ArrayList<Column> sourceColumns = new ArrayList<>();
 				ArrayList<Column> targetColumns = new ArrayList<>();
 				row.getColumns().forEach(duo -> {
@@ -149,31 +149,26 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				tablePerName.get(row.getSourceTable().getTableName())
 						.addForeignKey(row.getName(),
 								sourceColumns, tablePerName.get(row.getTargetTable().getTableName()), targetColumns);
-			});
+			}
 		});
 		
 		// Collecting indexes
+		Set<IndexMetadata> indexesMetadata = metadataReader.giveIndexes(catalog, schema, tableNamePattern);
+		Map<String, IndexMetadata> indexPerTableName = Iterables.map(indexesMetadata, IndexMetadata::getTableName);
 		tablePerName.values().forEach(table -> {
-			Set<IndexMetadata> foreignKeyMetadata = metadataReader.giveIndexes(catalog, schema, table.name);
-			foreignKeyMetadata.forEach(row -> {
-				boolean addIndex = shouldAddIndex(result, row);
+			IndexMetadata indexMetadata = indexPerTableName.get(table.name);
+			if (indexMetadata != null) {
+				boolean addIndex = shouldAddIndex(result, indexMetadata);
 				if (addIndex) {
-					Index index = result.addIndex(row.getName());
-					index.setUnique(row.isUnique());
-					row.getColumns().forEach(duo -> {
-						Boolean aBoolean = duo.getRight();
-						AscOrDesc ascOrDesc;
-						if (aBoolean == null) {
-							ascOrDesc = null;
-						} else if (aBoolean) {
-							ascOrDesc = AscOrDesc.ASC;
-						} else {
-							ascOrDesc = AscOrDesc.DESC;
-						}
-						index.addColumn(columnCache.get(new Duo<>(row.getTableName(), duo.getLeft())), ascOrDesc);
+					Index index = result.addIndex(indexMetadata.getName());
+					index.setUnique(indexMetadata.isUnique());
+					indexMetadata.getColumns().forEach(duo -> {
+						AscOrDesc direction = mapBooleanToDirection(duo.getRight());
+						Column column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
+						index.addColumn(column, direction);
 					});
 				}
-			});
+			}
 		});
 
 //		SortedSet<ColumnMetadata> columnMetadata = metadataReader.giveColumns(catalog, schema, "%");
@@ -194,6 +189,18 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		return result;
 	}
 	
+	private static AscOrDesc mapBooleanToDirection(Boolean ascOrDesc) {
+		AscOrDesc direction;
+		if (ascOrDesc == null) {
+			direction = null;
+		} else if (ascOrDesc) {
+			direction = AscOrDesc.ASC;
+		} else {
+			direction = AscOrDesc.DESC;
+		}
+		return direction;
+	}
+	
 	protected boolean shouldAddIndex(Schema result, IndexMetadata row) {
 		// we don't take into account indexes that matches primaryKey names because some database vendors
 		// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
@@ -209,6 +216,16 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 	
 	protected void completeSchema(Schema result) {
 	
+	}
+	
+	public interface SchemaElement {
+		
+		Schema getSchema();
+	}
+	
+	public interface TableElement {
+		
+		Table getTable();
 	}
 	
 	public static class Schema {
@@ -266,7 +283,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					'}';
 		}
 		
-		public class Table {
+		public class Table implements SchemaElement {
 			
 			private final String name;
 			private final List<Column> columns = new ArrayList<>();
@@ -278,7 +295,8 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				this.name = name;
 			}
 			
-			Schema getSchema() {
+			@Override
+			public Schema getSchema() {
 				return Schema.this;
 			}
 			
@@ -328,7 +346,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 						'}';
 			}
 			
-			public class Column {
+			public class Column implements SchemaElement, TableElement {
 				
 				private final String name;
 				private final JDBCType type;
@@ -346,6 +364,12 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					this.autoIncrement = autoIncrement;
 				}
 				
+				@Override
+				public Schema getSchema() {
+					return getTable().getSchema();
+				}
+				
+				@Override
 				public Table getTable() {
 					return Table.this;
 				}
@@ -377,14 +401,15 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				@Override
 				public String toString() {
 					return "Column{" +
-							"name='" + name + '\'' +
+							"tableName='" + getTable().getName() + '\'' +
+							", name='" + name + '\'' +
 							", type='" + type + '\'' +
 							", size=" + size +
 							'}';
 				}
 			}
 			
-			public class PrimaryKey {
+			public class PrimaryKey implements SchemaElement, TableElement {
 				
 				private final String name;
 				private final List<Column> columns;
@@ -392,6 +417,16 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				private PrimaryKey(String name, List<Column> columns) {
 					this.name = name;
 					this.columns = columns;
+				}
+				
+				@Override
+				public Schema getSchema() {
+					return Schema.this;
+				}
+				
+				@Override
+				public Table getTable() {
+					return Table.this;
 				}
 				
 				public String getName() {
@@ -410,7 +445,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				}
 			}
 			
-			public class ForeignKey {
+			public class ForeignKey implements SchemaElement, TableElement {
 				
 				private final String name;
 				private final List<Column> columns;
@@ -422,6 +457,16 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					this.columns = columns;
 					this.targetTable = targetTable;
 					this.targetColumns = targetColumns;
+				}
+				
+				@Override
+				public Schema getSchema() {
+					return Schema.this;
+				}
+				
+				@Override
+				public Table getTable() {
+					return Table.this;
 				}
 				
 				public String getName() {
@@ -451,7 +496,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			}
 		}
 		
-		public class Index {
+		public class Index implements SchemaElement, TableElement {
 			
 			private final String name;
 			
@@ -474,6 +519,16 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			
 			protected Index(String name) {
 				this.name = name;
+			}
+			
+			@Override
+			public Schema getSchema() {
+				return Schema.this;
+			}
+			
+			@Override
+			public Table getTable() {
+				return Iterables.first(columns.keySet()).getTable();
 			}
 			
 			public String getName() {
@@ -522,7 +577,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			DESC
 		}
 		
-		public class View {
+		public class View implements SchemaElement {
 			
 			private final String name;
 			private final KeepOrderSet<PseudoColumn> columns = new KeepOrderSet<>();
@@ -531,7 +586,8 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				this.name = name;
 			}
 			
-			Schema getSchema() {
+			@Override
+			public Schema getSchema() {
 				return Schema.this;
 			}
 			

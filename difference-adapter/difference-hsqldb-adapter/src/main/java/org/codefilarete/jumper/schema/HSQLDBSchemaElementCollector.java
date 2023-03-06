@@ -21,16 +21,19 @@ public class HSQLDBSchemaElementCollector extends DefaultSchemaElementCollector 
 		super(metadataReader);
 	}
 	
+	@Override
 	public HSQLDBSchemaElementCollector withCatalog(String catalog) {
 		super.withCatalog(catalog);
 		return this;
 	}
 	
+	@Override
 	public HSQLDBSchemaElementCollector withSchema(String schema) {
 		super.withSchema(schema);
 		return this;
 	}
 	
+	@Override
 	public HSQLDBSchemaElementCollector withTableNamePattern(String tableNamePattern) {
 		super.withTableNamePattern(tableNamePattern);
 		return this;

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+		xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+	
+	<changeSet author="Guillaume Mary" id="answer_tables">
+		<createTable tableName="Answer">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="DTYPE" type="VARCHAR(31)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="question_id" type="BIGINT"/>
+			<column name="form_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="choice_id" type="BIGINT"/>
+			<column name="value" type="double precision"/>
+			<column name="date" type="datetime(6)"/>
+		</createTable>
+		
+		<createTable tableName="Answer_Choice">
+			<column name="MultipleChoiceAnswer_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="choices_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="rank" type="INT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	
+	<changeSet author="Guillaume Mary" id="answer_constraints">
+		<addPrimaryKey tableName="Answer_Choice" columnNames="MultipleChoiceAnswer_id, rank"/>
+		<addForeignKeyConstraint baseTableName="Answer" baseColumnNames="choice_id"
+								 referencedTableName="Choice" referencedColumnNames="id"
+								 constraintName="FK2viobqwt4kki5q04i51fox7ax" />
+		<addForeignKeyConstraint baseTableName="Answer_Choice" baseColumnNames="MultipleChoiceAnswer_id"
+								 referencedTableName="Answer" referencedColumnNames="id"
+								 constraintName="FKc6i2fmg06305gbvmqqnxyxt2i" />
+		<addForeignKeyConstraint baseTableName="Answer" baseColumnNames="question_id"
+								 referencedTableName="Question" referencedColumnNames="id"
+								 constraintName="FKfiomvt17psxodcis3d8nmopx8" />
+		<addForeignKeyConstraint baseTableName="Answer_Choice" baseColumnNames="choices_id"
+								 referencedTableName="Choice" referencedColumnNames="id"
+								 constraintName="FKn3xsqrwvubdk3vyg4e8pjm3sd" />
+		
+	</changeSet>
+	
+</databaseChangeLog>

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+		xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+	
+	<changeSet author="Guillaume Mary" id="hibernate_tables">
+		<createTable tableName="IdGenerator">
+			<column name="sequence_name" type="VARCHAR(255)">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="next_val" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	
+	<changeSet author="Guillaume Mary" id="questionnaire_tables">
+		<createTable tableName="Questionnaire">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="name" type="VARCHAR(255)"/>
+		</createTable>
+		<createTable tableName="QuestionnaireElement">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="questionnaire_id" type="BIGINT"/>
+			<column name="idx" type="INT"/>
+		</createTable>
+		<createTable tableName="Question">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="label" type="VARCHAR(255)"/>
+		</createTable>
+	</changeSet>
+	<changeSet author="Guillaume Mary" id="open_questions_tables">
+		<createTable tableName="CommentQuestion">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		
+		<createTable tableName="NumericQuestion">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="precision" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="scale" type="INT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		
+		<createTable tableName="DateQuestion">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="withDay" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="withHour" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="withMillisecond" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="withMinute" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="withMonth" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="withYear" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	
+	<changeSet author="Guillaume Mary" id="closed_questions_tables">
+		<createTable tableName="ClosedQuestion">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		
+		<createTable tableName="SingleChoiceQuestion">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		
+		<createTable tableName="MultipleChoiceQuestion">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="maximumChoiceCount" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="minimumChoiceCount" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="ordered" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		
+		<createTable tableName="Choice">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="label" type="VARCHAR(255)"/>
+			<column name="weight" type="DOUBLE">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		
+		<createTable tableName="ClosedQuestion_Choice">
+			<column name="ClosedQuestion_id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="choices_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="idx" type="INT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+	</changeSet>
+	
+	<changeSet author="Guillaume Mary" id="extra_questionnaireElements_tables">
+		<createTable tableName="Section">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="title" type="VARCHAR(255)"/>
+		</createTable>
+		
+		<createTable tableName="QuestionTable">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="label" type="VARCHAR(255)"/>
+		</createTable>
+		
+		<createTable tableName="Criterion">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="label" type="VARCHAR(255)"/>
+		</createTable>
+		
+		<createTable tableName="QuestionTable_Criterion">
+			<column name="QuestionTable_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="criteria_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		
+		<createTable tableName="QuestionTable_Question">
+			<column name="QuestionTable_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="questions_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	
+	
+	</changeSet>
+	
+	<changeSet author="Guillaume Mary" id="questionnaire_constraints">
+		<addForeignKeyConstraint baseTableName="MultipleChoiceQuestion" baseColumnNames="id"
+								 referencedTableName="ClosedQuestion" referencedColumnNames="id"
+								 constraintName="FK2tfanb3djtqnhdiql7to60m0" />
+		<addForeignKeyConstraint baseTableName="SingleChoiceQuestion" baseColumnNames="id"
+								 referencedTableName="ClosedQuestion" referencedColumnNames="id"
+								 constraintName="FK3mmw0crbasp96o5nj4a1or7fv" />
+		<addForeignKeyConstraint baseTableName="QuestionTable_Criterion" baseColumnNames="QuestionTable_id"
+								 referencedTableName="QuestionTable" referencedColumnNames="id"
+								 constraintName="FK4g6g0kgcnr030wntye36jqrfy" />
+		<addForeignKeyConstraint baseTableName="ClosedQuestion_Choice" baseColumnNames="choices_id"
+								 referencedTableName="Choice" referencedColumnNames="id"
+								 constraintName="FK6korjoy8tarmfibrjivymnpbx" />
+		<addForeignKeyConstraint baseTableName="Question" baseColumnNames="id"
+								 referencedTableName="QuestionnaireElement" referencedColumnNames="id"
+								 constraintName="FK7phnsqdg7oowleve6gd2grbel" />
+		<addForeignKeyConstraint baseTableName="CommentQuestion" baseColumnNames="id"
+								 referencedTableName="Question" referencedColumnNames="id"
+								 constraintName="FK9ibqw4128bwwg9kagxvg08r0n" />
+		<addForeignKeyConstraint baseTableName="Section" baseColumnNames="id"
+								 referencedTableName="QuestionnaireElement" referencedColumnNames="id"
+								 constraintName="FKak5sq2gxqxgoakx321oscegeg" />
+		<addForeignKeyConstraint baseTableName="QuestionTable_Criterion" baseColumnNames="criteria_id"
+								 referencedTableName="Criterion" referencedColumnNames="id"
+								 constraintName="FKba1ex7uov2011y45ic95i9ffq" />
+		<addForeignKeyConstraint baseTableName="ClosedQuestion_Choice" baseColumnNames="ClosedQuestion_id"
+								 referencedTableName="ClosedQuestion" referencedColumnNames="id"
+								 constraintName="FKi1rbx6r3j761ak2dttl4ggvpx" />
+		<addForeignKeyConstraint baseTableName="QuestionnaireElement" baseColumnNames="questionnaire_id"
+								 referencedTableName="Questionnaire" referencedColumnNames="id"
+								 constraintName="FKjf4gtlxichnmo9q6kdhm08sq8" />
+		<addForeignKeyConstraint baseTableName="QuestionTable_Question" baseColumnNames="QuestionTable_id"
+								 referencedTableName="QuestionTable" referencedColumnNames="id"
+								 constraintName="FKlklb7ywnghhfy9ovuvnyb44ao" />
+		<addForeignKeyConstraint baseTableName="QuestionTable_Question" baseColumnNames="questions_id"
+								 referencedTableName="Question" referencedColumnNames="id"
+								 constraintName="FKn4diyjvls00btbs5rwqs7bu11" />
+		<addForeignKeyConstraint baseTableName="QuestionTable" baseColumnNames="id"
+								 referencedTableName="QuestionnaireElement" referencedColumnNames="id"
+								 constraintName="FKnk2fdd1p7qulqh8k6bilo0bto" />
+		<addForeignKeyConstraint baseTableName="ClosedQuestion" baseColumnNames="id"
+								 referencedTableName="Question" referencedColumnNames="id"
+								 constraintName="FKojtw674u2o0ahxrlj6gb2hmkf" />
+		<addForeignKeyConstraint baseTableName="NumericQuestion" baseColumnNames="id"
+								 referencedTableName="Question" referencedColumnNames="id"
+								 constraintName="FKsbuw2skldt72n4sv77h10efp9" />
+		<addForeignKeyConstraint baseTableName="DateQuestion" baseColumnNames="id"
+								 referencedTableName="Question" referencedColumnNames="id"
+								 constraintName="FKov1onp7y4ybu82wjcvqailbjn" />
+		<addUniqueConstraint tableName="QuestionTable_Question" columnNames="questions_id" constraintName="UK_9ily67sdsm62u8h9gocm28coy"/>
+		<addUniqueConstraint tableName="QuestionTable_Criterion" columnNames="criteria_id" constraintName="UK_amqe6fhn528v0o1m5yxpaa35w"/>
+		<addUniqueConstraint tableName="ClosedQuestion_Choice" columnNames="choices_id" constraintName="UK_ikfrkeim0qy7ct2fqri242eki"/>
+	</changeSet>
+	
+</databaseChangeLog>

@@ -3,7 +3,7 @@ package org.codefilarete.jumper;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codefilarete.jumper.ChangeSetExecutionListener.FineGrainExecutionListener;
+import org.codefilarete.jumper.ChangeSetExecutionListener.StatementExecutionListener;
 import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.Iterables;
 
@@ -11,7 +11,7 @@ import org.codefilarete.tool.collection.Iterables;
  *
  * @author Guillaume Mary
  */
-public class ChangeSetExecutionListenerCollection implements ChangeSetExecutionListener, FineGrainExecutionListener {
+public class ChangeSetExecutionListenerCollection implements ChangeSetExecutionListener, StatementExecutionListener {
 	
 	private final List<ChangeSetExecutionListener> listeners;
 	
@@ -59,8 +59,8 @@ public class ChangeSetExecutionListenerCollection implements ChangeSetExecutionL
 	
 	@Override
 	public void afterRun(String statement, Long updatedRowCount) {
-		this.listeners.stream().filter(FineGrainExecutionListener.class::isInstance)
-				.map(FineGrainExecutionListener.class::cast)
+		this.listeners.stream().filter(StatementExecutionListener.class::isInstance)
+				.map(StatementExecutionListener.class::cast)
 				.forEach(l -> l.afterRun(statement, updatedRowCount));
 	}
 }

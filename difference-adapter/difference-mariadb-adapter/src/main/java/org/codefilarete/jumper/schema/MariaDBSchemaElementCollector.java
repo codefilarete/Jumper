@@ -22,16 +22,19 @@ public class MariaDBSchemaElementCollector extends DefaultSchemaElementCollector
 		super(metadataReader);
 	}
 	
+	@Override
 	public MariaDBSchemaElementCollector withCatalog(String catalog) {
 		super.withCatalog(catalog);
 		return this;
 	}
 	
+	@Override
 	public MariaDBSchemaElementCollector withSchema(String schema) {
 		super.withSchema(schema);
 		return this;
 	}
 	
+	@Override
 	public MariaDBSchemaElementCollector withTableNamePattern(String tableNamePattern) {
 		super.withTableNamePattern(tableNamePattern);
 		return this;
@@ -56,12 +59,12 @@ public class MariaDBSchemaElementCollector extends DefaultSchemaElementCollector
 	}
 	
 	@Override
-	protected boolean shouldAddIndex(Schema result, IndexMetadata row) {
+	protected boolean shouldAddIndex(Schema result, IndexMetadata metadata) {
 		// we don't consider adding index related to primary key to schema since they highly linked to it
-		if (row.getName().equals("PRIMARY")) {
+		if (metadata.getName().equals("PRIMARY")) {
 			return false;
 		} else {
-			return super.shouldAddIndex(result, row);
+			return super.shouldAddIndex(result, metadata);
 		}
 	}
 	

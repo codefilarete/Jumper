@@ -1,5 +1,14 @@
 package org.codefilarete.jumper.impl;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.codefilarete.jumper.ChangeSetId;
 import org.codefilarete.jumper.ChangeStorage;
 import org.codefilarete.jumper.Checksum;
@@ -21,15 +30,6 @@ import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.sql.TransactionSupport;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Change that deploys Jumper's history table.
@@ -102,7 +102,7 @@ public class JdbcChangeStorage implements ChangeStorage {
 		return Iterables.map((List<Duo<String, Checksum>>) (List) changeIds, duo -> new ChangeSetId(duo.getLeft()), Duo::getRight);
 	}
 	
-	protected class ChangeHistoryTableEnsurer extends NoopExecutionListener {
+	public class ChangeHistoryTableEnsurer extends NoopExecutionListener {
 		
 		protected Connection connection;
 		

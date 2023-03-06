@@ -15,6 +15,7 @@
 		<module>core</module>
 		<module>difference</module>
 		<module>difference-adapter</module>
+		<module>benchmark</module>
 	</modules>
 	
 	<properties>

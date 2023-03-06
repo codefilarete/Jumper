@@ -2,30 +2,33 @@ package org.codefilarete.jumper.schema;
 
 import java.sql.DatabaseMetaData;
 
-import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
 import org.codefilarete.jumper.schema.metadata.IndexMetadata;
 import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.MySQLMetadataReader;
 
 public class MySQLSchemaElementCollector extends DefaultSchemaElementCollector {
 	
 	public MySQLSchemaElementCollector(DatabaseMetaData databaseMetaData) {
-		this(new DefaultMetadataReader(databaseMetaData));
+		this(new MySQLMetadataReader(databaseMetaData));
 	}
 	
 	public MySQLSchemaElementCollector(MetadataReader metadataReader) {
 		super(metadataReader);
 	}
 	
+	@Override
 	public MySQLSchemaElementCollector withCatalog(String catalog) {
 		super.withCatalog(catalog);
 		return this;
 	}
 	
+	@Override
 	public MySQLSchemaElementCollector withSchema(String schema) {
 		super.withSchema(schema);
 		return this;
 	}
 	
+	@Override
 	public MySQLSchemaElementCollector withTableNamePattern(String tableNamePattern) {
 		super.withTableNamePattern(tableNamePattern);
 		return this;

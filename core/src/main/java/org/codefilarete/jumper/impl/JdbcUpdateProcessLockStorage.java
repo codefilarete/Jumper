@@ -1,5 +1,13 @@
 package org.codefilarete.jumper.impl;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.Instant;
+
 import org.codefilarete.jumper.NoopExecutionListener;
 import org.codefilarete.jumper.UpdateProcessLockStorage;
 import org.codefilarete.stalactite.engine.PersistenceContext;
@@ -16,14 +24,6 @@ import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.exception.Exceptions;
 import org.codefilarete.tool.sql.TransactionSupport;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.time.Instant;
 
 public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 	
@@ -111,7 +111,7 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 		}
 	}
 	
-	protected class LockTableEnsurer extends NoopExecutionListener {
+	public class LockTableEnsurer extends NoopExecutionListener {
 		
 		protected Connection connection;
 		
