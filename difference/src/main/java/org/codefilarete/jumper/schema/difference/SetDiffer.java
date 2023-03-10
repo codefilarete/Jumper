@@ -1,12 +1,12 @@
 package org.codefilarete.jumper.schema.difference;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 
 import org.codefilarete.tool.collection.Iterables;
-import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
 
 import static org.codefilarete.jumper.schema.difference.State.*;
@@ -36,8 +36,8 @@ public class SetDiffer<T, I> implements CollectionDiffer<T, Set<T>, Diff<T>> {
 	 */
 	@Override
 	public KeepOrderSet<Diff<T>> diff(Set<T> before, Set<T> after) {
-		Map<I, T> beforeMappedOnIdentifier = Iterables.map(before, idProvider, Function.identity(), KeepOrderMap::new);
-		Map<I, T> afterMappedOnIdentifier = Iterables.map(after, idProvider, Function.identity(), KeepOrderMap::new);
+		Map<I, T> beforeMappedOnIdentifier = Iterables.map(before, idProvider, Function.identity(), HashMap::new);
+		Map<I, T> afterMappedOnIdentifier = Iterables.map(after, idProvider, Function.identity(), HashMap::new);
 		
 		KeepOrderSet<Diff<T>> result = new KeepOrderSet<>();
 		
@@ -49,8 +49,9 @@ public class SetDiffer<T, I> implements CollectionDiffer<T, Set<T>, Diff<T>> {
 				result.add(new Diff<>(REMOVED, entry.getValue(), null));
 			}
 		}
-		afterMappedOnIdentifier.keySet().removeAll(beforeMappedOnIdentifier.keySet());
-		for (Entry<I, T> identifiedEntry : afterMappedOnIdentifier.entrySet()) {
+		Map<I, T> addedElements = new HashMap<>(afterMappedOnIdentifier);
+		addedElements.keySet().removeAll(beforeMappedOnIdentifier.keySet());
+		for (Entry<I, T> identifiedEntry : addedElements.entrySet()) {
 			result.add(new Diff<>(ADDED, null, identifiedEntry.getValue()));
 		}
 		return result;

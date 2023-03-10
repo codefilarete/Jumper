@@ -59,12 +59,12 @@ public class MariaDBSchemaElementCollector extends DefaultSchemaElementCollector
 	}
 	
 	@Override
-	protected boolean shouldAddIndex(Schema result, IndexMetadata metadata) {
+	protected boolean shouldAddIndex(Schema result, IndexMetadata indexMetadata) {
 		// we don't consider adding index related to primary key to schema since they highly linked to it
-		if (metadata.getName().equals("PRIMARY")) {
+		if (indexMetadata.getName().equals("PRIMARY")) {
 			return false;
 		} else {
-			return super.shouldAddIndex(result, metadata);
+			return super.shouldAddIndex(result, indexMetadata);
 		}
 	}
 	

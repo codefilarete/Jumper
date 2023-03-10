@@ -339,8 +339,9 @@ class JumperDeployerTest {
 								.addColumn("phoneNumber", "VARCHAR(255)")
 								.addColumn("email", "VARCHAR(255)"),
 						createTable("DistributionConfiguration_ContactMean")
-								.addColumn("DistributionConfiguration_id", "BIGINT").primaryKey()
-								.addColumn("personas_id", "BIGINT").primaryKey(),
+								.addColumn("DistributionConfiguration_id", "BIGINT")
+								.addColumn("personas_id", "BIGINT")
+								.primaryKey("DistributionConfiguration_id", "personas_id"),
 						createForeignKey("FK3dinoqtgbhiv0tx7fmtqwj7aw",
 								"DistributionConfiguration").addSourceColumn("messageTemplate_id")
 								.targetTable("Message").addTargetColumn("id"),

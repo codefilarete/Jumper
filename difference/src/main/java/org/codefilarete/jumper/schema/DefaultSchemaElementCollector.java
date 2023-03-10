@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
@@ -154,20 +155,22 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		
 		// Collecting indexes
 		Set<IndexMetadata> indexesMetadata = metadataReader.giveIndexes(catalog, schema, tableNamePattern);
-		Map<String, IndexMetadata> indexPerTableName = Iterables.map(indexesMetadata, IndexMetadata::getTableName);
+		Map<String, List<IndexMetadata>> indexPerTableName = indexesMetadata.stream().collect(Collectors.groupingBy(IndexMetadata::getTableName));
 		tablePerName.values().forEach(table -> {
-			IndexMetadata indexMetadata = indexPerTableName.get(table.name);
-			if (indexMetadata != null) {
-				boolean addIndex = shouldAddIndex(result, indexMetadata);
-				if (addIndex) {
-					Index index = result.addIndex(indexMetadata.getName());
-					index.setUnique(indexMetadata.isUnique());
-					indexMetadata.getColumns().forEach(duo -> {
-						AscOrDesc direction = mapBooleanToDirection(duo.getRight());
-						Column column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
-						index.addColumn(column, direction);
-					});
-				}
+			List<IndexMetadata> tableIndexes = indexPerTableName.get(table.name);
+			if (tableIndexes != null) {
+				tableIndexes.forEach(indexMetadata -> {
+					boolean addIndex = shouldAddIndex(result, indexMetadata);
+					if (addIndex) {
+						Index index = result.addIndex(indexMetadata.getName());
+						index.setUnique(indexMetadata.isUnique());
+						indexMetadata.getColumns().forEach(duo -> {
+							AscOrDesc direction = mapBooleanToDirection(duo.getRight());
+							Column column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
+							index.addColumn(column, direction);
+						});
+					}
+				});
 			}
 		});
 
@@ -201,12 +204,12 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		return direction;
 	}
 	
-	protected boolean shouldAddIndex(Schema result, IndexMetadata row) {
+	protected boolean shouldAddIndex(Schema result, IndexMetadata indexMetadata) {
 		// we don't take into account indexes that matches primaryKey names because some database vendors
 		// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
 		// as they are highly tied to primaryKey presence (can't be deleted without removing primaryKey)
 		Optional<String> matchingPkName = result.getTables().stream().map(t -> nullable(t.getPrimaryKey()).map(PrimaryKey::getName).getOr((String) null))
-				.filter(pkName -> row.getName().equals(pkName)).findFirst();
+				.filter(pkName -> indexMetadata.getName().equals(pkName)).findFirst();
 		return !matchingPkName.isPresent();
 	}
 	
@@ -568,6 +571,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				return "Index{" +
 						"name='" + name + '\'' +
 						", unique=" + unique +
+						", columns=" + columns.keySet().stream().map(Column::getName).collect(Collectors.joining(", ")) +
 						'}';
 			}
 		}

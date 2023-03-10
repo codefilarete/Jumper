@@ -21,6 +21,8 @@ import org.codefilarete.tool.Nullable;
 
 public class MariaDBMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
 	
+	private final TableMetadataReader tableMetadataReader;
+	
 	private final ColumnMetadataReader columnMetadataReader;
 	
 	private final IndexMetadataReader indexMetadataReader;
@@ -29,9 +31,33 @@ public class MariaDBMetadataReader extends DefaultMetadataReader implements Sequ
 	
 	public MariaDBMetadataReader(DatabaseMetaData metaData) {
 		super(metaData);
+		this.tableMetadataReader = new TableMetadataReader(metaData);
 		this.columnMetadataReader = new ColumnMetadataReader(metaData);
 		this.indexMetadataReader = new IndexMetadataReader(metaData);
 		this.exportedKeysMetadataReader = new ExportedKeysMetadataReader(metaData);
+	}
+	
+	@Override
+	public Set<TableMetadata> giveTables(String catalog, String schema, String tableNamePattern) {
+		try (ResultSet tableResultSet = tableMetadataReader.giveMetaData(
+				Nullable.nullable(schema).map(Like::new).get(),
+				Nullable.nullable(tableNamePattern).map(Like::new).get())) {
+			ResultSetIterator<TableMetadata> resultSetIterator = new ResultSetIterator<TableMetadata>(tableResultSet) {
+				@Override
+				public TableMetadata convert(ResultSet resultSet) {
+					TableMetadata result = new TableMetadata(
+							TableMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+							TableMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet)
+					);
+					TableMetaDataPseudoTable.INSTANCE.tableName.apply(resultSet, result::setName);
+					TableMetaDataPseudoTable.INSTANCE.remarks.apply(resultSet, result::setRemarks);
+					return result;
+				}
+			};
+			return new HashSet<>(resultSetIterator.convert());
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	@Override
@@ -71,7 +97,9 @@ public class MariaDBMetadataReader extends DefaultMetadataReader implements Sequ
 	
 	@Override
 	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern) {
-		try (ResultSet tableResultSet = indexMetadataReader.giveMetaData(Nullable.nullable(schema).map(Like::new).get(), new Like<>(tablePattern))) {
+		try (ResultSet tableResultSet = indexMetadataReader.giveMetaData(
+				Nullable.nullable(schema).map(Like::new).get(),
+				Nullable.nullable(tablePattern).map(Like::new).get())) {
 			Map<String, IndexMetadata> cache = new HashMap<>();
 			ResultSetIterator<IndexMetadata> resultSetIterator = new ResultSetIterator<IndexMetadata>(tableResultSet) {
 				@Override

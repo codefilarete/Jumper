@@ -35,12 +35,12 @@ public class MySQLSchemaElementCollector extends DefaultSchemaElementCollector {
 	}
 	
 	@Override
-	protected boolean shouldAddIndex(Schema result, IndexMetadata row) {
+	protected boolean shouldAddIndex(Schema result, IndexMetadata indexMetadata) {
 		// we don't consider adding index related to primary key to schema since they highly linked to it
-		if (row.getName().equals("PRIMARY")) {
+		if (indexMetadata.getName().equals("PRIMARY")) {
 			return false;
 		} else {
-			return super.shouldAddIndex(result, row);
+			return super.shouldAddIndex(result, indexMetadata);
 		}
 	}
 }

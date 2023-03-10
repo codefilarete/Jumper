@@ -16,7 +16,7 @@ import org.mariadb.jdbc.util.constants.ServerStatus;
 import static org.codefilarete.jumper.schema.metadata.PreparedCriteria.asSQLCriteria;
 
 /**
- * Class aimed at extracting table columns metadata for MariaDB, inspired from
+ * Class aimed at extracting table foreign keys metadata for MariaDB
  *
  * @author Guillaume Mary
  */
