@@ -6,7 +6,7 @@ import org.codefilarete.jumper.ddl.dsl.support.ModifyColumn;
  * @author Guillaume Mary
  */
 @FunctionalInterface
-public interface ModifyColumnGenerator {
+public interface ModifyColumnGenerator extends SQLGenerator<ModifyColumn> {
 	
 	String generateScript(ModifyColumn modifyColumn);
 }

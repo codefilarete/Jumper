@@ -8,7 +8,7 @@ import org.codefilarete.tool.collection.KeepOrderSet;
 /**
  * @author Guillaume Mary
  */
-public class NewIndex implements SupportedChange {
+public class NewIndex extends SupportedChange {
 	
 	private final String name;
 	private final Table table;
@@ -48,5 +48,25 @@ public class NewIndex implements SupportedChange {
 	
 	public void addColumn(String columnName) {
 		this.columns.add(columnName);
+	}
+	
+	@Override
+	public String getSchemaName() {
+		return this.table.getSchemaName();
+	}
+	
+	@Override
+	public void setSchemaName(String schemaName) {
+		this.table.setSchemaName(schemaName);
+	}
+	
+	@Override
+	public String getCatalogName() {
+		return this.table.getCatalogName();
+	}
+	
+	@Override
+	public void setCatalogName(String catalogName) {
+		this.table.setCatalogName(catalogName);
 	}
 }

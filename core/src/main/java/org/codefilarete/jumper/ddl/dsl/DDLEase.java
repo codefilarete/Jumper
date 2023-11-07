@@ -31,11 +31,15 @@ public class DDLEase {
 		return new IndexCreationSupport(name, tableName);
 	}
 	
-	public static ForeignKeyCreation createForeignKey(String name, String tableName) {
-		return new ForeignKeyCreationSupport(name, tableName);
+	public static ForeignKeyCreation createForeignKey(String name, String sourceTableName, String targetTableName) {
+		return new ForeignKeyCreationSupport(name, sourceTableName, targetTableName);
 	}
 	
 	public static UniqueContraintCreation createUniqueContraint(String name, String tableName, String columnName, String... extraColumnNames) {
 		return new UniqueContraintCreationSupport(name, tableName, columnName, extraColumnNames);
+	}
+	
+	public static StatementCreation sql(String... statements) {
+		return new StatementCreationSupport(statements);
 	}
 }

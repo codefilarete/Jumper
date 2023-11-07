@@ -7,7 +7,7 @@ import org.codefilarete.reflection.MethodReferenceDispatcher;
 /**
  * @author Guillaume Mary
  */
-public class TableCreationSupport implements TableCreation {
+public class TableCreationSupport extends AbstractSupportedChangeSupport<NewTable, TableCreation> implements TableCreation {
 	
 	private final NewTable table;
 	

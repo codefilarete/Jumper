@@ -14,6 +14,7 @@ import java.util.Set;
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.dsl.support.DropTable;
+import org.codefilarete.jumper.ddl.dsl.support.TableCreationSupport;
 import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
 import org.codefilarete.jumper.impl.SQLChange;
@@ -28,6 +29,8 @@ import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -292,4 +295,45 @@ public class ChangeSetRunnerTest {
 		assertThat(connectionCapturer.get()).isEqualTo(connectionMock);
 	}
 	
+	@Test
+	void processUpdate_withConditionedChangeSet() throws SQLException {
+		Connection connectionMock = Mockito.mock(Connection.class);
+		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
+		TableCreationSupport supportedChangeSupport = spy(new TableCreationSupport("myName"));
+		ChangeSet change = new ChangeSet("dummyId").addChanges(supportedChangeSupport);
+		change.runIf(context -> false);
+		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
+		localChangeRunner.processUpdate();
+		// build() shouldn't be invoked
+		// 1 is for Checksum computation due to lock acquisition
+		verify(supportedChangeSupport, atMost(1)).build();
+	}
+	
+	@Test
+	void processUpdate_withConditionedChange() throws SQLException {
+		Connection connectionMock = Mockito.mock(Connection.class);
+		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
+		TableCreationSupport supportedChangeSupport = spy(new TableCreationSupport("myName"));
+		supportedChangeSupport.runIf(context -> false);
+		ChangeSet change = new ChangeSet("dummyId").addChanges(supportedChangeSupport);
+		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
+		localChangeRunner.processUpdate();
+		// build() shouldn't be invoked
+		// 1 is for Checksum computation due to lock acquisition
+		verify(supportedChangeSupport, atMost(1)).build();
+	}
+	
+	@Test
+	void processUpdate_withConditionedChange_SQLChange() throws SQLException {
+		Connection connectionMock = Mockito.mock(Connection.class);
+		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
+		SQLChange sqlChange = spy(new SQLChange("whatever SQL"));
+		sqlChange.runIf(context -> false);
+		ChangeSet change = new ChangeSet("dummyId").addChanges(sqlChange);
+		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
+		localChangeRunner.processUpdate();
+		// build() shouldn't be invoked
+		// 1 is for Checksum computation due to lock acquisition
+		verify(sqlChange, atMost(1)).getSqlOrders();
+	}
 }

@@ -17,7 +17,9 @@ class DropTableHandlerTest {
 	@Test
 	void generateScript_catalogAndSchema() {
 		DropTableHandler testInstance = new DropTableHandler();
-		DropTable dropTable = new DropTable("toto").setCatalogName("catalog").setSchemaName("schema");
+		DropTable dropTable = new DropTable("toto");
+		dropTable.setCatalogName("catalog");
+		dropTable.setSchemaName("schema");
 		assertThat(testInstance.generateScript(dropTable)).isEqualTo("drop table catalog.schema.toto");
 	}
 	

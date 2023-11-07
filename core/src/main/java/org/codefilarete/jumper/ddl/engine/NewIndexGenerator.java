@@ -6,7 +6,7 @@ import org.codefilarete.jumper.ddl.dsl.support.NewIndex;
  * @author Guillaume Mary
  */
 @FunctionalInterface
-public interface NewIndexGenerator {
+public interface NewIndexGenerator extends SQLGenerator<NewIndex> {
 	
 	String generateScript(NewIndex index);
 }

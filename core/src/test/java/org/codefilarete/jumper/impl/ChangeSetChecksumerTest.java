@@ -40,9 +40,8 @@ class ChangeSetChecksumerTest {
 	@Test
 	void buildChecksum_handleNewForeignKey() {
 		ChangeChecksumer testInstance = Mockito.spy(new ChangeChecksumer());
-		NewForeignKey newForeignKey = new NewForeignKey("x", new Table("y"));
+		NewForeignKey newForeignKey = new NewForeignKey("x", new Table("y"), new Table("b"));
 		newForeignKey.addTargetColumn("a");
-		newForeignKey.setTargetTable(new Table("b"));
 		testInstance.buildChecksum(new ChangeSet("x").addChanges(newForeignKey));
 		verify(testInstance).giveSignature(newForeignKey);
 	}
@@ -87,10 +86,9 @@ class ChangeSetChecksumerTest {
 	@Test
 	void giveSignature_handleNewForeignKey() {
 		ChangeChecksumer testInstance = new ChangeChecksumer();
-		NewForeignKey newForeignKey = new NewForeignKey("X->Y", new Table("X"));
+		NewForeignKey newForeignKey = new NewForeignKey("X->Y", new Table("X"), new Table("Y"));
 		newForeignKey.addSourceColumn("x1");
 		newForeignKey.addSourceColumn("x2");
-		newForeignKey.setTargetTable(new Table("Y"));
 		newForeignKey.addTargetColumn("y1");
 		newForeignKey.addTargetColumn("y2");
 		String signature = testInstance.giveSignature(newForeignKey);

@@ -5,7 +5,7 @@ import org.codefilarete.jumper.impl.SupportedChange;
 /**
  * @author Guillaume Mary
  */
-public class ModifyColumn implements SupportedChange {
+public class ModifyColumn extends SupportedChange {
 	
 	private final Table table;
 	private final String name;
@@ -93,40 +93,23 @@ public class ModifyColumn implements SupportedChange {
 		return this;
 	}
 	
+	@Override
 	public String getSchemaName() {
 		return this.table.getSchemaName();
 	}
 	
-	public ModifyColumn setSchemaName(String schemaName) {
+	@Override
+	public void setSchemaName(String schemaName) {
 		this.table.setSchemaName(schemaName);
-		return this;
 	}
 	
+	@Override
 	public String getCatalogName() {
 		return this.table.getCatalogName();
 	}
 	
-	public ModifyColumn setCatalogName(String catalogName) {
+	@Override
+	public void setCatalogName(String catalogName) {
 		this.table.setCatalogName(catalogName);
-		return this;
-	}
-	
-	public static class ColumnRenaming {
-		
-		private final String oldName;
-		private final String newName;
-		
-		public ColumnRenaming(String oldName, String newName) {
-			this.oldName = oldName;
-			this.newName = newName;
-		}
-		
-		public String getNewName() {
-			return newName;
-		}
-		
-		public String getOldName() {
-			return oldName;
-		}
 	}
 }

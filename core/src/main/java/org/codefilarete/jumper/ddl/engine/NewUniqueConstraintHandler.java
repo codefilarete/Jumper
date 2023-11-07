@@ -17,7 +17,6 @@ public class NewUniqueConstraintHandler implements NewUniqueConstraintGenerator 
 	
 	@Override
 	public String generateScript(NewUniqueConstraint newUniqueConstraint) {
-		Table table = newUniqueConstraint.getTable();
 		StringAppender sqlCreateIndex = new DDLAppender("alter table ", newUniqueConstraint.getTable().getName())
 				.cat(" add constraint ", newUniqueConstraint.getName(), " unique (")
 				.ccat(newUniqueConstraint.getColumns(), ", ")

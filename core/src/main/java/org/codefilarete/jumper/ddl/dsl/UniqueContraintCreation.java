@@ -1,13 +1,12 @@
 package org.codefilarete.jumper.ddl.dsl;
 
-import org.codefilarete.jumper.ChangeSet;
+import org.codefilarete.jumper.ddl.dsl.support.NewUniqueConstraint;
 
 /**
+ * Contract for {@link NewUniqueConstraint} creation through fluent API
+ *
  * @author Guillaume Mary
  */
-public interface UniqueContraintCreation extends ChangeSet.ChangeBuilder {
+public interface UniqueContraintCreation extends FluentSupportedChange<NewUniqueConstraint, UniqueContraintCreation> {
 	
-	UniqueContraintCreation setSchema(String schemaName);
-	
-	UniqueContraintCreation setCatalog(String catalogName);
 }

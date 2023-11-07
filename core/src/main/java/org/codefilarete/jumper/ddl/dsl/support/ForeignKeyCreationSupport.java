@@ -5,61 +5,35 @@ import org.codefilarete.jumper.ddl.dsl.ForeignKeyCreation;
 /**
  * @author Guillaume Mary
  */
-public class ForeignKeyCreationSupport implements ForeignKeyCreation {
+public class ForeignKeyCreationSupport extends AbstractSupportedChangeSupport<NewForeignKey, ForeignKeyCreation> implements ForeignKeyCreation {
 	
 	private final NewForeignKey foreignKey;
 	
-	public ForeignKeyCreationSupport(String name, String tableName) {
-		this.foreignKey = new NewForeignKey(name, new Table(tableName));
+	public ForeignKeyCreationSupport(String name, String sourceTableName, String targetTableName) {
+		this.foreignKey = new NewForeignKey(name, new Table(sourceTableName), new Table(targetTableName));
 	}
 	
 	@Override
-	public ForeignKeyPostSourceColumnOptions addSourceColumn(String name) {
-		foreignKey.addSourceColumn(name);
-		return new ForeignKeyPostSourceColumnOptions() {
-			@Override
-			public ForeignKeyPostSourceColumnOptions addSourceColumn(String name) {
-				foreignKey.addSourceColumn(name);
-				return this;
-			}
-			
-			@Override
-			public ForeignKeyPostTargetTableOptions targetTable(String name) {
-				foreignKey.setTargetTable(new Table(name));
-				return new ForeignKeyPostTargetTableOptions() {
-					@Override
-					public ForeignKeyPostTargetColumnOptions addTargetColumn(String name) {
-						foreignKey.addTargetColumn(name);
-						return new ForeignKeyPostTargetColumnOptions() {
-							@Override
-							public ForeignKeyPostTargetColumnOptions addTargetColumn(String name) {
-								foreignKey.addTargetColumn(name);
-								return this;
-							}
-							
-							@Override
-							public NewForeignKey build() {
-								return foreignKey;
-							}
-						};
-					}
-				};
-			}
-		};
-//		return new MethodReferenceDispatcher()
-//				.redirect(ForeignKeyPostSourceColumnOptions::targetTable, (String s) -> foreignKey.setTargetTable(new Table(s)))
-//				.build(ForeignKeyPostSourceColumnOptions.class);
+	public ForeignKeyCreation addColumnReference(String sourceColumnName, String targetColumnName) {
+		foreignKey.addSourceColumn(sourceColumnName);
+		foreignKey.addTargetColumn(targetColumnName);
+		return this;
 	}
 	
 	@Override
 	public ForeignKeyCreation setSchema(String schemaName) {
-		foreignKey.getTable().setSchemaName(schemaName);
+		foreignKey.setSchemaName(schemaName);
 		return this;
 	}
 	
 	@Override
 	public ForeignKeyCreation setCatalog(String catalogName) {
-		foreignKey.getTable().setCatalogName(catalogName);
+		foreignKey.setCatalogName(catalogName);
 		return this;
+	}
+	
+	@Override
+	public NewForeignKey build() {
+		return this.foreignKey;
 	}
 }

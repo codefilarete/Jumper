@@ -7,7 +7,7 @@ import org.codefilarete.jumper.ddl.dsl.support.DropTable;
  * @author Guillaume Mary
  */
 @FunctionalInterface
-public interface DropTableGenerator {
+public interface DropTableGenerator extends SQLGenerator<DropTable> {
 	
 	String generateScript(DropTable dropTable);
 }

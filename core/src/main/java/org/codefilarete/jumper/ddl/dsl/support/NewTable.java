@@ -9,7 +9,7 @@ import org.codefilarete.tool.collection.KeepOrderSet;
 /**
  * @author Guillaume Mary
  */
-public class NewTable implements SupportedChange {
+public class NewTable extends SupportedChange {
 	
 	private final Table table;
 	private final Set<NewColumn> columns = new KeepOrderSet<>();
@@ -24,22 +24,24 @@ public class NewTable implements SupportedChange {
 		return this.table.getName();
 	}
 	
+	@Override
 	public String getSchemaName() {
 		return this.table.getSchemaName();
 	}
 	
-	public NewTable setSchemaName(String schemaName) {
+	@Override
+	public void setSchemaName(String schemaName) {
 		this.table.setSchemaName(schemaName);
-		return this;
 	}
 	
+	@Override
 	public String getCatalogName() {
 		return this.table.getCatalogName();
 	}
 	
-	public NewTable setCatalogName(String catalogName) {
+	@Override
+	public void setCatalogName(String catalogName) {
 		this.table.setCatalogName(catalogName);
-		return this;
 	}
 	
 	public Set<NewColumn> getColumns() {

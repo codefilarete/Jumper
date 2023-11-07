@@ -8,25 +8,26 @@ import org.codefilarete.tool.collection.KeepOrderSet;
 /**
  * @author Guillaume Mary
  */
-public class NewForeignKey implements SupportedChange {
+public class NewForeignKey extends SupportedChange {
 	
 	private final String name;
-	private final Table table;
+	private final Table sourceTable;
 	private final Set<String> sourceColumns = new KeepOrderSet<>();
-	private Table targetTable;
+	private final Table targetTable;
 	private final Set<String> targetColumns = new KeepOrderSet<>();
 	
-	public NewForeignKey(String name, Table table) {
+	public NewForeignKey(String name, Table sourceTable, Table targetTable) {
 		this.name = name;
-		this.table = table;
+		this.sourceTable = sourceTable;
+		this.targetTable = targetTable;
 	}
 	
 	public String getName() {
 		return name;
 	}
 	
-	public Table getTable() {
-		return table;
+	public Table getSourceTable() {
+		return sourceTable;
 	}
 	
 	public Set<String> getSourceColumns() {
@@ -45,11 +46,29 @@ public class NewForeignKey implements SupportedChange {
 		targetColumns.add(name);
 	}
 	
-	public void setTargetTable(Table targetTable) {
-		this.targetTable = targetTable;
-	}
-	
 	public Table getTargetTable() {
 		return targetTable;
+	}
+	
+	@Override
+	public String getSchemaName() {
+		return this.sourceTable.getSchemaName();
+	}
+	
+	@Override
+	public void setSchemaName(String schemaName) {
+		this.sourceTable.setSchemaName(schemaName);
+		this.targetTable.setSchemaName(schemaName);
+	}
+	
+	@Override
+	public String getCatalogName() {
+		return this.sourceTable.getCatalogName();
+	}
+	
+	@Override
+	public void setCatalogName(String catalogName) {
+		this.sourceTable.setCatalogName(catalogName);
+		this.targetTable.setCatalogName(catalogName);
 	}
 }

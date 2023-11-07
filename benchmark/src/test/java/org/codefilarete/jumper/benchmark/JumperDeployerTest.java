@@ -239,54 +239,38 @@ class JumperDeployerTest {
 								.addColumn("QuestionTable_id", "BIGINT").notNull()
 								.addColumn("questions_id", "BIGINT").notNull()),
 				changeSet("questionnaire_constraints",
-						createForeignKey("FK2tfanb3djtqnhdiql7to60m0",
-								"MultipleChoiceQuestion").addSourceColumn("id")
-								.targetTable("ClosedQuestion").addTargetColumn("id"),
-						createForeignKey("FK3mmw0crbasp96o5nj4a1or7fv",
-								"SingleChoiceQuestion").addSourceColumn("id")
-								.targetTable("ClosedQuestion").addTargetColumn("id"),
-						createForeignKey("FK4g6g0kgcnr030wntye36jqrfy",
-								"QuestionTable_Criterion").addSourceColumn("QuestionTable_id")
-								.targetTable("QuestionTable").addTargetColumn("id"),
-						createForeignKey("FK6korjoy8tarmfibrjivymnpbx",
-								"ClosedQuestion_Choice").addSourceColumn("choices_id")
-								.targetTable("Choice").addTargetColumn("id"),
-						createForeignKey("FK7phnsqdg7oowleve6gd2grbel",
-								"Question").addSourceColumn("id")
-								.targetTable("QuestionnaireElement").addTargetColumn("id"),
-						createForeignKey("FK9ibqw4128bwwg9kagxvg08r0n",
-								"CommentQuestion").addSourceColumn("id")
-								.targetTable("Question").addTargetColumn("id"),
-						createForeignKey("FKak5sq2gxqxgoakx321oscegeg",
-								"Section").addSourceColumn("id")
-								.targetTable("QuestionnaireElement").addTargetColumn("id"),
-						createForeignKey("FKba1ex7uov2011y45ic95i9ffq",
-								"QuestionTable_Criterion").addSourceColumn("criteria_id")
-								.targetTable("Criterion").addTargetColumn("id"),
-						createForeignKey("FKi1rbx6r3j761ak2dttl4ggvpx",
-								"ClosedQuestion_Choice").addSourceColumn("ClosedQuestion_id")
-								.targetTable("ClosedQuestion").addTargetColumn("id"),
-						createForeignKey("FKjf4gtlxichnmo9q6kdhm08sq8",
-								"QuestionnaireElement").addSourceColumn("questionnaire_id")
-								.targetTable("Questionnaire").addTargetColumn("id"),
-						createForeignKey("FKlklb7ywnghhfy9ovuvnyb44ao",
-								"QuestionTable_Question").addSourceColumn("QuestionTable_id")
-								.targetTable("QuestionTable").addTargetColumn("id"),
-						createForeignKey("FKn4diyjvls00btbs5rwqs7bu11",
-								"QuestionTable_Question").addSourceColumn("questions_id")
-								.targetTable("Question").addTargetColumn("id"),
-						createForeignKey("FKnk2fdd1p7qulqh8k6bilo0bto",
-								"QuestionTable").addSourceColumn("id")
-								.targetTable("QuestionnaireElement").addTargetColumn("id"),
-						createForeignKey("FKojtw674u2o0ahxrlj6gb2hmkf",
-								"ClosedQuestion").addSourceColumn("id")
-								.targetTable("Question").addTargetColumn("id"),
-						createForeignKey("FKsbuw2skldt72n4sv77h10efp9",
-								"NumericQuestion").addSourceColumn("id")
-								.targetTable("Question").addTargetColumn("id"),
-						createForeignKey("FKov1onp7y4ybu82wjcvqailbjn",
-								"DateQuestion").addSourceColumn("id")
-								.targetTable("Question").addTargetColumn("id"),
+						createForeignKey("FK2tfanb3djtqnhdiql7to60m0", "MultipleChoiceQuestion", "ClosedQuestion")
+								.addColumnReference("id", "id"),
+						createForeignKey("FK3mmw0crbasp96o5nj4a1or7fv", "SingleChoiceQuestion", "ClosedQuestion")
+								.addColumnReference("id", "id"),
+						createForeignKey("FK4g6g0kgcnr030wntye36jqrfy", "QuestionTable_Criterion", "QuestionTable")
+								.addColumnReference("QuestionTable_id", "id"),
+						createForeignKey("FK6korjoy8tarmfibrjivymnpbx", "ClosedQuestion_Choice", "Choice")
+								.addColumnReference("choices_id", "id"),
+						createForeignKey("FK7phnsqdg7oowleve6gd2grbel", "Question", "QuestionnaireElement")
+								.addColumnReference("id", "id"),
+						createForeignKey("FK9ibqw4128bwwg9kagxvg08r0n", "CommentQuestion", "Question")
+								.addColumnReference("id", "id"),
+						createForeignKey("FKak5sq2gxqxgoakx321oscegeg", "Section", "QuestionnaireElement")
+								.addColumnReference("id", "id"),
+						createForeignKey("FKba1ex7uov2011y45ic95i9ffq", "QuestionTable_Criterion", "Criterion")
+								.addColumnReference("criteria_id", "id"),
+						createForeignKey("FKi1rbx6r3j761ak2dttl4ggvpx", "ClosedQuestion_Choice", "ClosedQuestion")
+								.addColumnReference("ClosedQuestion_id", "id"),
+						createForeignKey("FKjf4gtlxichnmo9q6kdhm08sq8", "QuestionnaireElement", "Questionnaire")
+								.addColumnReference("questionnaire_id", "id"),
+						createForeignKey("FKlklb7ywnghhfy9ovuvnyb44ao", "QuestionTable_Question", "QuestionTable")
+								.addColumnReference("QuestionTable_id", "id"),
+						createForeignKey("FKn4diyjvls00btbs5rwqs7bu11", "QuestionTable_Question", "Question")
+								.addColumnReference("questions_id", "id"),
+						createForeignKey("FKnk2fdd1p7qulqh8k6bilo0bto", "QuestionTable", "QuestionnaireElement")
+								.addColumnReference("id", "id"),
+						createForeignKey("FKojtw674u2o0ahxrlj6gb2hmkf", "ClosedQuestion", "Question")
+								.addColumnReference("id", "id"),
+						createForeignKey("FKsbuw2skldt72n4sv77h10efp9", "NumericQuestion", "Question")
+								.addColumnReference("id", "id"),
+						createForeignKey("FKov1onp7y4ybu82wjcvqailbjn", "DateQuestion", "Question")
+								.addColumnReference("id", "id"),
 						createUniqueContraint("UK_9ily67sdsm62u8h9gocm28coy", "QuestionTable_Question", "questions_id"),
 						createUniqueContraint("UK_amqe6fhn528v0o1m5yxpaa35w", "QuestionTable_Criterion", "criteria_id"),
 						createUniqueContraint("UK_ikfrkeim0qy7ct2fqri242eki", "ClosedQuestion_Choice", "choices_id")),
@@ -304,18 +288,14 @@ class JumperDeployerTest {
 								.addColumn("choices_id", "BIGINT").notNull()
 								.addColumn("rank", "INT").notNull()
 								.primaryKey("MultipleChoiceAnswer_id", "rank"),
-						createForeignKey("FK2viobqwt4kki5q04i51fox7ax",
-								"Answer").addSourceColumn("choice_id")
-								.targetTable("Choice").addTargetColumn("id"),
-						createForeignKey("FKc6i2fmg06305gbvmqqnxyxt2i",
-								"Answer_Choice").addSourceColumn("MultipleChoiceAnswer_id")
-								.targetTable("Answer").addTargetColumn("id"),
-						createForeignKey("FKfiomvt17psxodcis3d8nmopx8",
-								"Answer").addSourceColumn("question_id")
-								.targetTable("Question").addTargetColumn("id"),
-						createForeignKey("FKn3xsqrwvubdk3vyg4e8pjm3sd",
-								"Answer_Choice").addSourceColumn("choices_id")
-								.targetTable("Choice").addTargetColumn("id")),
+						createForeignKey("FK2viobqwt4kki5q04i51fox7ax", "Answer", "Choice")
+								.addColumnReference("choice_id", "id"),
+						createForeignKey("FKc6i2fmg06305gbvmqqnxyxt2i", "Answer_Choice", "Answer")
+								.addColumnReference("MultipleChoiceAnswer_id", "id"),
+						createForeignKey("FKfiomvt17psxodcis3d8nmopx8", "Answer", "Question")
+								.addColumnReference("question_id", "id"),
+						createForeignKey("FKn3xsqrwvubdk3vyg4e8pjm3sd", "Answer_Choice", "Choice")
+								.addColumnReference("choices_id", "id")),
 						
 				changeSet("distribution_tables",
 						createTable("DistributionConfiguration")
@@ -342,27 +322,20 @@ class JumperDeployerTest {
 								.addColumn("DistributionConfiguration_id", "BIGINT")
 								.addColumn("personas_id", "BIGINT")
 								.primaryKey("DistributionConfiguration_id", "personas_id"),
-						createForeignKey("FK3dinoqtgbhiv0tx7fmtqwj7aw",
-								"DistributionConfiguration").addSourceColumn("messageTemplate_id")
-								.targetTable("Message").addTargetColumn("id"),
-						createForeignKey("FK3ir0g80egqsx0w4g8gdjodorr",
-								"Distribution").addSourceColumn("message_id")
-								.targetTable("Message").addTargetColumn("id"),
-						createForeignKey("FK5r24hv6bjr2sjk29upfh0vw09",
-								"ContactMean").addSourceColumn("persona_id")
-								.targetTable("Persona").addTargetColumn("id"),
-						createForeignKey("FK6oirw3dw1561f15kr1vs2m7xd",
-								"DistributionConfiguration_ContactMean").addSourceColumn("DistributionConfiguration_id")
-								.targetTable("DistributionConfiguration").addTargetColumn("id"),
-						createForeignKey("FK7th6op3ks1vt75bda36xj8pd6",
-								"Distribution").addSourceColumn("personas_id")
-								.targetTable("ContactMean").addTargetColumn("id"),
-						createForeignKey("FKlo25lam49k7xwc32f6h5pw85y",
-								"Distribution").addSourceColumn("configuration_id")
-								.targetTable("DistributionConfiguration").addTargetColumn("id"),
-						createForeignKey("FKo47m1faxdqlc7qtyg6834yb3o",
-								"DistributionConfiguration_ContactMean").addSourceColumn("personas_id")
-								.targetTable("ContactMean").addTargetColumn("id"),
+						createForeignKey("FK3dinoqtgbhiv0tx7fmtqwj7aw", "DistributionConfiguration", "Message")
+								.addColumnReference("messageTemplate_id", "id"),
+						createForeignKey("FK3ir0g80egqsx0w4g8gdjodorr", "Distribution", "Message")
+								.addColumnReference("message_id", "id"),
+						createForeignKey("FK5r24hv6bjr2sjk29upfh0vw09", "ContactMean", "Persona")
+								.addColumnReference("persona_id", "id"),
+						createForeignKey("FK6oirw3dw1561f15kr1vs2m7xd", "DistributionConfiguration_ContactMean", "DistributionConfiguration")
+								.addColumnReference("DistributionConfiguration_id", "id"),
+						createForeignKey("FK7th6op3ks1vt75bda36xj8pd6", "Distribution", "ContactMean")
+								.addColumnReference("personas_id", "id"),
+						createForeignKey("FKlo25lam49k7xwc32f6h5pw85y", "Distribution", "DistributionConfiguration")
+								.addColumnReference("configuration_id", "id"),
+						createForeignKey("FKo47m1faxdqlc7qtyg6834yb3o", "DistributionConfiguration_ContactMean", "ContactMean")
+								.addColumnReference("personas_id", "id"),
 						createUniqueContraint("UK_77tdfhlc0il375875o4epwfrd", "DistributionConfiguration_ContactMean", "personas_id"))
 		);
 		

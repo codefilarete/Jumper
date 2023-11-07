@@ -5,7 +5,7 @@ import org.codefilarete.jumper.ddl.dsl.ColumnAddition;
 /**
  * @author Guillaume Mary
  */
-public class ColumnAdditionSupport implements ColumnAddition {
+public class ColumnAdditionSupport extends AbstractSupportedChangeSupport<AddColumn, ColumnAddition> implements ColumnAddition {
 	
 	private final AddColumn addColumn;
 	
@@ -37,13 +37,13 @@ public class ColumnAdditionSupport implements ColumnAddition {
 	
 	@Override
 	public ColumnAddition setSchema(String schemaName) {
-		addColumn.setSchemaName(schemaName);
+		this.addColumn.setSchemaName(schemaName);
 		return this;
 	}
 	
 	@Override
 	public ColumnAddition setCatalog(String catalogName) {
-		addColumn.setCatalogName(catalogName);
+		this.addColumn.setCatalogName(catalogName);
 		return this;
 	}
 	

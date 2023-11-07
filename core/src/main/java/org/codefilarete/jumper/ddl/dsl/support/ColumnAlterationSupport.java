@@ -5,7 +5,7 @@ import org.codefilarete.jumper.ddl.dsl.ColumnAlteration;
 /**
  * @author Guillaume Mary
  */
-public class ColumnAlterationSupport implements ColumnAlteration {
+public class ColumnAlterationSupport extends AbstractSupportedChangeSupport<ModifyColumn, ColumnAlteration> implements ColumnAlteration {
 	
 	private final ModifyColumn modifyColumn;
 	
@@ -37,13 +37,13 @@ public class ColumnAlterationSupport implements ColumnAlteration {
 	
 	@Override
 	public ColumnAlteration setSchema(String schemaName) {
-		modifyColumn.setSchemaName(schemaName);
+		this.modifyColumn.setSchemaName(schemaName);
 		return this;
 	}
 	
 	@Override
 	public ColumnAlteration setCatalog(String catalogName) {
-		modifyColumn.setCatalogName(catalogName);
+		this.modifyColumn.setCatalogName(catalogName);
 		return this;
 	}
 	

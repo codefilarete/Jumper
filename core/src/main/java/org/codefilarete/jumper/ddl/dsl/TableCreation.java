@@ -1,24 +1,19 @@
 package org.codefilarete.jumper.ddl.dsl;
 
-import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ddl.dsl.support.NewTable;
 
 /**
+ * Contract for {@link NewTable} creation through fluent API
+ *
  * @author Guillaume Mary
  */
-public interface TableCreation extends ChangeSet.ChangeBuilder {
+public interface TableCreation extends FluentSupportedChange<NewTable, TableCreation> {
 	
 	TableCreationColumnOption addColumn(String name, String sqlType);
-	
-	TableCreation setSchema(String schemaName);
-	
-	TableCreation setCatalog(String catalogName);
 	
 	TableCreation primaryKey(String columnName, String... extraColumnNames);
 	
 	TableCreation uniqueConstraint(String constraintName, String columnName, String... extraColumnNames);
-	
-	NewTable build();
 	
 	interface TableCreationColumnOption extends TableCreation, ColumnOption {
 		

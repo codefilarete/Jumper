@@ -6,7 +6,7 @@ import org.codefilarete.jumper.ddl.dsl.support.NewUniqueConstraint;
  * @author Guillaume Mary
  */
 @FunctionalInterface
-public interface NewUniqueConstraintGenerator {
+public interface NewUniqueConstraintGenerator extends SQLGenerator<NewUniqueConstraint> {
 	
 	String generateScript(NewUniqueConstraint newUniqueConstraint);
 }

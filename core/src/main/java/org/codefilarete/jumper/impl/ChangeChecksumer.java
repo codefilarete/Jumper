@@ -122,7 +122,7 @@ public class ChangeChecksumer {
 	
 	protected String giveSignature(NewForeignKey newForeignKey) {
 		StringAppender result = new StringAppender();
-		return result.cat("NewForeignKey ", newForeignKey.getName(), " ", newForeignKey.getTable().getName(), " ")
+		return result.cat("NewForeignKey ", newForeignKey.getName(), " ", newForeignKey.getSourceTable().getName(), " ")
 				.ccat(newForeignKey.getSourceColumns(), " ")
 				.cat(", ", newForeignKey.getTargetTable().getName(), " ")
 				.ccat(newForeignKey.getTargetColumns(), " ")

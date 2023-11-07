@@ -14,12 +14,9 @@ class NewForeignKeyHandlerTest {
 	@Test
 	void generateScript() {
 		NewForeignKeyHandler testInstance = new NewForeignKeyHandler();
-		NewForeignKey newIndex = DDLEase.createForeignKey("toto", "tutu")
-				.addSourceColumn("col1")
-				.addSourceColumn("col2")
-				.targetTable("tata")
-				.addTargetColumn("col1_")
-				.addTargetColumn("col2_")
+		NewForeignKey newIndex = DDLEase.createForeignKey("toto", "tutu", "tata")
+				.addColumnReference("col1", "col1_")
+				.addColumnReference("col2", "col2_")
 				.build();
 		assertThat(testInstance.generateScript(newIndex)).isEqualTo("alter table tutu add constraint toto foreign key(col1, col2) references tata(col1_, col2_)");
 	}
@@ -27,14 +24,11 @@ class NewForeignKeyHandlerTest {
 	@Test
 	void generateScript_catalogAndSchema() {
 		NewForeignKeyHandler testInstance = new NewForeignKeyHandler();
-		NewForeignKey newIndex = DDLEase.createForeignKey("toto", "tutu")
+		NewForeignKey newIndex = DDLEase.createForeignKey("toto", "tutu", "tata")
 				.setSchema("schema")
 				.setCatalog("catalog")
-				.addSourceColumn("col1")
-				.addSourceColumn("col2")
-				.targetTable("tata")
-				.addTargetColumn("col1_")
-				.addTargetColumn("col2_")
+				.addColumnReference("col1", "col1_")
+				.addColumnReference("col2", "col2_")
 				.build();
 		assertThat(testInstance.generateScript(newIndex)).isEqualTo("alter table catalog.schema.tutu add constraint toto foreign key(col1, col2) references catalog.schema.tata(col1_, col2_)");
 	}

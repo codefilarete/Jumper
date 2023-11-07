@@ -87,7 +87,7 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 			});
 		} catch (SQLExecutionException e) {
 			if (Exceptions.findExceptionInCauses(e, SQLIntegrityConstraintViolationException.class) != null) {
-				Duo<String, Instant> presentLock = persistenceContext.select(Duo::new, storageTable.createdBy, storageTable.createdAt).get(0);
+				Duo<String, Instant> presentLock = persistenceContext.select(Duo::new, storageTable.createdBy, storageTable.createdAt).stream().findFirst().orElse(null);
 				throw new RuntimeException("Can't obtain lock to process changes : a lock is already acquired by " + presentLock.getLeft() + " since " + presentLock.getRight());
 			} else {
 				throw e;

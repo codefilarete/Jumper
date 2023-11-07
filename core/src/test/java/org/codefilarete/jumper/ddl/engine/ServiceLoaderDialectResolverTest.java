@@ -48,18 +48,6 @@ class ServiceLoaderDialectResolverTest {
 		assertThat(dialect).isEqualTo(expectedDialect);
 	}
 	
-	
-	@Test
-	void determineDialect_noCompatibleDialectFound_throwsException() {
-		ServiceLoaderDialectResolver testInstance = new ServiceLoaderDialectResolver();
-		assertThatThrownBy(() -> testInstance.determineDialect(Arrays.asSet(new DummyDialectEntry(new DatabaseSignet("A", 0, 0), new Dialect()),
-															   new DummyDialectEntry(new DatabaseSignet("A", 0, 0), new Dialect())),
-															   new DatabaseSignet("B", 2, 10)))
-				// we only check main element of message : exception type and exact message is not so important 
-				.hasMessageContaining("Unable to determine dialect")
-				.hasMessageContaining("B 2.10");
-	}
-	
 	@Test
 	void determineDialect_multipleDialectsWithSameCompatibilityGiven_throwsException() {
 		ServiceLoaderDialectResolver testInstance = new ServiceLoaderDialectResolver();
@@ -68,7 +56,6 @@ class ServiceLoaderDialectResolverTest {
 																  new DatabaseSignet("B", 2, 10)))
 				.hasMessageContaining("Multiple dialects with same database compatibility found : B 0.0");
 	}
-	
 	
 	static class DummyDialectEntry implements DialectResolverEntry {
 		

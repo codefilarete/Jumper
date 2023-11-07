@@ -16,10 +16,10 @@ class DialectTest {
 	
 	static Object[][] generateScript() {
 			return new Object[][] {
-					{ new DialectBuilder().withNewTableHandler(table -> "my script"), new NewTable("toto"), "my script" },
-					{ new DialectBuilder().withNewForeignKeyHandler(table -> "my script"), new NewForeignKey("toto", new Table("titi")), "my script" },
-					{ new DialectBuilder().withNewIndexHandler(table -> "my script"), new NewIndex("toto", new Table("titi")), "my script" },
-					{ new DialectBuilder().withDropTableHandler(table -> "my script"), new DropTable("toto"), "my script" }
+					{ new DialectBuilder().withSqlGenerator(NewTable.class, table -> "my script"), new NewTable("toto"), "my script" },
+					{ new DialectBuilder().withSqlGenerator(NewForeignKey.class, table -> "my script"), new NewForeignKey("toto", new Table("tata"), new Table("titi")), "my script" },
+					{ new DialectBuilder().withSqlGenerator(NewIndex.class, table -> "my script"), new NewIndex("toto", new Table("titi")), "my script" },
+					{ new DialectBuilder().withSqlGenerator(DropTable.class, table -> "my script"), new DropTable("toto"), "my script" }
 			};
 	}
 	

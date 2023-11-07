@@ -6,7 +6,7 @@ import org.codefilarete.jumper.ddl.dsl.support.NewTable;
  * @author Guillaume Mary
  */
 @FunctionalInterface
-public interface NewTableGenerator {
+public interface NewTableGenerator extends SQLGenerator<NewTable> {
 	
 	String generateScript(NewTable table);
 }

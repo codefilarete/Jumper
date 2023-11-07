@@ -191,23 +191,25 @@ public class ChangeSetRunner {
 						run(changes, context);
 						persistState(changes);
 					}, executionConnection);
-				} catch (SQLException e) {
+				} catch (SQLException | RuntimeException e) {
 					throw new ExecutionException("Error while running change " + changes.getIdentifier(), e);
 				}
 				executionListener.afterRun(changes);
 			}
 		}
 		
-		private void run(ChangeSet changes, Context context) throws SQLException {
-			try {
-				for (Change change : changes.getChanges()) {
-					executionListener.beforeRun(change);
-					run(change, context);
-					executionListener.afterRun(change);
-				}
-			} catch (SQLException e) {
-				throw new SQLException("Error while running change " + changes.getIdentifier(), e);
-			}
+		private void run(ChangeSet changes, Context context) {
+			changes.getChanges().stream()
+					.filter(change -> !(change instanceof SQLChange) || ((SQLChange) change).shouldRun(context))
+					.forEach(change -> {
+						try {
+							executionListener.beforeRun(change);
+							run(change, context);
+							executionListener.afterRun(change);
+						} catch (SQLException e) {
+							throw new RuntimeException("Error while running change " + changes.getIdentifier(), e);
+						}
+					});
 		}
 		
 		private void run(Change change, Context context) throws SQLException {

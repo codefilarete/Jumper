@@ -95,7 +95,7 @@ public class JdbcChangeStorage implements ChangeStorage {
 	
 	@Override
 	public Map<ChangeSetId, Checksum> giveChecksum(Iterable<ChangeSetId> changes) {
-		List<Duo> changeIds = persistenceContext.newQuery(QueryEase.select(storageTable.id, storageTable.checksum)
+		Set<Duo> changeIds = persistenceContext.newQuery(QueryEase.select(storageTable.id, storageTable.checksum)
 						.from(storageTable).where(storageTable.id, Operators.in(Iterables.collectToList(changes, ChangeSetId::toString))), Duo.class)
 				.mapKey(Duo::new, storageTable.id, storageTable.checksum)
 				.execute();

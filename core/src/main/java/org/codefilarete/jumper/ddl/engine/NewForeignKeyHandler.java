@@ -12,7 +12,7 @@ public class NewForeignKeyHandler implements NewForeignKeyGenerator {
 	
 	@Override
 	public String generateScript(NewForeignKey foreignKey) {
-		Table table = foreignKey.getTable();
+		Table table = foreignKey.getSourceTable();
 		Table targetTable = foreignKey.getTargetTable();
 		StringAppender sqlCreateFK = new DDLAppender("alter table ", table)
 				.cat(" add constraint ", foreignKey.getName(), " foreign key(")

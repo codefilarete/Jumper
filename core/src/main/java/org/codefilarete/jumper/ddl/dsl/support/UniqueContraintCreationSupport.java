@@ -1,9 +1,8 @@
 package org.codefilarete.jumper.ddl.dsl.support;
 
-import org.codefilarete.jumper.Change;
 import org.codefilarete.jumper.ddl.dsl.UniqueContraintCreation;
 
-public class UniqueContraintCreationSupport implements UniqueContraintCreation {
+public class UniqueContraintCreationSupport extends AbstractSupportedChangeSupport<NewUniqueConstraint, UniqueContraintCreation> implements UniqueContraintCreation {
 	
 	private final NewUniqueConstraint newUniqueConstraint;
 	
@@ -30,7 +29,7 @@ public class UniqueContraintCreationSupport implements UniqueContraintCreation {
 	}
 	
 	@Override
-	public Change build() {
+	public NewUniqueConstraint build() {
 		return newUniqueConstraint;
 	}
 }

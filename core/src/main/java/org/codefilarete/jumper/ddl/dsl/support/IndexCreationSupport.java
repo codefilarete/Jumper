@@ -5,7 +5,7 @@ import org.codefilarete.jumper.ddl.dsl.IndexCreation;
 /**
  * @author Guillaume Mary
  */
-public class IndexCreationSupport implements IndexCreation {
+public class IndexCreationSupport extends AbstractSupportedChangeSupport<NewIndex, IndexCreation> implements IndexCreation {
 	
 	private final NewIndex index;
 	

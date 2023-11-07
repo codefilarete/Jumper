@@ -5,7 +5,7 @@ import org.codefilarete.jumper.impl.SupportedChange;
 /**
  * @author Guillaume Mary
  */
-public class DropTable implements SupportedChange {
+public class DropTable extends SupportedChange {
 	
 	private final Table table;
 	
@@ -17,21 +17,23 @@ public class DropTable implements SupportedChange {
 		return this.table.getName();
 	}
 	
+	@Override
 	public String getSchemaName() {
 		return this.table.getSchemaName();
 	}
 	
-	public DropTable setSchemaName(String schemaName) {
+	@Override
+	public void setSchemaName(String schemaName) {
 		this.table.setSchemaName(schemaName);
-		return this;
 	}
 	
+	@Override
 	public String getCatalogName() {
 		return this.table.getCatalogName();
 	}
 	
-	public DropTable setCatalogName(String catalogName) {
+	@Override
+	public void setCatalogName(String catalogName) {
 		this.table.setCatalogName(catalogName);
-		return this;
 	}
 }
