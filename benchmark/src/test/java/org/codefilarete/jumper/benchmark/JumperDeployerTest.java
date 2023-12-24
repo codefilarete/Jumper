@@ -103,11 +103,11 @@ class JumperDeployerTest {
 		mariaDBSchemaElementCollector1.withSchema(JUMPER_SCHEMA_NAME);
 		Chrono c = new Chrono();
 		mariaDBSchemaDiffer.compareAndPrint(mariaDBSchemaElementCollector.collect(), mariaDBSchemaElementCollector1.collect());
-		System.out.println("Time spent in comparison : " + c);
+		System.out.println("Time spent in comparison by Jumper : " + c);
 		
 		Chrono c2 = new Chrono();
 		testSchemaDifference();
-		System.out.println("Time spent in comparison : " + c2);
+		System.out.println("Time spent in comparison by Liquibase : " + c2);
 	}
 	
 	void testSchemaDifference() throws SQLException, LiquibaseException, IOException {
@@ -118,11 +118,11 @@ class JumperDeployerTest {
 		MariaDbDataSource jumperDataSource = new MariaDbDataSource(MARIADB_CONTAINER.withDatabaseName(JUMPER_SCHEMA_NAME).getJdbcUrl());
 		jumperDataSource.setUser(MARIADB_CONTAINER.getUsername());
 		jumperDataSource.setPassword(MARIADB_CONTAINER.getPassword());
-		Database hibernateDatabase = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jumperDataSource.getConnection()));
+		Database jumperDatabase = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jumperDataSource.getConnection()));
 		
 		Database liquibaseDatabase = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(liquibaseDataSource.getConnection()));
 		
-		DiffResult result = this.getDiffResult(hibernateDatabase, liquibaseDatabase);
+		DiffResult result = this.getDiffResult(jumperDatabase, liquibaseDatabase);
 		
 		if (!result.areEqual()) {
 			// we get difference details because Liquibase doesn't print it
@@ -166,7 +166,7 @@ class JumperDeployerTest {
 				new ClassLoaderResourceAccessor(),
 				new JdbcConnection(connection));
 		liquibase.update(new Contexts());
-		System.out.println(chrono);
+		System.out.println("time took by Liquibase for deployment : " + chrono);
 	}
 	
 	void deployWithJumper(Connection connection) throws SQLException {
@@ -341,6 +341,6 @@ class JumperDeployerTest {
 		
 		ChangeSetRunner.forJdbcStorage(() -> connection, changeSetStream)
 				.processUpdate();
-		System.out.println(chrono);
+		System.out.println("time took by Jumper for deployment : " + chrono);
 	}
 }

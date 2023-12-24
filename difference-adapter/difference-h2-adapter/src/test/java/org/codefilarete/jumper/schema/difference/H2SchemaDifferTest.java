@@ -96,9 +96,10 @@ class H2SchemaDifferTest {
 					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName + ": "
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
-				"Index.unique: Index{name='TATA', unique=true} vs Index{name='TATA', unique=false}",
-				"Column.size: Column{name='LASTNAME', type='VARCHAR', size=50} vs Column{name='LASTNAME', type='VARCHAR', size=100}",
-				"Entry.value: Column{name='LASTNAME', type='VARCHAR', size=50}=DESC vs Column{name='LASTNAME', type='VARCHAR', size=100}=ASC"
+				"Schema.name: Schema{name='REFERENCE'} vs Schema{name='COMPARISON'}",
+				"Index.unique: Index{name='TATA', unique=true, columns=LASTNAME} vs Index{name='TATA', unique=false, columns=LASTNAME}",
+				"Column.size: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50} vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}",
+				"Entry.value: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50}=DESC vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}=ASC"
 		);
 		
 		System.out.println("Missing in " + dataSource.getUrl());

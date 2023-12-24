@@ -26,7 +26,7 @@ class PostgreSQLSchemaElementCollectorTest extends PostgreSQLTest {
 		
 		PostgreSQLSchemaElementCollector testInstance = new PostgreSQLSchemaElementCollector(dataSourceReference.getConnection().getMetaData());
 		PostgreSQLSchema schema = testInstance.withCatalog(null)
-				.withSchema("DUMMY%")
+				.withSchema("dummy%")
 				.withTableNamePattern("%")
 				.collect();
 	

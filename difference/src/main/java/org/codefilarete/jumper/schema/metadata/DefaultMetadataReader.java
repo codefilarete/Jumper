@@ -21,6 +21,11 @@ import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader;
 import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.bean.Objects;
 
+/**
+ * A {@link MetadataReader} based on JDBC {@link DatabaseMetaData} methods to retrieve requested elements.
+ *
+ * @author Guillaume Mary
+ */
 public class DefaultMetadataReader implements MetadataReader {
 	
 	protected final DatabaseMetaData metaData;
@@ -51,7 +56,8 @@ public class DefaultMetadataReader implements MetadataReader {
 					return result;
 				}
 			};
-			SortedSet<ColumnMetadata> result = new TreeSet<>(Comparator.comparing(ColumnMetadata::getPosition));
+			SortedSet<ColumnMetadata> result = new TreeSet<>(Comparator.comparing(ColumnMetadata::getTableName)
+					.thenComparing(ColumnMetadata::getPosition));
 			result.addAll(resultSetIterator.convert());
 			return result;
 		} catch (SQLException e) {

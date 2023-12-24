@@ -80,13 +80,12 @@ public class MariaDBSchemaElementCollector extends DefaultSchemaElementCollector
 			return sequences;
 		}
 		
-		MariaDBSchema.Sequence addSequence(String name) {
+		void addSequence(String name) {
 			MariaDBSchema.Sequence result = new MariaDBSchema.Sequence(name);
 			this.sequences.add(result);
-			return result;
 		}
 		
-		protected class Sequence {
+		public class Sequence {
 			
 			private final String name;
 			

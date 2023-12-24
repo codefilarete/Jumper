@@ -32,16 +32,6 @@ public class PostgreSQLSequenceMetadataReader extends DefaultMetadataReader impl
 			}
 		}
 		
-		String namespaceCriteria = null;
-		if (!Strings.isEmpty(namespace)) {
-			String operator;
-			if (namespace.contains("%")) {
-				operator = "like";
-			} else {
-				operator = "=";
-			}
-			namespaceCriteria = operator + " '" + namespace + "'";
-		}
 		String sequenceSql = "SELECT"
 				+ " s.schemaname AS \"SCHEMA_NAME\", "
 				+ " s.sequencename AS \"SEQUENCE_NAME\", "
@@ -52,29 +42,28 @@ public class PostgreSQLSequenceMetadataReader extends DefaultMetadataReader impl
 				+ " s.start_value AS \"START_VALUE\""
 				+ " FROM pg_sequences s";
 		
-//		if (namespaceCriteria != null) {
-//			sequenceSql += " WHERE s.schemaname " + namespaceCriteria;
-//		}
+		if (!Strings.isEmpty(namespace)) {
+			String operator = namespace.contains("%") ? "like" : "=";
+			sequenceSql += " WHERE s.schemaname " + operator + " '" + namespace + "'";
+		}
 		
-		Set<SequenceMetadata> result = new HashSet<>();
 		try (PreparedStatement selectSequenceStatement = metaData.getConnection().prepareStatement(sequenceSql);
 			 ResultSet tableResultSet = selectSequenceStatement.executeQuery()) {
 			ResultSetIterator<SequenceMetadata> resultSetIterator = new ResultSetIterator<SequenceMetadata>(tableResultSet) {
 				@Override
 				public SequenceMetadata convert(ResultSet resultSet) {
 					return new SequenceMetadata(
-							catalog,
+							null,
 							SequenceMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
 							SequenceMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
 					);
 				}
 			};
 			
-			result.addAll(resultSetIterator.convert());
+			return new HashSet<>(resultSetIterator.convert());
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-		return result;
 	}
 	
 	/**

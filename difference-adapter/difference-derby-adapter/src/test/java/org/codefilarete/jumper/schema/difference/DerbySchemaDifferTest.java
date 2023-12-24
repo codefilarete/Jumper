@@ -35,7 +35,6 @@ class DerbySchemaDifferTest {
 		connection1.prepareStatement("create table C(id BIGINT, aId BIGINT, lastname VARCHAR(50), primary key (id), constraint fromCtoA foreign key (aId) references A(id))").execute();
 		connection1.prepareStatement("create table D(firstname VARCHAR(50))").execute();
 		connection1.prepareStatement("create unique index toto on A(name asc)").execute();
-		// we check Derby subtleties as index uniqueness and column sort order
 		connection1.prepareStatement("create unique index tata on C(lastname desc)").execute();
 		connection1.prepareStatement("create view TUTU as select a.id, a.name, b.dummyData from A a inner join B b on a.id = b.aId").execute();
 		connection1.commit();
@@ -53,12 +52,14 @@ class DerbySchemaDifferTest {
 		connection2.close();
 		
 		DefaultSchemaElementCollector schemaElementCollector = new DefaultSchemaElementCollector(dataSource.getConnection().getMetaData());
-		schemaElementCollector.withCatalog(null)
+		schemaElementCollector
+				.withCatalog(null)
 				.withSchema("REFERENCE")
 				.withTableNamePattern("%");
 		Schema ddlElements1 = schemaElementCollector.collect();
 		
-		schemaElementCollector.withCatalog(null)
+		schemaElementCollector
+				.withCatalog(null)
 				.withSchema("COMPARISON")
 				.withTableNamePattern("%");
 		Schema ddlElements2 = schemaElementCollector.collect();
@@ -95,9 +96,10 @@ class DerbySchemaDifferTest {
 					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName + ": "
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
-				"Index.unique: Index{name='TATA', unique=true} vs Index{name='TATA', unique=false}",
-				"Column.size: Column{name='LASTNAME', type='VARCHAR', size=50} vs Column{name='LASTNAME', type='VARCHAR', size=100}",
-				"Entry.value: Column{name='LASTNAME', type='VARCHAR', size=50}=DESC vs Column{name='LASTNAME', type='VARCHAR', size=100}=ASC"
+				"Schema.name: Schema{name='REFERENCE'} vs Schema{name='COMPARISON'}",
+				"Index.unique: Index{name='TATA', unique=true, columns=LASTNAME} vs Index{name='TATA', unique=false, columns=LASTNAME}",
+				"Column.size: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50} vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}",
+				"Entry.value: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50}=DESC vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}=ASC"
 		);
 		
 		System.out.println("Missing in " + dataSource.getUrl());

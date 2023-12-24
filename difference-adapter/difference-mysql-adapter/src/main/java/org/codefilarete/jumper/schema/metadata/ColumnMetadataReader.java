@@ -5,15 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.codefilarete.jumper.schema.metadata.PreparedCriteria.Operator;
 import org.codefilarete.tool.trace.ModifiableInt;
+
+import static org.codefilarete.jumper.schema.metadata.PreparedCriteria.asSQLCriteria;
 
 /**
  * Class aimed at extracting table columns metadata for MySQL
@@ -69,14 +68,14 @@ public class ColumnMetadataReader {
 				asSQLCriteria("TABLE_NAME", tableNamePattern),
 				asSQLCriteria("COLUMN_NAME", columnNamePattern)).filter(Objects::nonNull).toArray(PreparedCriteria[]::new);
 		columnSelectSQL += " WHERE " + Stream.of(criteria)
-				.map(preparedCriteria -> preparedCriteria.criteriaSegment)
+				.map(PreparedCriteria::getCriteriaSegment)
 				.collect(Collectors.joining(" AND "));
 		columnSelectSQL += " ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, ORDINAL_POSITION";
 		
 		PreparedStatement preparedStatement = metaData.getConnection().prepareStatement(columnSelectSQL);
 		ModifiableInt preparedParameterIndex = new ModifiableInt(0);
 		Stream.of(criteria)
-				.flatMap(preparedCriteria -> preparedCriteria.values.stream())
+				.flatMap(preparedCriteria -> preparedCriteria.getValues().stream())
 				.map(String.class::cast)
 				.forEach(value -> {
 					try {
@@ -102,74 +101,6 @@ public class ColumnMetadataReader {
 //		;
 //		return new Configuration(noBackslashEscapes, conf.tinyInt1isBit(), conf.yearIsDateType());
 //	}
-	
-	PreparedCriteria asSQLCriteria(String columnName, Operator<?> operator) {
-		if (operator == null) {
-			return null;
-		}
-		PreparedCriteria operatorCriterion = new PreparedCriteria();
-		if (operator instanceof Like) {
-			operatorCriterion.criteriaSegment = columnName + " like ?";
-			operatorCriterion.values = Arrays.asList((String) operator.getValue());
-		} else if (operator instanceof Equal) {
-			operatorCriterion.criteriaSegment = columnName + " = ?";
-			operatorCriterion.values = Arrays.asList((String) operator.getValue());
-		} else if (operator instanceof In) {
-			operatorCriterion.criteriaSegment = columnName + " in (" + IntStream.of(((Set<String>) operator.getValue()).size()).mapToObj(i -> "?").collect(Collectors.joining(", ")) + ")";
-			operatorCriterion.values = (Set<String>) operator.getValue();
-		}
-		return operatorCriterion;
-	}
-	
-	public static class PreparedCriteria {
-		
-		private String criteriaSegment;
-		
-		private Collection<String> values;
-		
-		public String getCriteriaSegment() {
-			return criteriaSegment;
-		}
-		
-		public Collection<String> getValues() {
-			return values;
-		}
-	}
-	
-	public static abstract class Operator<V> {
-		
-		protected V value;
-		
-		public Operator(V value) {
-			this.value = value;
-		}
-		
-		public V getValue() {
-			return value;
-		}
-	}
-	
-	public static class Like<V extends String> extends Operator<V> {
-		
-		public Like(V value) {
-			super(value);
-		}
-		
-	}
-	
-	public static class Equal<V extends String> extends Operator<V> {
-		
-		public Equal(V value) {
-			super(value);
-		}
-	}
-	
-	public static class In<V extends String> extends Operator<Set<V>> {
-		
-		public In(Set<V> value) {
-			super(value);
-		}
-	}
 	
 	private String dataTypeClause(String fullTypeColumnName) {
 		return " CASE data_type"

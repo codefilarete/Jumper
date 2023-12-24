@@ -75,7 +75,7 @@ public class HSQLDBSchemaElementCollector extends DefaultSchemaElementCollector 
 			return result;
 		}
 		
-		protected class Sequence {
+		public class Sequence {
 			
 			private final String name;
 			

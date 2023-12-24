@@ -57,16 +57,6 @@ public class PostgreSQLSchemaElementCollector extends DefaultSchemaElementCollec
 		return new PostgreSQLSchema(Strings.preventEmpty(schemaName.toString(), null));
 	}
 	
-//	@Override
-//	protected boolean shouldAddIndex(Schema result, IndexMetadata row) {
-//		// we don't consider adding index related to primary key to schema since they highly linked to it
-//		if (row.getName().equals("PRIMARY")) {
-//			return false;
-//		} else {
-//			return super.shouldAddIndex(result, row);
-//		}
-//	}
-	
 	public static class PostgreSQLSchema extends Schema {
 		
 		private final Set<PostgreSQLSchema.Sequence> sequences = new HashSet<>();
@@ -79,13 +69,12 @@ public class PostgreSQLSchemaElementCollector extends DefaultSchemaElementCollec
 			return sequences;
 		}
 		
-		PostgreSQLSchema.Sequence addSequence(String name) {
+		void addSequence(String name) {
 			PostgreSQLSchema.Sequence result = new PostgreSQLSchema.Sequence(name);
 			this.sequences.add(result);
-			return result;
 		}
 		
-		protected class Sequence {
+		public class Sequence {
 			
 			private final String name;
 			

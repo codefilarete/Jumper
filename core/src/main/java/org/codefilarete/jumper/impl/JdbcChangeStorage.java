@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -95,11 +94,11 @@ public class JdbcChangeStorage implements ChangeStorage {
 	
 	@Override
 	public Map<ChangeSetId, Checksum> giveChecksum(Iterable<ChangeSetId> changes) {
-		Set<Duo> changeIds = persistenceContext.newQuery(QueryEase.select(storageTable.id, storageTable.checksum)
-						.from(storageTable).where(storageTable.id, Operators.in(Iterables.collectToList(changes, ChangeSetId::toString))), Duo.class)
+		Set<Duo<String, Checksum>> changeIds = persistenceContext.newQuery(QueryEase.select(storageTable.id, storageTable.checksum)
+						.from(storageTable).where(storageTable.id, Operators.in(Iterables.collectToList(changes, ChangeSetId::toString))), (Class<Duo<String, Checksum>>) (Class) Duo.class)
 				.mapKey(Duo::new, storageTable.id, storageTable.checksum)
 				.execute();
-		return Iterables.map((List<Duo<String, Checksum>>) (List) changeIds, duo -> new ChangeSetId(duo.getLeft()), Duo::getRight);
+		return Iterables.map(changeIds, duo -> new ChangeSetId(duo.getLeft()), Duo::getRight);
 	}
 	
 	public class ChangeHistoryTableEnsurer extends NoopExecutionListener {

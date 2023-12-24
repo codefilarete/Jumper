@@ -57,14 +57,14 @@ class MySQLSchemaDifferTest extends MySQLTest {
 		
 		DefaultSchemaElementCollector schemaElementCollector = new MySQLSchemaElementCollector(dataSource.getConnection().getMetaData());
 		schemaElementCollector
-				.withCatalog("REFERENCE")
-				.withSchema(null)
+				.withCatalog(null)
+				.withSchema("REFERENCE")
 				.withTableNamePattern("%");
 		Schema ddlElements1 = schemaElementCollector.collect();
 		
 		schemaElementCollector
-				.withCatalog("COMPARISON")
-				.withSchema(null)
+				.withCatalog(null)
+				.withSchema("COMPARISON")
 				.withTableNamePattern("%");
 		Schema ddlElements2 = schemaElementCollector.collect();
 		
@@ -100,8 +100,8 @@ class MySQLSchemaDifferTest extends MySQLTest {
 					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName + ": "
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
-				"Index.unique: Index{name='tata', unique=true} vs Index{name='tata', unique=false}",
-				"Column.size: Column{name='lastname', type='VARCHAR', size=50} vs Column{name='lastname', type='VARCHAR', size=100}"
+				"Index.unique: Index{name='tata', unique=true, columns=lastname} vs Index{name='tata', unique=false, columns=lastname}",
+				"Column.size: Column{tableName='C', name='lastname', type='VARCHAR', size=50} vs Column{tableName='C', name='lastname', type='VARCHAR', size=100}"
 		);
 		
 		System.out.println("Missing in " + dataSource.getUrl());
