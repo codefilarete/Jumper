@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,6 +22,7 @@ import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.sql.ddl.structure.Column;
 import org.codefilarete.stalactite.sql.ddl.structure.Database.Schema;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
+import org.codefilarete.stalactite.sql.result.Accumulators;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultParameterBinders;
 import org.codefilarete.stalactite.sql.statement.binder.LambdaParameterBinder;
 import org.codefilarete.tool.Duo;
@@ -86,10 +86,10 @@ public class JdbcChangeStorage implements ChangeStorage {
 	
 	@Override
 	public Set<ChangeSetId> giveRanIdentifiers() {
-		return new HashSet<>(persistenceContext.newQuery(QueryEase.select(storageTable.id)
+		return persistenceContext.newQuery(QueryEase.select(storageTable.id)
 						.from(storageTable), ChangeSetId.class)
 				.mapKey(ChangeSetId::new, storageTable.id)
-				.execute());
+				.execute(Accumulators.toUnmodifiableSet());
 	}
 	
 	@Override
@@ -97,7 +97,7 @@ public class JdbcChangeStorage implements ChangeStorage {
 		Set<Duo<String, Checksum>> changeIds = persistenceContext.newQuery(QueryEase.select(storageTable.id, storageTable.checksum)
 						.from(storageTable).where(storageTable.id, Operators.in(Iterables.collectToList(changes, ChangeSetId::toString))), (Class<Duo<String, Checksum>>) (Class) Duo.class)
 				.mapKey(Duo::new, storageTable.id, storageTable.checksum)
-				.execute();
+				.execute(Accumulators.toUnmodifiableSet());
 		return Iterables.map(changeIds, duo -> new ChangeSetId(duo.getLeft()), Duo::getRight);
 	}
 	
