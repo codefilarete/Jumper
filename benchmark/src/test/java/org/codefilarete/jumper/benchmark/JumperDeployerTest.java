@@ -271,9 +271,9 @@ class JumperDeployerTest {
 								.addColumnReference("id", "id"),
 						createForeignKey("FKov1onp7y4ybu82wjcvqailbjn", "DateQuestion", "Question")
 								.addColumnReference("id", "id"),
-						createUniqueContraint("UK_9ily67sdsm62u8h9gocm28coy", "QuestionTable_Question", "questions_id"),
-						createUniqueContraint("UK_amqe6fhn528v0o1m5yxpaa35w", "QuestionTable_Criterion", "criteria_id"),
-						createUniqueContraint("UK_ikfrkeim0qy7ct2fqri242eki", "ClosedQuestion_Choice", "choices_id")),
+						createUniqueConstraint("UK_9ily67sdsm62u8h9gocm28coy", "QuestionTable_Question", "questions_id"),
+						createUniqueConstraint("UK_amqe6fhn528v0o1m5yxpaa35w", "QuestionTable_Criterion", "criteria_id"),
+						createUniqueConstraint("UK_ikfrkeim0qy7ct2fqri242eki", "ClosedQuestion_Choice", "choices_id")),
 				changeSet("answer_tables",
 						createTable("Answer")
 								.addColumn("id", "BIGINT").primaryKey()
@@ -336,7 +336,7 @@ class JumperDeployerTest {
 								.addColumnReference("configuration_id", "id"),
 						createForeignKey("FKo47m1faxdqlc7qtyg6834yb3o", "DistributionConfiguration_ContactMean", "ContactMean")
 								.addColumnReference("personas_id", "id"),
-						createUniqueContraint("UK_77tdfhlc0il375875o4epwfrd", "DistributionConfiguration_ContactMean", "personas_id"))
+						createUniqueConstraint("UK_77tdfhlc0il375875o4epwfrd", "DistributionConfiguration_ContactMean", "personas_id"))
 		);
 		
 		ChangeSetRunner.forJdbcStorage(() -> connection, changeSetStream)

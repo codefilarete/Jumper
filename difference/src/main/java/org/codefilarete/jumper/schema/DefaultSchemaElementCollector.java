@@ -46,10 +46,6 @@ import static org.codefilarete.tool.Nullable.nullable;
  */
 public class DefaultSchemaElementCollector extends SchemaElementCollector {
 	
-	protected String catalog;
-	protected String schema;
-	protected String tableNamePattern;
-	
 	/**
 	 * Constructor to create schema elements from given {@link DatabaseMetaData}.
 	 * Will use a {@link DefaultMetadataReader} to collect elements and create a {@link Schema} on {@link #collect()}
@@ -73,19 +69,19 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 	
 	@Override
 	public DefaultSchemaElementCollector withCatalog(String catalog) {
-		this.catalog = catalog;
+		super.withCatalog(catalog);
 		return this;
 	}
 	
 	@Override
 	public DefaultSchemaElementCollector withSchema(String schema) {
-		this.schema = schema;
+		super.withSchema(schema);
 		return this;
 	}
 	
 	@Override
 	public DefaultSchemaElementCollector withTableNamePattern(String tableNamePattern) {
-		this.tableNamePattern = tableNamePattern;
+		super.withTableNamePattern(tableNamePattern);
 		return this;
 	}
 	

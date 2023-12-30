@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
 import org.codefilarete.jumper.ddl.dsl.FluentChange;
-import org.codefilarete.tool.function.Predicates;
+import org.codefilarete.tool.collection.Iterables;
 
 /**
  * @author Guillaume Mary
@@ -74,6 +74,7 @@ public class ChangeSet {
 	
 	/**
 	 * Gives a condition on which all changes of this instance will be applied if it is verified.
+	 * Note that for a more fine-grained condition, one can use {@link FluentChange#runIf(Predicate)}.
 	 *
 	 * @param contextCondition a {@link Predicate} which, if returns true, allows to run this instance
 	 * @return this
@@ -106,18 +107,15 @@ public class ChangeSet {
 	}
 	
 	/**
-	 * Class that helps to create a condition on database vendor name to be used by {@link ChangeSet#runIf(Predicate)}.
+	 * Class that creates a condition on database vendor name. It runs with case-insensitivity.
+	 * To be used by {@link ChangeSet#runIf(Predicate)} or {@link FluentChange#runIf(Predicate)}
 	 *
 	 * @author Guillaume Mary
-	 * @see #DBMS_IS_ORACLE
-	 * @see #DBMS_IS_MYSQL
-	 * @see #DBMS_IS_MARIADB
+	 * @see org.codefilarete.jumper.ddl.dsl.DDLEase#DBMS_IS_ORACLE
+	 * @see org.codefilarete.jumper.ddl.dsl.DDLEase#DBMS_IS_MYSQL
+	 * @see org.codefilarete.jumper.ddl.dsl.DDLEase#DBMS_IS_MARIADB
 	 */
 	public static class VendorPredicate implements Predicate<DatabaseSignet> {
-		
-		public static final Predicate<Context> DBMS_IS_ORACLE = Predicates.predicate(Context::getDatabaseSignet, new VendorPredicate("Oracle"));
-		public static final Predicate<Context> DBMS_IS_MYSQL = Predicates.predicate(Context::getDatabaseSignet, new VendorPredicate("MySQL"));
-		public static final Predicate<Context> DBMS_IS_MARIADB = Predicates.predicate(Context::getDatabaseSignet, new VendorPredicate("MariaDB"));
 		
 		private final Set<String> expectedVendor;
 		
@@ -132,6 +130,27 @@ public class ChangeSet {
 		@Override
 		public boolean test(DatabaseSignet databaseSignet) {
 			return this.expectedVendor.stream().anyMatch(databaseSignet.getProductName().toLowerCase()::contains);
+		}
+	}
+	
+	/**
+	 * Class that creates a condition on already executed changes through their identifier.
+	 * To be used by {@link ChangeSet#runIf(Predicate)} or {@link FluentChange#runIf(Predicate)}
+	 *
+	 * @author Guillaume Mary
+	 * @see org.codefilarete.jumper.ddl.dsl.DDLEase#executedChangesContains(String...)
+	 */
+	public static class ExecutedChangeSetPredicate implements Predicate<Set<ChangeSetId>> {
+		
+		private final Set<ChangeSetId> expectedChangeSetIds;
+		
+		public ExecutedChangeSetPredicate(ChangeSetId... expectedChangeSetIds) {
+			this.expectedChangeSetIds = org.codefilarete.tool.collection.Arrays.asSet(expectedChangeSetIds);
+		}
+		
+		@Override
+		public boolean test(Set<ChangeSetId> changeSetIds) {
+			return !Iterables.intersect(changeSetIds, expectedChangeSetIds, ChangeSetId::equals).isEmpty();
 		}
 	}
 }

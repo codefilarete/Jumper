@@ -41,7 +41,7 @@ public class ChangeSetRunnerTest {
 	
 	private static class LocalChangeRunner extends ChangeSetRunner {
 		
-		private final Context context = new Context(new DatabaseSignet("", 1, 0));
+		private Context context;
 		
 		private final ChangeStorage changeStorage;
 		
@@ -63,7 +63,8 @@ public class ChangeSetRunnerTest {
 		}
 		
 		@Override
-		protected Context buildContext(Connection connection) {
+		protected Context buildContext(Connection connection, Set<ChangeSetId> ranIdentifiers) {
+			context = new Context(new DatabaseSignet("", 1, 0), ranIdentifiers);
 			return context;
 		}
 		

@@ -87,7 +87,7 @@ public class ChangeSetRunner {
 			
 			executionConnection = connectionProvider.giveConnection();
 			
-			Context context = buildContext(executionConnection);
+			Context context = buildContext(executionConnection, changeStorage.giveRanIdentifiers());
 			List<ChangeSet> updatesToRun = keepChangesToRun(changes, context);
 			ChangeRunner changeRunner = new ChangeRunner(giveDialect(context.getDatabaseSignet()));
 			changeRunner.run(updatesToRun, context);
@@ -121,8 +121,8 @@ public class ChangeSetRunner {
 		}
 	}
 	
-	protected Context buildContext(Connection connection) {
-		return new Context(DialectResolver.DatabaseSignet.fromMetadata(connection));
+	protected Context buildContext(Connection connection, Set<ChangeSetId> ranIdentifiers) {
+		return new Context(DialectResolver.DatabaseSignet.fromMetadata(connection), ranIdentifiers);
 	}
 	
 	/**
@@ -156,9 +156,8 @@ public class ChangeSetRunner {
 	}
 	
 	private List<ChangeSet> keepChangesToRun(List<ChangeSet> changes, Context context) {
-		Set<ChangeSetId> ranIdentifiers = changeStorage.giveRanIdentifiers();
 		return changes.stream()
-				.filter(u -> shouldRun(u, ranIdentifiers, context))
+				.filter(u -> shouldRun(u, context))
 				.collect(Collectors.toList());
 	}
 	
@@ -166,11 +165,10 @@ public class ChangeSetRunner {
 	 * Decides whether a {@link ChangeSet} must be run
 	 *
 	 * @param change the {@link ChangeSet} to be checked
-	 * @param ranIdentifiers the already ran identifiers
 	 * @return true to plan it for running
 	 */
-	protected boolean shouldRun(ChangeSet change, Set<ChangeSetId> ranIdentifiers, Context context) {
-		boolean isAuthorizedToRun = !ranIdentifiers.contains(change.getIdentifier()) || change.shouldAlwaysRun();
+	protected boolean shouldRun(ChangeSet change, Context context) {
+		boolean isAuthorizedToRun = !context.getAlreadyRanChanges().contains(change.getIdentifier()) || change.shouldAlwaysRun();
 		return isAuthorizedToRun && change.shouldRun(context);
 	}
 	
@@ -200,6 +198,7 @@ public class ChangeSetRunner {
 		
 		private void run(ChangeSet changes, Context context) {
 			changes.getChanges().stream()
+					// SQLChange are excluded from execution if they say not to run them (fine-grained exclusion compared to ChangeSet one)
 					.filter(change -> !(change instanceof SQLChange) || ((SQLChange) change).shouldRun(context))
 					.forEach(change -> {
 						try {
@@ -210,6 +209,8 @@ public class ChangeSetRunner {
 							throw new RuntimeException("Error while running change " + changes.getIdentifier(), e);
 						}
 					});
+			// notifying context that the changeSet has been run
+			context.addRanChangeSet(changes);
 		}
 		
 		private void run(Change change, Context context) throws SQLException {
