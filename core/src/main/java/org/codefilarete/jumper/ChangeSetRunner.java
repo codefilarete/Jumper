@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
@@ -18,15 +17,12 @@ import org.codefilarete.jumper.ddl.engine.Dialect;
 import org.codefilarete.jumper.ddl.engine.ServiceLoaderDialectResolver;
 import org.codefilarete.jumper.impl.AbstractJavaChange;
 import org.codefilarete.jumper.impl.ChangeChecksumer;
-import org.codefilarete.jumper.impl.JdbcChangeStorage;
-import org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage;
 import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.jumper.impl.StringChecksumer;
 import org.codefilarete.jumper.impl.SupportedChange;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.Reflections;
 import org.codefilarete.tool.VisibleForTesting;
-import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.exception.NotImplementedException;
 import org.codefilarete.tool.sql.TransactionSupport;
@@ -36,28 +32,10 @@ import org.codefilarete.tool.sql.TransactionSupport;
  */
 public class ChangeSetRunner {
 	
-	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, Stream<ChangeSet> changes) {
-		return forJdbcStorage(connectionProvider, changes.collect(Collectors.toList()));
-	}
-	
-	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, List<ChangeSet> changes) {
-		JdbcChangeStorage changeHistoryStorage = new JdbcChangeStorage(connectionProvider);
-		JdbcUpdateProcessLockStorage processLockStorage = new JdbcUpdateProcessLockStorage(connectionProvider);
-		ChangeSetRunner result = new ChangeSetRunner(changes, connectionProvider, changeHistoryStorage, processLockStorage);
-		// we add storage listeners so they can create their tables at very beginning of the process
-		result.addExecutionListener(processLockStorage.getLockTableEnsurer());
-		result.addExecutionListener(changeHistoryStorage.getChangeHistoryTableEnsurer());
-		return result;
-	}
-	
-	public static ChangeSetRunner forJdbcStorage(ConnectionProvider connectionProvider, ChangeSet... changes) {
-		return forJdbcStorage(connectionProvider, Arrays.asList(changes));
-	}
-	
 	private final List<ChangeSet> changes;
 	private final ConnectionProvider connectionProvider;
 	private final ChangeStorage changeStorage;
-	private final UpdateProcessLockStorage processLockStorage;
+	private final UpdateProcessSemaphore processSemaphore;
 	
 	private final ChangeSetExecutionListenerCollection executionListener = new ChangeSetExecutionListenerCollection();
 	
@@ -68,11 +46,11 @@ public class ChangeSetRunner {
 	 */
 	private Connection executionConnection;
 	
-	public ChangeSetRunner(List<ChangeSet> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage, UpdateProcessLockStorage lockStorage) {
+	public ChangeSetRunner(List<ChangeSet> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage, UpdateProcessSemaphore processSemaphore) {
 		this.changes = changes;
 		this.connectionProvider = connectionProvider;
 		this.changeStorage = changeStorage;
-		this.processLockStorage = lockStorage;
+		this.processSemaphore = processSemaphore;
 	}
 	
 	public void addExecutionListener(ChangeSetExecutionListener executionListener) {
@@ -99,7 +77,7 @@ public class ChangeSetRunner {
 		// we create a lock based on changes content, hence current process can't be run twice at same time
 		String allChangesSignature = changes.stream().map(checksumer::buildChecksum).map(Object::toString).collect(Collectors.toList()).toString();
 		Checksum allChangesChecksum = new StringChecksumer().checksum(allChangesSignature);
-		processLockStorage.insertRow(allChangesChecksum.toString());
+		processSemaphore.acquireLock(allChangesChecksum.toString());
 		return new UpdateLock(allChangesChecksum.toString());
 	}
 	
@@ -117,7 +95,7 @@ public class ChangeSetRunner {
 		}
 		
 		private void releaseUpdateLock() {
-			processLockStorage.deleteRow(identifier);
+			processSemaphore.releaseLock(identifier);
 		}
 	}
 	

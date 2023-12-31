@@ -3,17 +3,43 @@ package org.codefilarete.jumper.ddl.dsl;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.codefilarete.jumper.Change;
+import org.codefilarete.jumper.ChangeSet;
 import org.codefilarete.jumper.ChangeSet.ExecutedChangeSetPredicate;
 import org.codefilarete.jumper.ChangeSet.VendorPredicate;
 import org.codefilarete.jumper.ChangeSetId;
 import org.codefilarete.jumper.Context;
-import org.codefilarete.jumper.ddl.dsl.support.*;
+import org.codefilarete.jumper.ddl.dsl.support.ColumnAdditionSupport;
+import org.codefilarete.jumper.ddl.dsl.support.ColumnAlterationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.FluentChangeLogSupport;
+import org.codefilarete.jumper.ddl.dsl.support.FluentChangeSetSupport;
+import org.codefilarete.jumper.ddl.dsl.support.ForeignKeyCreationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.IndexCreationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.StatementCreationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.TableCreationSupport;
+import org.codefilarete.jumper.ddl.dsl.support.UniqueContraintCreationSupport;
 import org.codefilarete.tool.function.Predicates;
 
 /**
  * @author Guillaume Mary
  */
 public class DDLEase {
+	
+	public static FluentChangeLog changeLog(Builder<? extends ChangeSet>... changes) {
+		FluentChangeLogSupport result = new FluentChangeLogSupport();
+		result.addBuilders(changes);
+		return result;
+	}
+	
+	public static FluentChangeLog changeLog(ChangeSet... changes) {
+		FluentChangeLogSupport result = new FluentChangeLogSupport();
+		result.addAll(changes);
+		return result;
+	}
+	
+	public static FluentChangeSet changeSet(String changeSetId, Builder<? extends Change>... changes) {
+		return new FluentChangeSetSupport(changeSetId).addChanges(changes);
+	}
 	
 	public static TableCreation createTable(String name) {
 		return new TableCreationSupport(name);

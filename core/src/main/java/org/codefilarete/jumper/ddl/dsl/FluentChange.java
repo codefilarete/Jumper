@@ -3,10 +3,9 @@ package org.codefilarete.jumper.ddl.dsl;
 import java.util.function.Predicate;
 
 import org.codefilarete.jumper.Change;
-import org.codefilarete.jumper.ChangeSet.ChangeBuilder;
 import org.codefilarete.jumper.Context;
 
-public interface FluentChange<C extends Change, SELF extends FluentChange<C, SELF>> extends ChangeBuilder<C> {
+public interface FluentChange<C extends Change, SELF extends FluentChange<C, SELF>> extends Builder<C> {
 	
 	/**
 	 * Gives a condition on which this change will be applied if it is verified.

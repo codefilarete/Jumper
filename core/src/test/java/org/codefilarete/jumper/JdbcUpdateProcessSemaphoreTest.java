@@ -6,8 +6,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage;
-import org.codefilarete.stalactite.sql.ConnectionProvider;
+import org.codefilarete.jumper.impl.JdbcUpdateProcessSemaphore;
 import org.codefilarete.stalactite.sql.HSQLDBDialect;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.sql.result.Row;
@@ -20,27 +19,29 @@ import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
 import org.codefilarete.tool.collection.Maps;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.codefilarete.jumper.impl.JdbcUpdateProcessLockStorage.DEFAULT_STORAGE_TABLE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.byLessThan;
+import static org.codefilarete.jumper.impl.JdbcUpdateProcessSemaphore.DEFAULT_STORAGE_TABLE;
 
-class JdbcUpdateProcessLockStorageTest {
+class JdbcUpdateProcessSemaphoreTest {
 
 	@Test
 	void insertRow() throws SQLException, UnknownHostException {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
-		ConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
+		SeparateConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
 		
 		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
 		
 		// deploying table to database
 		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
-		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessLockStorage.DEFAULT_STORAGE_TABLE);
+		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessSemaphore.DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
-		JdbcUpdateProcessLockStorage testInstance = new JdbcUpdateProcessLockStorage(connectionProvider);
+		JdbcUpdateProcessSemaphore testInstance = new JdbcUpdateProcessSemaphore(connectionProvider);
 		
 		// test
-		testInstance.insertRow("dummy identifier");
+		testInstance.acquireLock("dummy identifier");
 		
 		// verifications
 		RowIterator rowIterator = new RowIterator(
@@ -59,41 +60,41 @@ class JdbcUpdateProcessLockStorageTest {
 	@Test
 	void insertRow_calledTwice_throwsException() {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
-		ConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
+		SeparateConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
 		
 		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
 		
 		// deploying table to database
 		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
-		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessLockStorage.DEFAULT_STORAGE_TABLE);
+		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessSemaphore.DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
-		JdbcUpdateProcessLockStorage testInstance = new JdbcUpdateProcessLockStorage(connectionProvider);
+		JdbcUpdateProcessSemaphore testInstance = new JdbcUpdateProcessSemaphore(connectionProvider);
 		
 		// test
-		testInstance.insertRow("dummy identifier");
-		assertThatCode(() -> testInstance.insertRow("dummy identifier"))
+		testInstance.acquireLock("dummy identifier");
+		assertThatCode(() -> testInstance.acquireLock("dummy identifier"))
 				.hasMessageMatching("Can't obtain lock to process changes : a lock is already acquired by .+ since .+");
 	}
 	
 	@Test
 	void deleteRow() throws SQLException {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
-		ConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
+		SeparateConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
 		
 		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
 		
 		// deploying table to database
 		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
-		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessLockStorage.DEFAULT_STORAGE_TABLE);
+		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessSemaphore.DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
-		JdbcUpdateProcessLockStorage testInstance = new JdbcUpdateProcessLockStorage(connectionProvider);
+		JdbcUpdateProcessSemaphore testInstance = new JdbcUpdateProcessSemaphore(connectionProvider);
 		
 		// test
-		testInstance.insertRow("dummy identifier");
+		testInstance.acquireLock("dummy identifier");
 		
-		testInstance.deleteRow("dummy identifier");
+		testInstance.releaseLock("dummy identifier");
 		
 		// verifications
 		RowIterator rowIterator = new RowIterator(

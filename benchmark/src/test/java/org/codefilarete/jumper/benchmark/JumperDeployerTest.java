@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Stream;
 
 import liquibase.Contexts;
 import liquibase.Liquibase;
@@ -31,8 +30,8 @@ import liquibase.structure.core.Sequence;
 import liquibase.structure.core.Table;
 import liquibase.structure.core.UniqueConstraint;
 import liquibase.structure.core.View;
-import org.codefilarete.jumper.ChangeSet;
-import org.codefilarete.jumper.ChangeSetRunner;
+import org.codefilarete.jumper.DataSourceConnectionProvider;
+import org.codefilarete.jumper.ddl.dsl.FluentChangeLog;
 import org.codefilarete.jumper.schema.MariaDBSchemaElementCollector;
 import org.codefilarete.jumper.schema.difference.MariaDBSchemaDiffer;
 import org.codefilarete.jumper.schema.metadata.MariaDBMetadataReader;
@@ -44,8 +43,11 @@ import org.mariadb.jdbc.MariaDbDataSource;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import static org.codefilarete.jumper.ChangeSet.changeSet;
-import static org.codefilarete.jumper.ddl.dsl.DDLEase.*;
+import static org.codefilarete.jumper.ddl.dsl.DDLEase.changeLog;
+import static org.codefilarete.jumper.ddl.dsl.DDLEase.changeSet;
+import static org.codefilarete.jumper.ddl.dsl.DDLEase.createForeignKey;
+import static org.codefilarete.jumper.ddl.dsl.DDLEase.createTable;
+import static org.codefilarete.jumper.ddl.dsl.DDLEase.createUniqueConstraint;
 import static org.codefilarete.tool.collection.Arrays.asSet;
 
 class JumperDeployerTest {
@@ -92,7 +94,7 @@ class JumperDeployerTest {
 		MariaDbDataSource jumperDataSource = new MariaDbDataSource(MARIADB_CONTAINER.withDatabaseName(JUMPER_SCHEMA_NAME).getJdbcUrl());
 		jumperDataSource.setUser(MARIADB_CONTAINER.getUsername());
 		jumperDataSource.setPassword(MARIADB_CONTAINER.getPassword());
-		deployWithJumper(jumperDataSource.getConnection());
+		deployWithJumper(new DataSourceConnectionProvider(jumperDataSource));
 		
 		// Diff
 		
@@ -169,10 +171,10 @@ class JumperDeployerTest {
 		System.out.println("time took by Liquibase for deployment : " + chrono);
 	}
 	
-	void deployWithJumper(Connection connection) throws SQLException {
+	void deployWithJumper(DataSourceConnectionProvider dataSource) throws SQLException {
 		Chrono chrono = new Chrono();
 		
-		Stream<ChangeSet> changeSetStream = Stream.of(
+		FluentChangeLog changeLog = changeLog(
 				changeSet("hibernate_tables",
 						createTable("IdGenerator")
 								.addColumn("sequence_name", "VARCHAR(255)")
@@ -296,7 +298,7 @@ class JumperDeployerTest {
 								.addColumnReference("question_id", "id"),
 						createForeignKey("FKn3xsqrwvubdk3vyg4e8pjm3sd", "Answer_Choice", "Choice")
 								.addColumnReference("choices_id", "id")),
-						
+				
 				changeSet("distribution_tables",
 						createTable("DistributionConfiguration")
 								.addColumn("id", "BIGINT").primaryKey()
@@ -338,9 +340,8 @@ class JumperDeployerTest {
 								.addColumnReference("personas_id", "id"),
 						createUniqueConstraint("UK_77tdfhlc0il375875o4epwfrd", "DistributionConfiguration_ContactMean", "personas_id"))
 		);
+		changeLog.applyTo(dataSource);
 		
-		ChangeSetRunner.forJdbcStorage(() -> connection, changeSetStream)
-				.processUpdate();
 		System.out.println("time took by Jumper for deployment : " + chrono);
 	}
 }

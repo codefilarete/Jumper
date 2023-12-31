@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.DialectResolver.DatabaseSignet;
+import org.codefilarete.jumper.ddl.dsl.Builder;
 import org.codefilarete.jumper.ddl.dsl.FluentChange;
 import org.codefilarete.tool.collection.Iterables;
 
@@ -17,10 +18,6 @@ import org.codefilarete.tool.collection.Iterables;
  * @author Guillaume Mary
  */
 public class ChangeSet {
-	
-	public static ChangeSet changeSet(String changeSetId, FluentChange... changes) {
-		return new ChangeSet(changeSetId).addChanges(changes);
-	}
 	
 	private final ChangeSetId changeSetId;
 	private boolean shouldAlwaysRun = false;
@@ -50,8 +47,8 @@ public class ChangeSet {
 		return this;
 	}
 	
-	public ChangeSet addChanges(ChangeBuilder... changes) {
-		this.changes.addAll(Arrays.stream(changes).map(ChangeBuilder::build).collect(Collectors.toList()));
+	public ChangeSet addChanges(Builder<? extends Change>... changes) {
+		this.changes.addAll(Arrays.stream(changes).map(Builder::build).collect(Collectors.toList()));
 		return this;
 	}
 	
@@ -99,11 +96,6 @@ public class ChangeSet {
 	 */
 	Set<Checksum> getCompatibleChecksums() {
 		return Collections.emptySet();
-	}
-	
-	public interface ChangeBuilder<C extends Change> {
-		
-		C build();
 	}
 	
 	/**

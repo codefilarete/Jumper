@@ -48,14 +48,14 @@ public class ChangeSetRunnerTest {
 		private final Dialect dialect = new Dialect();
 		
 		private LocalChangeRunner(List<ChangeSet> changes, ConnectionProvider connectionProvider, ChangeStorage changeStorage) {
-			super(changes, connectionProvider, changeStorage, new UpdateProcessLockStorage() {
+			super(changes, connectionProvider, changeStorage, new UpdateProcessSemaphore() {
 				@Override
-				public void insertRow(String lockIdentifier) {
+				public void acquireLock(String lockIdentifier) {
 				
 				}
 				
 				@Override
-				public void deleteRow(String lockIdentifier) {
+				public void releaseLock(String lockIdentifier) {
 				
 				}
 			});

@@ -9,10 +9,10 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.Instant;
 
 import org.codefilarete.jumper.NoopExecutionListener;
-import org.codefilarete.jumper.UpdateProcessLockStorage;
+import org.codefilarete.jumper.SeparateConnectionProvider;
+import org.codefilarete.jumper.UpdateProcessSemaphore;
 import org.codefilarete.stalactite.engine.PersistenceContext;
 import org.codefilarete.stalactite.query.model.Operators;
-import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.stalactite.sql.Dialect;
 import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
@@ -25,7 +25,14 @@ import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.exception.Exceptions;
 import org.codefilarete.tool.sql.TransactionSupport;
 
-public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
+/**
+ * A class that handles update lock through an SQL row.
+ *
+ * Persistence is based on Stalactite.
+ *
+ * @author Guillaume Mary
+ */
+public class JdbcUpdateProcessSemaphore implements UpdateProcessSemaphore {
 	
 	private static final String HOSTNAME;
 	
@@ -39,7 +46,7 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 	
 	public static final UpdateProcessLockTable DEFAULT_STORAGE_TABLE = new UpdateProcessLockTable();
 	
-	private final ConnectionProvider connectionProvider;
+	private final SeparateConnectionProvider connectionProvider;
 	
 	private final PersistenceContext persistenceContext;
 	
@@ -47,22 +54,22 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 	
 	private final LockTableEnsurer lockTableEnsurer;
 	
-	public JdbcUpdateProcessLockStorage(ConnectionProvider connectionProvider) {
+	public JdbcUpdateProcessSemaphore(SeparateConnectionProvider connectionProvider) {
 		this(connectionProvider, DEFAULT_STORAGE_TABLE);
 	}
 	
-	public JdbcUpdateProcessLockStorage(ConnectionProvider connectionProvider, Dialect dialect) {
+	public JdbcUpdateProcessSemaphore(SeparateConnectionProvider connectionProvider, Dialect dialect) {
 		this(connectionProvider, DEFAULT_STORAGE_TABLE, dialect);
 	}
 	
-	public JdbcUpdateProcessLockStorage(ConnectionProvider connectionProvider, UpdateProcessLockTable lockTable) {
+	public JdbcUpdateProcessSemaphore(SeparateConnectionProvider connectionProvider, UpdateProcessLockTable lockTable) {
 		this.connectionProvider = connectionProvider;
 		this.persistenceContext = new PersistenceContext(connectionProvider);
 		this.storageTable = lockTable;
 		this.lockTableEnsurer = new LockTableEnsurer();
 	}
 	
-	public JdbcUpdateProcessLockStorage(ConnectionProvider connectionProvider, UpdateProcessLockTable lockTable, Dialect dialect) {
+	public JdbcUpdateProcessSemaphore(SeparateConnectionProvider connectionProvider, UpdateProcessLockTable lockTable, Dialect dialect) {
 		this.connectionProvider = connectionProvider;
 		this.persistenceContext = new PersistenceContext(connectionProvider, dialect);
 		this.storageTable = lockTable;
@@ -74,8 +81,8 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 	}
 	
 	@Override
-	public void insertRow(String lockIdentifier) {
-		Connection currentConnection = connectionProvider.giveConnection();
+	public void acquireLock(String lockIdentifier) {
+		Connection currentConnection = connectionProvider.giveSeparateConnection();
 		try {
 			TransactionSupport transactionSupport = new TransactionSupport(currentConnection);
 			transactionSupport.runAtomically(c -> {
@@ -98,8 +105,8 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 	}
 	
 	@Override
-	public void deleteRow(String lockIdentifier) {
-		Connection currentConnection = connectionProvider.giveConnection();
+	public void releaseLock(String lockIdentifier) {
+		Connection currentConnection = connectionProvider.giveSeparateConnection();
 		TransactionSupport transactionSupport = new TransactionSupport(currentConnection);
 		try {
 			transactionSupport.runAtomically(c -> {
@@ -149,12 +156,19 @@ public class JdbcUpdateProcessLockStorage implements UpdateProcessLockStorage {
 		}
 	}
 	
+	/**
+	 * Description of the table containing locking row.
+	 *
+	 * @author Guillaume Mary
+	 */
 	public static class UpdateProcessLockTable extends Table<UpdateProcessLockTable> {
 		
 		public static final String DEFAULT_TABLE_NAME = "UpdateProcessLockTable";
 		
 		public final Column<UpdateProcessLockTable, String> id;
+		/** Creation instant of the lock, for information only (may help debug) */
 		public final Column<UpdateProcessLockTable, Instant> createdAt;
+		/** Creator of the lock, for information only (may help debug) */
 		public final Column<UpdateProcessLockTable, String> createdBy;
 		
 		public UpdateProcessLockTable() {
