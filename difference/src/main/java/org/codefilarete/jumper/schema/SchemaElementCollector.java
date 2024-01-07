@@ -1,22 +1,22 @@
 package org.codefilarete.jumper.schema;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
-import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 
 public abstract class SchemaElementCollector {
 	
-	protected final MetadataReader metadataReader;
+	protected final SchemaMetadataReader metadataReader;
 	protected String catalog;
 	protected String schema;
 	protected String tableNamePattern;
 	
 	/**
-	 * Generic constructor. Will create {@link Schema} elements from given {@link MetadataReader} on {@link #collect()}
+	 * Generic constructor. Will create {@link Schema} elements from given {@link SchemaMetadataReader} on {@link #collect()}
 	 * call.
 	 *
 	 * @param metadataReader
 	 */
-	public SchemaElementCollector(MetadataReader metadataReader) {
+	public SchemaElementCollector(SchemaMetadataReader metadataReader) {
 		this.metadataReader = metadataReader;
 	}
 	

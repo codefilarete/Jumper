@@ -23,7 +23,7 @@ import org.codefilarete.jumper.schema.metadata.ColumnMetadata;
 import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
 import org.codefilarete.jumper.schema.metadata.ForeignKeyMetadata;
 import org.codefilarete.jumper.schema.metadata.IndexMetadata;
-import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.PrimaryKeyMetadata;
 import org.codefilarete.jumper.schema.metadata.TableMetadata;
 import org.codefilarete.jumper.schema.metadata.ViewMetadata;
@@ -38,7 +38,7 @@ import org.codefilarete.tool.collection.PairIterator;
 import static org.codefilarete.tool.Nullable.nullable;
 
 /**
- * Collects database schema elements based on a {@link MetadataReader} to read DDL elements and build a structured
+ * Collects database schema elements based on a {@link SchemaMetadataReader} to read DDL elements and build a structured
  * version of them through a {@link Schema}.
  *
  * @see #collect()
@@ -58,12 +58,12 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 	}
 	
 	/**
-	 * Generic constructor. Will create {@link Schema} elements from given {@link MetadataReader} on {@link #collect()}
+	 * Generic constructor. Will create {@link Schema} elements from given {@link SchemaMetadataReader} on {@link #collect()}
 	 * call.
 	 *
 	 * @param metadataReader
 	 */
-	public DefaultSchemaElementCollector(MetadataReader metadataReader) {
+	public DefaultSchemaElementCollector(SchemaMetadataReader metadataReader) {
 		super(metadataReader);
 	}
 	
@@ -114,67 +114,50 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					row.isNullable(), row.isAutoIncrement());
 			columnCache.put(new Duo<>(table.getName(), row.getName()), column);
 		});
-
-		tablePerName.values().forEach(table -> {
-			PrimaryKeyMetadata primaryKeyMetadata = metadataReader.givePrimaryKey(catalog, schema, table.name);
-			if (primaryKeyMetadata != null) {
-				List<Column> primaryKeyColumns = new ArrayList<>();
-				primaryKeyMetadata.getColumns().forEach(columnName -> {
-					primaryKeyColumns.add(columnCache.get(new Duo<>(table.name, columnName)));
-				});
-				table.setPrimaryKey(primaryKeyMetadata.getName(), primaryKeyColumns);
-			}
+		
+		Set<PrimaryKeyMetadata> primaryKeyMetadata = metadataReader.givePrimaryKey(catalog, schema, tableNamePattern);
+		primaryKeyMetadata.forEach(primaryKeyMetadatum -> {
+			List<Column> primaryKeyColumns = new ArrayList<>();
+			primaryKeyMetadatum.getColumns().forEach(columnName -> {
+				primaryKeyColumns.add(columnCache.get(new Duo<>(primaryKeyMetadatum.getTableName(), columnName)));
+			});
+			tablePerName.get(primaryKeyMetadatum.getTableName()).setPrimaryKey(primaryKeyMetadatum.getName(), primaryKeyColumns);
 		});
 
 		// Collecting Foreign Keys
-		// Some databases support table name pattern in getExportedKeys(..), some not. Since giving a pattern is not
-		// possible according to getExportedKeys(..) specification, we have to iterate over found table names to build
-		// foreign keys (since we just iterated over them to build Table instances). Meanwhile, we can't add this building
-		// to previous iteration because foreign key building needs source and target Columns which are not all created
-		// as we iterate to build Tables.
-		// For database vendors supporting pattern, this could be done without going over each table (and maybe enhance
-		// performances)
-		tablePerName.keySet().forEach(tableName -> {
-			Set<ForeignKeyMetadata> foreignKeyMetadata = metadataReader.giveExportedKeys(catalog, schema, tableName);
-			Map<String, ForeignKeyMetadata> foreignKeyPerSourceTableName = Iterables.map(foreignKeyMetadata, fk -> fk.getSourceTable().getTableName());
-			tablePerName.values().forEach(table -> {
-				ForeignKeyMetadata row = foreignKeyPerSourceTableName.get(table.getName());
-				if (row != null) {
-					ArrayList<Column> sourceColumns = new ArrayList<>();
-					ArrayList<Column> targetColumns = new ArrayList<>();
-					row.getColumns().forEach(duo -> {
-						sourceColumns.add(columnCache.get(new Duo<>(row.getSourceTable().getTableName(), duo.getLeft())));
-						targetColumns.add(columnCache.get(new Duo<>(row.getTargetTable().getTableName(), duo.getRight())));
-					});
-					// setting foreign key to owning table
-					tablePerName.get(row.getSourceTable().getTableName())
-							.addForeignKey(row.getName(),
-									sourceColumns, tablePerName.get(row.getTargetTable().getTableName()), targetColumns);
-				}
+		Set<ForeignKeyMetadata> foreignKeyMetadata = metadataReader.giveExportedKeys(catalog, schema, tableNamePattern);
+		foreignKeyMetadata.forEach(row -> {
+			ArrayList<Column> sourceColumns = new ArrayList<>();
+			ArrayList<Column> targetColumns = new ArrayList<>();
+			row.getColumns().forEach(duo -> {
+				sourceColumns.add(columnCache.get(new Duo<>(row.getSourceTable().getTableName(), duo.getLeft())));
+				targetColumns.add(columnCache.get(new Duo<>(row.getTargetTable().getTableName(), duo.getRight())));
 			});
+			// setting foreign key to owning table
+			tablePerName.get(row.getSourceTable().getTableName())
+					.addForeignKey(row.getName(),
+							sourceColumns, tablePerName.get(row.getTargetTable().getTableName()), targetColumns);
 		});
 		
 		// Collecting indexes
+		Set<IndexMetadata> indexesMetadata = metadataReader.giveIndexes(catalog, schema, tableNamePattern);
+		Map<String, List<IndexMetadata>> indexPerTableName = indexesMetadata.stream().collect(Collectors.groupingBy(IndexMetadata::getTableName));
 		tablePerName.keySet().forEach(tableName -> {
-			Set<IndexMetadata> indexesMetadata = metadataReader.giveIndexes(catalog, schema, tableName);
-			Map<String, List<IndexMetadata>> indexPerTableName = indexesMetadata.stream().collect(Collectors.groupingBy(IndexMetadata::getTableName));
-			tablePerName.values().forEach(table -> {
-				List<IndexMetadata> tableIndexes = indexPerTableName.get(table.name);
-				if (tableIndexes != null) {
-					tableIndexes.forEach(indexMetadata -> {
-						boolean addIndex = shouldAddIndex(result, indexMetadata);
-						if (addIndex) {
-							Index index = result.addIndex(indexMetadata.getName());
-							index.setUnique(indexMetadata.isUnique());
-							indexMetadata.getColumns().forEach(duo -> {
-								AscOrDesc direction = mapBooleanToDirection(duo.getRight());
-								Column column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
-								index.addColumn(column, direction);
-							});
-						}
-					});
-				}
-			});
+			List<IndexMetadata> tableIndexes = indexPerTableName.get(tableName);
+			if (tableIndexes != null) {
+				tableIndexes.forEach(indexMetadata -> {
+					boolean addIndex = shouldAddIndex(result, indexMetadata);
+					if (addIndex) {
+						Index index = result.addIndex(indexMetadata.getName());
+						index.setUnique(indexMetadata.isUnique());
+						indexMetadata.getColumns().forEach(duo -> {
+							AscOrDesc direction = mapBooleanToDirection(duo.getRight());
+							Column column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
+							index.addColumn(column, direction);
+						});
+					}
+				});
+			}
 		});
 		
 		Set<ViewMetadata> viewMetadata = metadataReader.giveViews(catalog, schema, tableNamePattern);

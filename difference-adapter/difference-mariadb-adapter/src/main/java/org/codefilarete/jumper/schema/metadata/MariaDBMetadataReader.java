@@ -29,12 +29,40 @@ public class MariaDBMetadataReader extends DefaultMetadataReader implements Sequ
 	
 	private final ExportedKeysMetadataReader exportedKeysMetadataReader;
 	
+	private final PrimaryKeyMetadataReader primaryKeyMetadataReader;
+	
 	public MariaDBMetadataReader(DatabaseMetaData metaData) {
 		super(metaData);
 		this.tableMetadataReader = new TableMetadataReader(metaData);
 		this.columnMetadataReader = new ColumnMetadataReader(metaData);
 		this.indexMetadataReader = new IndexMetadataReader(metaData);
 		this.exportedKeysMetadataReader = new ExportedKeysMetadataReader(metaData);
+		this.primaryKeyMetadataReader = new PrimaryKeyMetadataReader(metaData);
+	}
+	
+	@Override
+	public Set<PrimaryKeyMetadata> givePrimaryKey(String catalog, String schema, String tableNamePattern) {
+		try (ResultSet tableResultSet = primaryKeyMetadataReader.giveMetaData(
+				Nullable.nullable(schema).map(Like::new).get(),
+				Nullable.nullable(tableNamePattern).map(Like::new).get())) {
+			Nullable<PrimaryKeyMetadata> result = Nullable.nullable((PrimaryKeyMetadata) null);
+			ResultSetIterator<PrimaryKeyMetadata> resultSetIterator = new ResultSetIterator<PrimaryKeyMetadata>(tableResultSet) {
+				@Override
+				public PrimaryKeyMetadata convert(ResultSet resultSet) {
+					PrimaryKeyMetadata result = new PrimaryKeyMetadata(
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet),
+							PrimaryKeysMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
+					);
+					PrimaryKeysMetaDataPseudoTable.INSTANCE.columnName.apply(resultSet, result::addColumn);
+					return result;
+				}
+			};
+			return new HashSet<>(resultSetIterator.convert());
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	@Override

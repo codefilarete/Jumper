@@ -1,7 +1,6 @@
 package org.codefilarete.jumper.schema.metadata;
 
 import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.codefilarete.jumper.schema.metadata.PreparedCriteria.Operator;
-import org.codefilarete.tool.trace.ModifiableInt;
 import org.mariadb.jdbc.util.constants.ServerStatus;
 
 import static org.codefilarete.jumper.schema.metadata.PreparedCriteria.asSQLCriteria;
@@ -20,21 +18,20 @@ import static org.codefilarete.jumper.schema.metadata.PreparedCriteria.asSQLCrit
  *
  * @author Guillaume Mary
  */
-public class ColumnMetadataReader {
+public class ColumnMetadataReader extends AbstractMetadataReader {
 	
 	private final Configuration configuration;
-	private final DatabaseMetaData metaData;
 	
 	public ColumnMetadataReader(DatabaseMetaData metaData) {
-		this.metaData = metaData;
-		this.configuration = buildConfiguration(this.metaData);
+		super(metaData);
+		this.configuration = buildConfiguration(metaData);
 	}
 	
 	ResultSet giveMetaData(Operator schema, Operator tableNamePattern, Operator columnNamePattern) throws SQLException {
 		// Please note there's a difference here with MariaDB Driver code : TABLE_CAT is null and TABLE_SCHEM contains schema
 		// whereas it's the opposite in MariaDB Driver, code which doesn't seem logical, hence it has been fixed here.
 		// Moreover, some tables and columns created in a database created through a "create schema" command appear with the right TABLE_SCHEM
-		String columnSelectSQL = "SELECT NULL TABLE_CAT, TABLE_SCHEMA TABLE_SCHEM, TABLE_NAME, COLUMN_NAME,"
+		StringBuilder columnsSelectSQL = new StringBuilder("SELECT NULL TABLE_CAT, TABLE_SCHEMA TABLE_SCHEM, TABLE_NAME, COLUMN_NAME,"
 				+ dataTypeClause("COLUMN_TYPE") + " DATA_TYPE,"
 				+ dataTypeClause() + " TYPE_NAME, "
 				+ " CASE DATA_TYPE"
@@ -66,30 +63,18 @@ public class ColumnMetadataReader {
 				+ " ORDINAL_POSITION, IS_NULLABLE, NULL SCOPE_CATALOG, NULL SCOPE_SCHEMA, NULL SCOPE_TABLE, NULL SOURCE_DATA_TYPE,"
 				+ " IF(EXTRA = 'auto_increment','YES','NO') IS_AUTOINCREMENT, "
 				+ " IF(EXTRA in ('VIRTUAL', 'PERSISTENT', 'VIRTUAL GENERATED', 'STORED GENERATED') ,'YES','NO') IS_GENERATEDCOLUMN "
-				+ " FROM INFORMATION_SCHEMA.COLUMNS";
+				+ " FROM INFORMATION_SCHEMA.COLUMNS");
 		PreparedCriteria[] criteria = Stream.of(
 				asSQLCriteria("TABLE_SCHEMA", schema),
 				asSQLCriteria("TABLE_NAME", tableNamePattern),
 				asSQLCriteria("COLUMN_NAME", columnNamePattern))
 				.filter(Objects::nonNull).toArray(PreparedCriteria[]::new);
-		columnSelectSQL += " WHERE " + Stream.of(criteria)
+		columnsSelectSQL.append(" WHERE ").append(Stream.of(criteria)
 				.map(PreparedCriteria::getCriteriaSegment)
-				.collect(Collectors.joining(" AND "));
-		columnSelectSQL += " ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, ORDINAL_POSITION";
+				.collect(Collectors.joining(" AND ")));
+		columnsSelectSQL.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, ORDINAL_POSITION");
 		
-		PreparedStatement preparedStatement = metaData.getConnection().prepareStatement(columnSelectSQL);
-		ModifiableInt preparedParameterIndex = new ModifiableInt(0);
-		Stream.of(criteria)
-				.flatMap(preparedCriteria -> preparedCriteria.getValues().stream())
-				.map(String.class::cast)
-				.forEach(value -> {
-					try {
-						preparedStatement.setString(preparedParameterIndex.increment(), value);
-					} catch (SQLException e) {
-						throw new RuntimeException(e);
-					}
-				});
-		return preparedStatement.executeQuery();
+		return executeQuery(columnsSelectSQL, criteria);
 	}
 	
 	Configuration buildConfiguration(DatabaseMetaData metaData) {

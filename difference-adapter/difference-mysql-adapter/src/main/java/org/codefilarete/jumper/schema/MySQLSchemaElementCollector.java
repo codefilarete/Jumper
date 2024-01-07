@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codefilarete.jumper.schema.metadata.IndexMetadata;
-import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.MySQLMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
@@ -18,7 +18,7 @@ public class MySQLSchemaElementCollector extends DefaultSchemaElementCollector {
 		this(new MySQLMetadataReader(databaseMetaData));
 	}
 	
-	public MySQLSchemaElementCollector(MetadataReader metadataReader) {
+	public MySQLSchemaElementCollector(SchemaMetadataReader metadataReader) {
 		super(metadataReader);
 	}
 	

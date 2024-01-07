@@ -12,21 +12,21 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.codefilarete.stalactite.sql.ddl.structure.Column;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
 import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader;
-import org.codefilarete.tool.Nullable;
 import org.codefilarete.tool.bean.Objects;
 
 /**
- * A {@link MetadataReader} based on JDBC {@link DatabaseMetaData} methods to retrieve requested elements.
+ * A {@link SchemaMetadataReader} based on JDBC {@link DatabaseMetaData} methods to retrieve requested elements.
  *
  * @author Guillaume Mary
  */
-public class DefaultMetadataReader implements MetadataReader {
+public class DefaultMetadataReader implements SchemaMetadataReader {
 	
 	protected final DatabaseMetaData metaData;
 	
@@ -67,90 +67,105 @@ public class DefaultMetadataReader implements MetadataReader {
 	
 	@Override
 	public Set<ForeignKeyMetadata> giveExportedKeys(String catalog, String schema, String tablePattern) {
-		try (ResultSet tableResultSet = metaData.getExportedKeys(catalog, schema, tablePattern)) {
-			Map<String, ForeignKeyMetadata> cache = new HashMap<>();
-			ResultSetIterator<ForeignKeyMetadata> resultSetIterator = new ResultSetIterator<ForeignKeyMetadata>(tableResultSet) {
-				@Override
-				public ForeignKeyMetadata convert(ResultSet resultSet) {
-					String name = ExportedKeysMetaDataPseudoTable.INSTANCE.fkName.giveValue(resultSet);
-					ForeignKeyMetadata result = cache.computeIfAbsent(name, k ->
-							new ForeignKeyMetadata(
-									k,
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkCatalog.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkSchema.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkTableName.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkCatalog.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkSchema.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkTableName.giveValue(resultSet)
-							));
-					result.addColumn(
-							ExportedKeysMetaDataPseudoTable.INSTANCE.fkColumnName.giveValue(resultSet),
-							ExportedKeysMetaDataPseudoTable.INSTANCE.pkColumnName.giveValue(resultSet)
-					);
-					return result;
-				}
-			};
-			return new HashSet<>(resultSetIterator.convert());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+		// DatabaseMetaData.getExportedKeys() is not expected to support table pattern, therefore we have to list
+		// tables before iterating over them to pick up their keys.
+		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
+		return tableMetadata.stream().flatMap(tableMetadatum -> {
+			try (ResultSet tableResultSet = metaData.getExportedKeys(catalog, schema, tableMetadatum.getName())) {
+				Map<String, ForeignKeyMetadata> cache = new HashMap<>();
+				ResultSetIterator<ForeignKeyMetadata> resultSetIterator = new ResultSetIterator<ForeignKeyMetadata>(tableResultSet) {
+					@Override
+					public ForeignKeyMetadata convert(ResultSet resultSet) {
+						String name = ExportedKeysMetaDataPseudoTable.INSTANCE.fkName.giveValue(resultSet);
+						ForeignKeyMetadata result = cache.computeIfAbsent(name, k ->
+								new ForeignKeyMetadata(
+										k,
+										ExportedKeysMetaDataPseudoTable.INSTANCE.fkCatalog.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.fkSchema.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.fkTableName.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.pkCatalog.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.pkSchema.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.pkTableName.giveValue(resultSet)
+								));
+						result.addColumn(
+								ExportedKeysMetaDataPseudoTable.INSTANCE.fkColumnName.giveValue(resultSet),
+								ExportedKeysMetaDataPseudoTable.INSTANCE.pkColumnName.giveValue(resultSet)
+						);
+						return result;
+					}
+				};
+				return resultSetIterator.convert().stream();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}).collect(Collectors.toSet());
 	}
 	
 	@Override
 	public Set<ForeignKeyMetadata> giveImportedKeys(String catalog, String schema, String tablePattern) {
-		try (ResultSet tableResultSet = metaData.getImportedKeys(catalog, schema, tablePattern)) {
-			Map<String, ForeignKeyMetadata> cache = new HashMap<>();
-			ResultSetIterator<ForeignKeyMetadata> resultSetIterator = new ResultSetIterator<ForeignKeyMetadata>(tableResultSet) {
-				@Override
-				public ForeignKeyMetadata convert(ResultSet resultSet) {
-					String name = ExportedKeysMetaDataPseudoTable.INSTANCE.fkName.giveValue(resultSet);
-					ForeignKeyMetadata result = cache.computeIfAbsent(name, k ->
-							new ForeignKeyMetadata(
-									k,
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkCatalog.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkSchema.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.fkTableName.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkCatalog.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkSchema.giveValue(resultSet),
-									ExportedKeysMetaDataPseudoTable.INSTANCE.pkTableName.giveValue(resultSet)
-							));
-					result.addColumn(
-							ExportedKeysMetaDataPseudoTable.INSTANCE.fkColumnName.giveValue(resultSet),
-							ExportedKeysMetaDataPseudoTable.INSTANCE.pkColumnName.giveValue(resultSet)
-					);
-					return result;
-				}
-			};
-			return new HashSet<>(resultSetIterator.convert());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+		// DatabaseMetaData.getImportedKeys() is not expected to support table pattern, therefore we have to list
+		// tables before iterating over them to pick up their keys.
+		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
+		return tableMetadata.stream().flatMap(tableMetadatum -> {
+			try (ResultSet tableResultSet = metaData.getImportedKeys(catalog, schema, tableMetadatum.getName())) {
+				Map<String, ForeignKeyMetadata> cache = new HashMap<>();
+				ResultSetIterator<ForeignKeyMetadata> resultSetIterator = new ResultSetIterator<ForeignKeyMetadata>(tableResultSet) {
+					@Override
+					public ForeignKeyMetadata convert(ResultSet resultSet) {
+						String name = ExportedKeysMetaDataPseudoTable.INSTANCE.fkName.giveValue(resultSet);
+						ForeignKeyMetadata result = cache.computeIfAbsent(name, k ->
+								new ForeignKeyMetadata(
+										k,
+										ExportedKeysMetaDataPseudoTable.INSTANCE.fkCatalog.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.fkSchema.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.fkTableName.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.pkCatalog.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.pkSchema.giveValue(resultSet),
+										ExportedKeysMetaDataPseudoTable.INSTANCE.pkTableName.giveValue(resultSet)
+								));
+						result.addColumn(
+								ExportedKeysMetaDataPseudoTable.INSTANCE.fkColumnName.giveValue(resultSet),
+								ExportedKeysMetaDataPseudoTable.INSTANCE.pkColumnName.giveValue(resultSet)
+						);
+						return result;
+					}
+				};
+				return resultSetIterator.convert().stream();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}).collect(Collectors.toSet());
 	}
 	
 	@Override
-	public PrimaryKeyMetadata givePrimaryKey(String catalog, String schema, String tableName) {
-		try (ResultSet tableResultSet = metaData.getPrimaryKeys(catalog, schema, tableName)) {
-			Nullable<PrimaryKeyMetadata> result = Nullable.nullable((PrimaryKeyMetadata) null);
-			ResultSetIterator<PrimaryKeyMetadata> resultSetIterator = new ResultSetIterator<PrimaryKeyMetadata>(tableResultSet) {
-				@Override
-				public PrimaryKeyMetadata convert(ResultSet resultSet) {
-					result.elseSet(new PrimaryKeyMetadata(
-							PrimaryKeysMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
-							PrimaryKeysMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
-							PrimaryKeysMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet),
-							PrimaryKeysMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
-					));
-					result.get().addColumn(
-							PrimaryKeysMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet)
-					);
-					return result.get();
-				}
-			};
-			resultSetIterator.convert();
-			return result.get();
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+	public Set<PrimaryKeyMetadata> givePrimaryKey(String catalog, String schema, String tablePattern) {
+		// DatabaseMetaData.getPrimaryKeys() is not expected to support table pattern, therefore we have to list
+		// tables before iterating over them to pick up their keys.
+		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
+		return tableMetadata.stream().flatMap(tableMetadatum -> {
+					try (ResultSet tableResultSet = metaData.getPrimaryKeys(catalog, schema, tableMetadatum.getName())) {
+						Map<String, PrimaryKeyMetadata> cache = new HashMap<>();
+						ResultSetIterator<PrimaryKeyMetadata> resultSetIterator = new ResultSetIterator<PrimaryKeyMetadata>(tableResultSet) {
+							@Override
+							public PrimaryKeyMetadata convert(ResultSet resultSet) {
+								String name = PrimaryKeysMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet);
+								PrimaryKeyMetadata result = cache.computeIfAbsent(name, k ->
+										new PrimaryKeyMetadata(
+												PrimaryKeysMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+												PrimaryKeysMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+												PrimaryKeysMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet),
+												k
+										));
+								result.addColumn(PrimaryKeysMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet));
+								return result;
+							}
+						};
+						return resultSetIterator.convert().stream();
+					} catch (SQLException e) {
+						throw new RuntimeException(e);
+					}
+				})
+				.collect(Collectors.toSet());
 	}
 	
 	@Override
@@ -199,34 +214,38 @@ public class DefaultMetadataReader implements MetadataReader {
 	}
 	
 	@Override
-	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tableName) {
-		try (ResultSet tableResultSet = metaData.getIndexInfo(catalog, schema, tableName, false, false)) {
-			Map<String, IndexMetadata> cache = new HashMap<>();
-			ResultSetIterator<IndexMetadata> resultSetIterator = new ResultSetIterator<IndexMetadata>(tableResultSet) {
-				@Override
-				public IndexMetadata convert(ResultSet resultSet) {
-					String name = IndexMetaDataPseudoTable.INSTANCE.indexName.giveValue(resultSet);
-					IndexMetadata result = cache.computeIfAbsent(name, k -> {
-						IndexMetadata newInstance = new IndexMetadata(
-								IndexMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
-								IndexMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
-								IndexMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
+	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern) {
+		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
+		return tableMetadata.stream().flatMap(tableMetadatum -> {
+			try (ResultSet tableResultSet = metaData.getIndexInfo(catalog, schema, tableMetadatum.getName(), false, false)) {
+				Map<String, IndexMetadata> cache = new HashMap<>();
+				ResultSetIterator<IndexMetadata> resultSetIterator = new ResultSetIterator<IndexMetadata>(tableResultSet) {
+					@Override
+					public IndexMetadata convert(ResultSet resultSet) {
+						String name = IndexMetaDataPseudoTable.INSTANCE.indexName.giveValue(resultSet);
+						IndexMetadata result = cache.computeIfAbsent(name, k -> {
+							IndexMetadata newInstance = new IndexMetadata(
+									IndexMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+									IndexMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+									IndexMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
+							);
+							IndexMetaDataPseudoTable.INSTANCE.indexName.apply(resultSet, newInstance::setName);
+							IndexMetaDataPseudoTable.INSTANCE.nonUnique.apply(resultSet, nonUnique -> newInstance.setUnique(!nonUnique));
+							return newInstance;
+						});
+						result.addColumn(
+								IndexMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet),
+								IndexMetaDataPseudoTable.INSTANCE.ascOrDesc.giveValue(resultSet)
 						);
-						IndexMetaDataPseudoTable.INSTANCE.indexName.apply(resultSet, newInstance::setName);
-						IndexMetaDataPseudoTable.INSTANCE.nonUnique.apply(resultSet, nonUnique -> newInstance.setUnique(!nonUnique));
-						return newInstance;
-					});
-					result.addColumn(
-							IndexMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet),
-							IndexMetaDataPseudoTable.INSTANCE.ascOrDesc.giveValue(resultSet)
-					);
-					return result;
-				}
-			};
-			return new HashSet<>(resultSetIterator.convert());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+						return result;
+					}
+				};
+				return resultSetIterator.convert().stream();
+				
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}).collect(Collectors.toSet());
 	}
 	
 	@Override

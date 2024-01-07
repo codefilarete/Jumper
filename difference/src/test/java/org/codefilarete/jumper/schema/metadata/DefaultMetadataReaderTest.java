@@ -57,7 +57,7 @@ class DefaultMetadataReaderTest {
 	@Test
 	void givePrimaryKeys() throws SQLException {
 		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
-		PrimaryKeyMetadata ddlElement = testInstance.givePrimaryKey("integrationTests", null, "Prescription");
+		Set<PrimaryKeyMetadata> ddlElement = testInstance.givePrimaryKey("integrationTests", null, "Prescription");
 		System.out.println(ddlElement);
 	}
 	

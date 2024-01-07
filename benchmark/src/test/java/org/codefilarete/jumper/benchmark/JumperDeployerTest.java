@@ -3,7 +3,10 @@ package org.codefilarete.jumper.benchmark;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,6 +38,8 @@ import org.codefilarete.jumper.ddl.dsl.FluentChangeLog;
 import org.codefilarete.jumper.schema.MariaDBSchemaElementCollector;
 import org.codefilarete.jumper.schema.difference.MariaDBSchemaDiffer;
 import org.codefilarete.jumper.schema.metadata.MariaDBMetadataReader;
+import org.codefilarete.reflection.MethodReferenceDispatcher;
+import org.codefilarete.tool.sql.ConnectionWrapper;
 import org.codefilarete.tool.trace.Chrono;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -87,21 +92,25 @@ class JumperDeployerTest {
 			connection.createStatement().execute("create schema " + LIQUIBASE_SCHEMA_NAME);
 		}
 		
-		MariaDbDataSource liquibaseDataSource = new MariaDbDataSource(MARIADB_CONTAINER.withDatabaseName(LIQUIBASE_SCHEMA_NAME).getJdbcUrl());
-		liquibaseDataSource.setUser(MARIADB_CONTAINER.getUsername());
-		liquibaseDataSource.setPassword(MARIADB_CONTAINER.getPassword());
-		deployWithLiquibase(liquibaseDataSource.getConnection());
 		MariaDbDataSource jumperDataSource = new MariaDbDataSource(MARIADB_CONTAINER.withDatabaseName(JUMPER_SCHEMA_NAME).getJdbcUrl());
 		jumperDataSource.setUser(MARIADB_CONTAINER.getUsername());
 		jumperDataSource.setPassword(MARIADB_CONTAINER.getPassword());
 		deployWithJumper(new DataSourceConnectionProvider(jumperDataSource));
 		
-		// Diff
+		MariaDbDataSource liquibaseDataSource = new MariaDbDataSource(MARIADB_CONTAINER.withDatabaseName(LIQUIBASE_SCHEMA_NAME).getJdbcUrl());
+		liquibaseDataSource.setUser(MARIADB_CONTAINER.getUsername());
+		liquibaseDataSource.setPassword(MARIADB_CONTAINER.getPassword());
+		deployWithLiquibase(liquibaseDataSource.getConnection());
 		
+		// Diff
 		MariaDBSchemaDiffer mariaDBSchemaDiffer = new MariaDBSchemaDiffer();
 		MariaDBSchemaElementCollector mariaDBSchemaElementCollector = new MariaDBSchemaElementCollector(new MariaDBMetadataReader(liquibaseDataSource.getConnection().getMetaData()));
 		mariaDBSchemaElementCollector.withSchema(LIQUIBASE_SCHEMA_NAME);
-		MariaDBSchemaElementCollector mariaDBSchemaElementCollector1 = new MariaDBSchemaElementCollector(new MariaDBMetadataReader(jumperDataSource.getConnection().getMetaData()));
+		
+		Connection jumperConnection = jumperDataSource.getConnection();
+//		Connection jumperConnection = spyMetadataCalls(jumperDataSource.getConnection());
+		
+		MariaDBSchemaElementCollector mariaDBSchemaElementCollector1 = new MariaDBSchemaElementCollector(new MariaDBMetadataReader(jumperConnection.getMetaData()));
 		mariaDBSchemaElementCollector1.withSchema(JUMPER_SCHEMA_NAME);
 		Chrono c = new Chrono();
 		mariaDBSchemaDiffer.compareAndPrint(mariaDBSchemaElementCollector.collect(), mariaDBSchemaElementCollector1.collect());
@@ -112,6 +121,40 @@ class JumperDeployerTest {
 		System.out.println("Time spent in comparison by Liquibase : " + c2);
 	}
 	
+	/**
+	 * Method that traces in the console time spent on some methods of the {@link DatabaseMetaData} given by the given {@link Connection}.
+	 * Spied methods are those of {@link DatabaseSchemaMetaData}.
+	 *
+	 * @param connection {@link Connection} from which some methods of {@link DatabaseMetaData} must be listened
+	 * @return a proxy that spy {@link DatabaseMetaData} {@link Connection}.
+	 */
+	private static ConnectionWrapper spyMetadataCalls(Connection connection) {
+		return new ConnectionWrapper(connection) {
+			@Override
+			public DatabaseMetaData getMetaData() throws SQLException {
+				DatabaseMetaData metaData = super.getMetaData();
+				DatabaseMetaDataWrapper wrapper = new DatabaseMetaDataWrapper(metaData);
+				DatabaseSchemaMetaData metadataCallChronoPrinter = (DatabaseSchemaMetaData) Proxy.newProxyInstance(
+						DatabaseSchemaMetaData.class.getClassLoader(), new Class[] { DatabaseSchemaMetaData.class },
+						(proxy, method, args) -> {
+					System.out.println(method.getName() + (args == null ? "()" : ("(" + Arrays.asList(args) + ")")));
+					Chrono c = new Chrono();
+					// input method may be coming from DatabaseSchemaMetaData, not DatabaseMetaData, so we have to adjust it,
+					// else we get a "object is not an instance of declaring class" error
+					// (we don't have the hand on that, JVM calls either DatabaseMetaData ones or DatabaseSchemaMetaData ones since they have same signature)
+					Method databaseMetaDataMethod = DatabaseMetaData.class.getMethod(method.getName(), method.getParameterTypes());
+					Object invoke = databaseMetaDataMethod.invoke(metaData, args);
+					System.out.println(c);
+					return invoke;
+				});
+				return new MethodReferenceDispatcher()
+						.redirect(DatabaseSchemaMetaData.class, metadataCallChronoPrinter)
+						.fallbackOn(wrapper)
+						.build(DatabaseSchemaMetaDataMashup.class);
+			}
+		};
+	}
+	
 	void testSchemaDifference() throws SQLException, LiquibaseException, IOException {
 		MariaDbDataSource liquibaseDataSource = new MariaDbDataSource(MARIADB_CONTAINER.withDatabaseName(LIQUIBASE_SCHEMA_NAME).getJdbcUrl());
 		liquibaseDataSource.setUser(MARIADB_CONTAINER.getUsername());
@@ -120,9 +163,12 @@ class JumperDeployerTest {
 		MariaDbDataSource jumperDataSource = new MariaDbDataSource(MARIADB_CONTAINER.withDatabaseName(JUMPER_SCHEMA_NAME).getJdbcUrl());
 		jumperDataSource.setUser(MARIADB_CONTAINER.getUsername());
 		jumperDataSource.setPassword(MARIADB_CONTAINER.getPassword());
-		Database jumperDatabase = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jumperDataSource.getConnection()));
+		Connection jumperConnection = jumperDataSource.getConnection();
+		Database jumperDatabase = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jumperConnection));
 		
-		Database liquibaseDatabase = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(liquibaseDataSource.getConnection()));
+//		Connection liquibaseConnection = liquibaseDataSource.getConnection();
+		Connection liquibaseConnection = spyMetadataCalls(liquibaseDataSource.getConnection());
+		Database liquibaseDatabase = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(liquibaseConnection));
 		
 		DiffResult result = this.getDiffResult(jumperDatabase, liquibaseDatabase);
 		

@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.codefilarete.jumper.schema.metadata.IndexMetadata;
 import org.codefilarete.jumper.schema.metadata.MariaDBMetadataReader;
-import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
 import org.codefilarete.tool.StringAppender;
@@ -18,7 +18,7 @@ public class MariaDBSchemaElementCollector extends DefaultSchemaElementCollector
 		this(new MariaDBMetadataReader(databaseMetaData));
 	}
 	
-	public MariaDBSchemaElementCollector(MetadataReader metadataReader) {
+	public MariaDBSchemaElementCollector(SchemaMetadataReader metadataReader) {
 		super(metadataReader);
 	}
 	

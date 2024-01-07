@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codefilarete.jumper.schema.metadata.HSQLDBSequenceMetadataReader;
-import org.codefilarete.jumper.schema.metadata.MetadataReader;
+import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
 import org.codefilarete.tool.StringAppender;
@@ -17,7 +17,7 @@ public class HSQLDBSchemaElementCollector extends DefaultSchemaElementCollector 
 		this(new HSQLDBSequenceMetadataReader(databaseMetaData));
 	}
 	
-	public HSQLDBSchemaElementCollector(MetadataReader metadataReader) {
+	public HSQLDBSchemaElementCollector(SchemaMetadataReader metadataReader) {
 		super(metadataReader);
 	}
 	
