@@ -1,9 +1,12 @@
 package org.codefilarete.jumper.ddl.dsl.support;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Set;
 
 import org.codefilarete.jumper.impl.SupportedChange;
+import org.codefilarete.tool.collection.Iterables;
+import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
 
 /**
@@ -15,6 +18,7 @@ public class NewTable extends SupportedChange {
 	private final Set<NewColumn> columns = new KeepOrderSet<>();
 	private NewPrimaryKey primaryKey;
 	private final Set<NewUniqueConstraint> uniqueConstraints = new KeepOrderSet<>();
+	private final Set<NewForeignKey> foreignKeys = new KeepOrderSet<>();
 	
 	public NewTable(String name) {
 		this.table = new Table(name);
@@ -60,12 +64,24 @@ public class NewTable extends SupportedChange {
 		return primaryKey;
 	}
 	
-	public void addUniqueConstraint(String constraintName, String columnName, String... extraColumnNames) {
-		this.uniqueConstraints.add(new NewUniqueConstraint(constraintName, columnName, extraColumnNames));
+	public NewUniqueConstraint addUniqueConstraint(String columnName, String... extraColumnNames) {
+		NewUniqueConstraint uniqueConstraint = new NewUniqueConstraint(columnName, extraColumnNames);
+		this.uniqueConstraints.add(uniqueConstraint);
+		return uniqueConstraint;
+	}
+	
+	public NewForeignKey addForeignKey(String targetTableName) {
+		NewForeignKey foreignKeyCreationSupport = new NewForeignKey(targetTableName);
+		this.foreignKeys.add(foreignKeyCreationSupport);
+		return foreignKeyCreationSupport;
 	}
 	
 	public Set<NewUniqueConstraint> getUniqueConstraints() {
 		return uniqueConstraints;
+	}
+	
+	public Set<NewForeignKey> getForeignKeys() {
+		return foreignKeys;
 	}
 	
 	public static class NewPrimaryKey {
@@ -90,7 +106,7 @@ public class NewTable extends SupportedChange {
 		private boolean nullable = true;
 		private String defaultValue;
 		private boolean autoIncrement = false;
-		private String uniqueConstraintName;
+		private boolean unique = false;
 		
 		/**
 		 * Creates a statement for column creation
@@ -165,23 +181,31 @@ public class NewTable extends SupportedChange {
 			return this;
 		}
 		
-		public String getUniqueConstraintName() {
-			return uniqueConstraintName;
+		public NewColumn unique() {
+			return setUnique(true);
 		}
 		
-		public void setUniqueConstraint(String name) {
-			this.uniqueConstraintName = name;
+		public NewColumn setUnique(boolean unique) {
+			this.unique = unique;
+			return this;
+		}
+		
+		public boolean isUnique() {
+			return unique;
 		}
 	}
 	
 	public static class NewUniqueConstraint {
 		
-		private final String name;
+		private String name;
 		
 		private final KeepOrderSet<String> columns = new KeepOrderSet<>();
 		
-		public NewUniqueConstraint(String name, String columnName, String... extraColumnNames) {
-			this.name = name;
+		public NewUniqueConstraint(Iterable<String> columnNames) {
+			Iterables.copy(columnNames, columns);
+		}
+		
+		public NewUniqueConstraint(String columnName, String... extraColumnNames) {
 			this.columns.add(columnName);
 			this.columns.addAll(Arrays.asList(extraColumnNames));
 		}
@@ -190,8 +214,57 @@ public class NewTable extends SupportedChange {
 			return name;
 		}
 		
+		public void setName(String name) {
+			this.name = name;
+		}
+		
 		public KeepOrderSet<String> getColumns() {
 			return columns;
+		}
+	}
+	
+	/**
+	 * Represents a foreign key declared directly during table creation.
+	 * Some Database vendor such as SQLite doesn't support foreign key creation out of table creation
+	 * (https://stackoverflow.com/a/1884841, https://www.sqlite.org/omitted.html), so in such case one can't use
+	 * {@link org.codefilarete.jumper.ddl.dsl.support.NewForeignKey}
+	 *
+	 * @author Guillaume Mary
+	 */
+	public static class NewForeignKey {
+		
+		private final String referencedTable;
+		
+		@Nullable
+		private String name;
+		
+		private final KeepOrderMap<String, String> columnReferences = new KeepOrderMap<>();
+		
+		public NewForeignKey(String referencedTable) {
+			this.referencedTable = referencedTable;
+		}
+		
+		public String getReferencedTable() {
+			return referencedTable;
+		}
+		
+		@Nullable
+		public String getName() {
+			return name;
+		}
+		
+		public NewForeignKey setName(@Nullable String name) {
+			this.name = name;
+			return this;
+		}
+		
+		public NewForeignKey addColumnReference(String sourceColumn, String referencedColumn) {
+			this.columnReferences.put(sourceColumn, referencedColumn);
+			return this;
+		}
+		
+		public KeepOrderMap<String, String> getColumnReferences() {
+			return columnReferences;
 		}
 	}
 }

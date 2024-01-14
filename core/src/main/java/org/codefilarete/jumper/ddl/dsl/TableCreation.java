@@ -11,9 +11,25 @@ public interface TableCreation extends FluentSupportedChange<NewTable, TableCrea
 	
 	TableCreationColumnOption addColumn(String name, String sqlType);
 	
-	TableCreation primaryKey(String columnName, String... extraColumnNames);
+	TableCreation setPrimaryKey(String columnName, String... extraColumnNames);
 	
-	TableCreation uniqueConstraint(String constraintName, String columnName, String... extraColumnNames);
+	UniqueConstraintInTableCreation addUniqueConstraint(String columnName, String... extraColumnNames);
+	
+	ForeignKeyInTableCreation addForeignKey(String targetTableName);
+	
+	// Can't inherit from ForeignKeyCreation because of conflict with FluentSupportedChange, which makes sens since
+	// this interface hasn't the same goal as FluentSupportedChange
+	interface ForeignKeyInTableCreation extends TableCreation {
+		
+		ForeignKeyInTableCreation addColumnReference(String sourceColumnName, String targetColumnName);
+		
+		ForeignKeyInTableCreation setForeignKeyName(String foreignKeyName);
+	}
+	
+	interface UniqueConstraintInTableCreation extends TableCreation {
+		
+		UniqueConstraintInTableCreation setUniqueConstraintName(String uniqueConstraintName);
+	}
 	
 	interface TableCreationColumnOption extends TableCreation, ColumnOption {
 		
@@ -30,6 +46,15 @@ public interface TableCreation extends FluentSupportedChange<NewTable, TableCrea
 		TableCreationColumnOption primaryKey();
 		
 		@Override
-		TableCreationColumnOption uniqueConstraint(String name);
+		TableCreationColumnOption unique();
+		
+		@Override
+		TableCreationColumnOption unique(String uniqueConstraintName);
+		
+		@Override
+		TableCreationColumnOption references(String tableName, String columnName);
+		
+		@Override
+		TableCreationColumnOption references(String tableName, String columnName, String foreignKeyName);
 	}
 }

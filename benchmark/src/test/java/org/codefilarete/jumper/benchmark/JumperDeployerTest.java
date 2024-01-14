@@ -269,7 +269,7 @@ class JumperDeployerTest {
 								.addColumn("ClosedQuestion_id", "BIGINT")
 								.addColumn("choices_id", "BIGINT").notNull()
 								.addColumn("idx", "INT").notNull()
-								.primaryKey("ClosedQuestion_id", "idx")),
+								.setPrimaryKey("ClosedQuestion_id", "idx")),
 				changeSet("extra_questionnaireElements_tables",
 						createTable("Section")
 								.addColumn("id", "BIGINT").primaryKey()
@@ -335,7 +335,7 @@ class JumperDeployerTest {
 								.addColumn("MultipleChoiceAnswer_id", "BIGINT").notNull()
 								.addColumn("choices_id", "BIGINT").notNull()
 								.addColumn("rank", "INT").notNull()
-								.primaryKey("MultipleChoiceAnswer_id", "rank"),
+								.setPrimaryKey("MultipleChoiceAnswer_id", "rank"),
 						createForeignKey("FK2viobqwt4kki5q04i51fox7ax", "Answer", "Choice")
 								.addColumnReference("choice_id", "id"),
 						createForeignKey("FKc6i2fmg06305gbvmqqnxyxt2i", "Answer_Choice", "Answer")
@@ -369,7 +369,7 @@ class JumperDeployerTest {
 						createTable("DistributionConfiguration_ContactMean")
 								.addColumn("DistributionConfiguration_id", "BIGINT")
 								.addColumn("personas_id", "BIGINT")
-								.primaryKey("DistributionConfiguration_id", "personas_id"),
+								.setPrimaryKey("DistributionConfiguration_id", "personas_id"),
 						createForeignKey("FK3dinoqtgbhiv0tx7fmtqwj7aw", "DistributionConfiguration", "Message")
 								.addColumnReference("messageTemplate_id", "id"),
 						createForeignKey("FK3ir0g80egqsx0w4g8gdjodorr", "Distribution", "Message")

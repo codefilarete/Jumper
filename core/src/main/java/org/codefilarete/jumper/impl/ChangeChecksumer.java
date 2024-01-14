@@ -74,7 +74,8 @@ public class ChangeChecksumer {
 	
 	protected String giveSignature(NewTable newTable) {
 		List<String> columnsSignature = Iterables.collect(newTable.getColumns(), this::giveSignature, ArrayList::new);
-		List<String> ukSignature = Iterables.collect(newTable.getUniqueConstraints(), this::giveSignature, ArrayList::new);
+		List<String> fkSignature = Iterables.collect(newTable.getForeignKeys(), this::giveSignature, ArrayList::new);
+		List<String> ucSignature = Iterables.collect(newTable.getUniqueConstraints(), this::giveSignature, ArrayList::new);
 		StringAppender result = new StringAppender() {
 			@Override
 			public StringAppender cat(Object s) {
@@ -88,8 +89,10 @@ public class ChangeChecksumer {
 				.ccat(columnsSignature, ", ")
 				.cat(" ")
 				.catIf(newTable.getPrimaryKey() != null, (Supplier) () -> giveSignature(newTable.getPrimaryKey()))
-				.cat(" ")
-				.ccat(ukSignature, ", ")
+				.cat(", ")
+				.ccat(fkSignature, ", ")
+				.cat(", ")
+				.ccat(ucSignature, ", ")
 				.toString();
 	}
 	
@@ -101,7 +104,7 @@ public class ChangeChecksumer {
 						newColumn.isNullable(),
 						newColumn.getDefaultValue(),
 						newColumn.isAutoIncrement(),
-						newColumn.getUniqueConstraintName(),
+						newColumn.isUnique(),
 						" ")
 				.toString();
 	}
@@ -111,9 +114,15 @@ public class ChangeChecksumer {
 		return result.cat("PK ").ccat(primaryKey.getColumns(), " ").toString();
 	}
 	
+	protected String giveSignature(NewTable.NewForeignKey newForeignKey) {
+		StringAppender result = new StringAppender();
+		return result.cat("FK ", newForeignKey.getReferencedTable(), " ", newForeignKey.getName(), " ")
+				.ccat(newForeignKey.getColumnReferences().entrySet(), " ").toString();
+	}
+	
 	protected String giveSignature(NewTable.NewUniqueConstraint newUniqueConstraint) {
 		StringAppender result = new StringAppender();
-		return result.cat("UK ", newUniqueConstraint.getName(), " ").ccat(newUniqueConstraint.getColumns(), " ").toString();
+		return result.cat("UC ", newUniqueConstraint.getName(), " ").ccat(newUniqueConstraint.getColumns(), " ").toString();
 	}
 	
 	protected String giveSignature(DropTable dropTable) {

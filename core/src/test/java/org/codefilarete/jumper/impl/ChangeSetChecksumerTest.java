@@ -61,17 +61,23 @@ class ChangeSetChecksumerTest {
 		newTable.addColumn(new NewColumn("a", "int").autoIncrement());
 		newTable.addColumn(new NewColumn("b", "varchar").notNull());
 		newTable.addColumn(new NewColumn("c", "blob").setDefaultValue("42"));
-		newTable.addUniqueConstraint("xyz", "x", "y", "z");
-		newTable.addUniqueConstraint("ab", "a", "b");
+		newTable.addColumn(new NewColumn("d", "decimal").unique());
+		newTable.addUniqueConstraint("x", "y", "z").setName("xyz");
+		newTable.addUniqueConstraint( "a", "b").setName("ab");
+		newTable.addForeignKey( "targetName")
+				.setName("fkName")
+				.addColumnReference("xx", "yy");
 		newTable.setPrimaryKey("a", "b", "c");
 		String signature = testInstance.giveSignature(newTable);
 		assertThat(signature).isEqualTo("NewTable" +
-				" a int true null true null," +
-				" b varchar false null false null," +
-				" c blob true 42 false null" +
-				" PK a b c" +
-				" UK xyz x y z," +
-				" UK ab a b"
+				" a int true null true false," +
+				" b varchar false null false false," +
+				" c blob true 42 false false," +
+				" d decimal true null false true" +
+				" PK a b c," +
+				" FK targetName fkName xx=yy," +
+				" UC xyz x y z," +
+				" UC ab a b"
 		);
 	}
 	

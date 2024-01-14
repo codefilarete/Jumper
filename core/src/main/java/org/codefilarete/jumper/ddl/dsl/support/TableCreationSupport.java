@@ -46,11 +46,40 @@ public class TableCreationSupport extends AbstractSupportedChangeSupport<NewTabl
 					}
 					
 					@Override
-					public TableCreationColumnOption uniqueConstraint(String name) {
-						newColumn.setUniqueConstraint(name);
+					public ColumnOption unique() {
+						newColumn.unique();
+						return null;
+					}
+					
+					@Override
+					public ColumnOption unique(String uniqueConstraintName) {
+						NewTable.NewUniqueConstraint uniqueConstraint = table.addUniqueConstraint(newColumn.getName());
+						uniqueConstraint.setName(uniqueConstraintName);
+						return null;
+					}
+					
+					@Override
+					public ColumnOption references(String tableName, String columnName) {
+						// we don't do anything here because it is overwritten below by appropriate redirection to
+						// handle extra options that adds column to the
+						return null;
+					}
+					
+					@Override
+					public ColumnOption references(String tableName, String columnName, String foreignKeyName) {
 						return null;
 					}
 				}, true)
+				.<TableCreationColumnOption, String, String, TableCreationColumnOption>
+						redirect(TableCreationColumnOption::references, (tableName, referencedColumName) -> {
+							table.addForeignKey(tableName).addColumnReference(newColumn.getName(), referencedColumName);
+				})
+				.<TableCreationColumnOption, String, String, String, TableCreationColumnOption>
+						redirect(TableCreationColumnOption::references, (tableName, referencedColumName, foreignKeyColumnName) -> {
+					NewTable.NewForeignKey newForeignKey = table.addForeignKey(tableName);
+					newForeignKey.setName(foreignKeyColumnName);
+					newForeignKey.addColumnReference(newColumn.getName(), referencedColumName);
+				})
 				.fallbackOn(this)
 				.build(TableCreationColumnOption.class);
 	}
@@ -68,15 +97,28 @@ public class TableCreationSupport extends AbstractSupportedChangeSupport<NewTabl
 	}
 	
 	@Override
-	public TableCreation primaryKey(String columnName, String... extraColumnNames) {
+	public TableCreation setPrimaryKey(String columnName, String... extraColumnNames) {
 		table.setPrimaryKey(columnName, extraColumnNames);
 		return this;
 	}
 	
 	@Override
-	public TableCreation uniqueConstraint(String constraintName, String columnName, String... extraColumnNames) {
-		table.addUniqueConstraint(constraintName, columnName, extraColumnNames);
-		return this;
+	public UniqueConstraintInTableCreation addUniqueConstraint(String columnName, String... extraColumnNames) {
+		NewTable.NewUniqueConstraint uniqueConstraintSupport = table.addUniqueConstraint(columnName, extraColumnNames);
+		return new MethodReferenceDispatcher()
+				.redirect(UniqueConstraintInTableCreation::setUniqueConstraintName, uniqueConstraintSupport::setName)
+				.fallbackOn(this)
+				.build(UniqueConstraintInTableCreation.class);
+	}
+	
+	@Override
+	public ForeignKeyInTableCreation addForeignKey(String targetTableName) {
+		NewTable.NewForeignKey foreignKeyCreationSupport = table.addForeignKey(targetTableName);
+		return new MethodReferenceDispatcher()
+				.redirect(ForeignKeyInTableCreation::addColumnReference, (s1, s2) -> { foreignKeyCreationSupport.addColumnReference(s1, s2); })
+				.redirect(ForeignKeyInTableCreation::setForeignKeyName, s -> { foreignKeyCreationSupport.setName(s); })
+				.fallbackOn(this)
+				.build(ForeignKeyInTableCreation.class);
 	}
 	
 	@Override
