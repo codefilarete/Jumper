@@ -26,7 +26,7 @@ public class DataSourceConnectionProvider implements SeparateConnectionProvider 
 	
 	public DataSourceConnectionProvider(DataSource dataSource, int connectionOpeningRetryMaxCount) {
 		this.dataSource = dataSource;
-		// Since Retryer is expected to be Thread-safe we instanciate is once
+		// Since Retryer is expected to be Thread-safe we instantiate is once
 		this.closedConnectionRetryer = new ClosedConnectionRetryer(connectionOpeningRetryMaxCount);
 	}
 	
