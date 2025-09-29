@@ -9,7 +9,6 @@ import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.MySQLMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
-import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 
 public class MySQLSchemaElementCollector extends DefaultSchemaElementCollector {
@@ -54,8 +53,8 @@ public class MySQLSchemaElementCollector extends DefaultSchemaElementCollector {
 	}
 	
 	@Override
-	protected MySQLSchema createSchema(StringAppender schemaName) {
-		return new MySQLSchema(Strings.preventEmpty(schemaName.toString(), null));
+	protected MySQLSchema createSchema(String schemaName) {
+		return new MySQLSchema(Strings.preventEmpty(schemaName, null));
 	}
 	
 	@Override

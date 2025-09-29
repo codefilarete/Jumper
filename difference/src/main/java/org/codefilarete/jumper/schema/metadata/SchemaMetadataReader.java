@@ -1,9 +1,12 @@
 package org.codefilarete.jumper.schema.metadata;
 
+import java.sql.DatabaseMetaData;
 import java.util.Set;
 import java.util.SortedSet;
 
 public interface SchemaMetadataReader {
+	
+	DatabaseMetaData getMetaData();
 	
 	SortedSet<ColumnMetadata> giveColumns(String catalog, String schema, String tableNamePattern);
 	

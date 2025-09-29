@@ -8,7 +8,6 @@ import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.PostgreSQLSequenceMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
-import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 
 public class PostgreSQLSchemaElementCollector extends DefaultSchemaElementCollector {
@@ -53,8 +52,8 @@ public class PostgreSQLSchemaElementCollector extends DefaultSchemaElementCollec
 	}
 	
 	@Override
-	protected PostgreSQLSchema createSchema(StringAppender schemaName) {
-		return new PostgreSQLSchema(Strings.preventEmpty(schemaName.toString(), null));
+	protected PostgreSQLSchema createSchema(String schemaName) {
+		return new PostgreSQLSchema(Strings.preventEmpty(schemaName, null));
 	}
 	
 	public static class PostgreSQLSchema extends Schema {

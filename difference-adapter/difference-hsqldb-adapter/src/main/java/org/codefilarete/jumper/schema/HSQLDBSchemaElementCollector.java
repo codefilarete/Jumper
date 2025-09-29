@@ -8,7 +8,6 @@ import org.codefilarete.jumper.schema.metadata.HSQLDBSequenceMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
-import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 
 public class HSQLDBSchemaElementCollector extends DefaultSchemaElementCollector {
@@ -53,8 +52,8 @@ public class HSQLDBSchemaElementCollector extends DefaultSchemaElementCollector 
 	}
 	
 	@Override
-	protected HSQLDBSchema createSchema(StringAppender schemaName) {
-		return new HSQLDBSchema(Strings.preventEmpty(schemaName.toString(), null));
+	protected HSQLDBSchema createSchema(String schemaName) {
+		return new HSQLDBSchema(Strings.preventEmpty(schemaName, null));
 	}
 	
 	public static class HSQLDBSchema extends Schema {

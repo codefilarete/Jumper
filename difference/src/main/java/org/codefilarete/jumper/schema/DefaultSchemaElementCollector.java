@@ -2,6 +2,7 @@ package org.codefilarete.jumper.schema;
 
 import java.sql.DatabaseMetaData;
 import java.sql.JDBCType;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -86,13 +87,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 	}
 	
 	public Schema collect() {
-		StringAppender schemaName = new StringAppender();
-		schemaName.catIf(!Strings.isEmpty(catalog), catalog);
-		if (!Strings.isEmpty(schema)) {
-			schemaName.catIf(schemaName.length() != 0, ".").cat(schema);
-		}
-		
-		Schema result = createSchema(schemaName);
+		Schema result = createSchema(buildNameSpace());
 		
 		// Collecting tables
 		Set<TableMetadata> tableMetadata = metadataReader.giveTables(catalog, schema, tableNamePattern);
@@ -174,6 +169,29 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		return result;
 	}
 	
+	private String buildNameSpace() {
+		StringAppender namespace = new StringAppender();
+		String catalogName = nullable(super.catalog).getOr(() -> {
+			try {
+				return metadataReader.getMetaData().getConnection().getCatalog();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		namespace.catIf(!Strings.isEmpty(catalogName), catalogName);
+		String schemaName = nullable(super.schema).getOr(() -> {
+			try {
+				return metadataReader.getMetaData().getConnection().getSchema();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		if (!Strings.isEmpty(schemaName)) {
+			namespace.catIf(namespace.length() != 0, ".").cat(schemaName);
+		}
+		return namespace.toString();
+	}
+	
 	private static AscOrDesc mapBooleanToDirection(Boolean ascOrDesc) {
 		AscOrDesc direction;
 		if (ascOrDesc == null) {
@@ -195,8 +213,8 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		return !matchingPkName.isPresent();
 	}
 	
-	protected Schema createSchema(StringAppender schemaName) {
-		return new Schema(Strings.preventEmpty(schemaName.toString(), null));
+	protected Schema createSchema(String schemaName) {
+		return new Schema(Strings.preventEmpty(schemaName, null));
 	}
 	
 	protected void completeSchema(Schema result) {

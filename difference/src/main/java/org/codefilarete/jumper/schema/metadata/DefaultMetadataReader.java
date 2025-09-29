@@ -39,6 +39,11 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 	}
 	
 	@Override
+	public DatabaseMetaData getMetaData() {
+		return metaData;
+	}
+	
+	@Override
 	public SortedSet<ColumnMetadata> giveColumns(String catalog, String schema, String tablePattern) {
 		try (ResultSet tableResultSet = metaData.getColumns(catalog, schema, tablePattern, "%")) {
 			ResultSetIterator<ColumnMetadata> resultSetIterator = new ResultSetIterator<ColumnMetadata>(tableResultSet) {
