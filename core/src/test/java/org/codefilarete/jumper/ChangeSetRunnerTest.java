@@ -21,7 +21,7 @@ import org.codefilarete.jumper.impl.SQLChange;
 import org.codefilarete.stalactite.sql.ConnectionProvider;
 import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.function.Hanger.Holder;
-import org.codefilarete.tool.trace.ModifiableInt;
+import org.codefilarete.tool.trace.MutableInt;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -79,7 +79,7 @@ public class ChangeSetRunnerTest {
 		Connection connectionMock = Mockito.mock(Connection.class);
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
 		
-		ModifiableInt executionCounter = new ModifiableInt();
+		MutableInt executionCounter = new MutableInt();
 		
 		AbstractJavaChange dummyUpdate = new AbstractJavaChange() {
 			@Override
@@ -113,7 +113,7 @@ public class ChangeSetRunnerTest {
 		Connection connectionMock = Mockito.mock(Connection.class);
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
 		
-		ModifiableInt executionCounter = new ModifiableInt();
+		MutableInt executionCounter = new MutableInt();
 		
 		Change dummyUpdate = new AbstractJavaChange() {
 			@Override
@@ -147,7 +147,7 @@ public class ChangeSetRunnerTest {
 		Connection connectionMock = Mockito.mock(Connection.class);
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
 		
-		ModifiableInt executionCounter = new ModifiableInt();
+		MutableInt executionCounter = new MutableInt();
 		
 		Change dummyUpdate = new AbstractJavaChange() {
 			@Override
@@ -191,8 +191,8 @@ public class ChangeSetRunnerTest {
 		Connection connectionMock = Mockito.mock(Connection.class);
 		when(connectionMock.createStatement()).thenReturn(Mockito.mock(PreparedStatement.class));
 		ChangeSet change = new ChangeSet("dummyId").addChanges(new DropTable("toto"));
-		ModifiableInt beforeRunCount = new ModifiableInt();
-		ModifiableInt afterRunCount = new ModifiableInt();
+		MutableInt beforeRunCount = new MutableInt();
+		MutableInt afterRunCount = new MutableInt();
 		LocalChangeRunner localChangeRunner = new LocalChangeRunner(Arrays.asList(change), () -> connectionMock, new InMemoryChangeStorage());
 		localChangeRunner.addExecutionListener(new NoopExecutionListener() {
 			@Override

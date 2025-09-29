@@ -20,12 +20,12 @@ public abstract class AbstractJavaChange implements Change, ChecksumCapableChang
 	}
 	
 	/**
-	 * Implemented to compute the Checksum of this class.
-	 * Therefore it depends on this class bytecode. This makes it depends of every code modification (except comments, some spaces, line breaks, etc).
-	 * Thus this principle has some drawbacks :
+	 * Implemented to compute the {@link Checksum} of this class.
+	 * Therefore, it depends on this class bytecode. This makes it depends on every code modification (except comments, some spaces, line breaks, etc).
+	 * Thus, this principle has some drawbacks :
 	 * - it doesn't take dependency to other classes into account
-	 * - even code modification of non business logic (outside execute method) alters it
-	 * - compiler and Java version may also alters it
+	 * - even code modification of non business logic (outside {@link #run(Context, Connection)} method) alters it
+	 * - compiler and Java version may also alter it
 	 * 
 	 * So it must be considered as a best effort / minimal behavior and is far from perfect.
 	 * <br/><br/>

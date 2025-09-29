@@ -11,7 +11,7 @@ import org.assertj.core.presentation.StandardRepresentation;
 import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.function.Functions;
 import org.codefilarete.tool.function.Predicates;
-import org.codefilarete.tool.trace.ModifiableInt;
+import org.codefilarete.tool.trace.MutableInt;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -39,7 +39,7 @@ class QueueDifferTest {
 	
 	private static class TestData {
 		
-		private final ModifiableInt longProvider = new ModifiableInt();
+		private final MutableInt longProvider = new MutableInt();
 		private final Country country1 = new Country(longProvider.increment());
 		private final Country country2 = new Country(longProvider.increment());
 		private final Country country3 = new Country(longProvider.increment());

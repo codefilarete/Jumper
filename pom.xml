@@ -24,10 +24,12 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<junit.version>5.9.0</junit.version>
 		<slf4j-api.version>1.7.12</slf4j-api.version>
-		<hsqldb.version>2.3.2</hsqldb.version>
+		<hsqldb.version>2.7.4</hsqldb.version>
 		<mockito.version>4.6.1</mockito.version>
-		<stalactite.version>2.0.0-SNAPSHOT</stalactite.version>
+		<stalactite.version>3.0.0-SNAPSHOT</stalactite.version>
 		<assertj.version>3.23.1</assertj.version>
+		<sonar.version>3.10.0.2594</sonar.version>
+		<jacoco.version>0.8.11</jacoco.version>
 	</properties>
 	
 	<dependencies>

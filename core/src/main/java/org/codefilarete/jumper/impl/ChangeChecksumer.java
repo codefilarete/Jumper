@@ -32,7 +32,7 @@ public class ChangeChecksumer {
 	
 	/**
 	 * Computes the checksum of given change. Only works for well-known {@link ChangeSet} class, if not known, then a {@link NotImplementedException} is thrown.
-	 * Checksum must be considered as a signature of the business logic of the update.
+	 * Checksum must be considered as a unique signature of the business logic of the update.
 	 *
 	 * @return a "business logic"-rely-on Checksum
 	 */

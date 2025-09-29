@@ -13,6 +13,7 @@ import org.codefilarete.jumper.SeparateConnectionProvider;
 import org.codefilarete.jumper.UpdateProcessSemaphore;
 import org.codefilarete.stalactite.engine.PersistenceContext;
 import org.codefilarete.stalactite.query.model.Operators;
+import org.codefilarete.stalactite.query.model.Where;
 import org.codefilarete.stalactite.sql.Dialect;
 import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
@@ -110,7 +111,7 @@ public class JdbcUpdateProcessSemaphore implements UpdateProcessSemaphore {
 		TransactionSupport transactionSupport = new TransactionSupport(currentConnection);
 		try {
 			transactionSupport.runAtomically(c -> {
-				persistenceContext.delete(storageTable).where(storageTable.id, Operators.eq(lockIdentifier))
+				persistenceContext.delete(storageTable, new Where<>(storageTable.id, Operators.eq(lockIdentifier)))
 						.execute();
 			});
 		} catch (SQLException e) {
@@ -143,7 +144,7 @@ public class JdbcUpdateProcessSemaphore implements UpdateProcessSemaphore {
 			// we register a Binder for reading and writing a Checksum in the configured database column as a String
 			Dialect dialect = persistenceContext.getDialect();
 			SimpleConnectionProvider localConnectionProvider = new SimpleConnectionProvider(connection);
-			DDLDeployer ddlDeployer = new DDLDeployer(dialect.getSqlTypeRegistry(), localConnectionProvider);
+			DDLDeployer ddlDeployer = new DDLDeployer(dialect, localConnectionProvider);
 			ddlDeployer.getDdlGenerator().addTables(storageTable);
 			Connection connection = localConnectionProvider.giveConnection();
 			try {

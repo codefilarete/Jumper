@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.codefilarete.jumper.schema.metadata.PreparedCriteria.Operator;
-import org.codefilarete.tool.trace.ModifiableInt;
+import org.codefilarete.tool.trace.MutableInt;
 
 import static org.codefilarete.jumper.schema.metadata.PreparedCriteria.asSQLCriteria;
 
@@ -64,7 +64,7 @@ public class ExportedKeysMetadataReader {
 		indexSelectSQL += " ORDER BY FKTABLE_CAT, FKTABLE_SCHEM, FKTABLE_NAME, KEY_SEQ";
 		
 		PreparedStatement preparedStatement = metaData.getConnection().prepareStatement(indexSelectSQL);
-		ModifiableInt preparedParameterIndex = new ModifiableInt(0);
+		MutableInt preparedParameterIndex = new MutableInt(0);
 		Stream.of(criteria)
 				.flatMap(preparedCriteria -> preparedCriteria.getValues().stream())
 				.map(String.class::cast)

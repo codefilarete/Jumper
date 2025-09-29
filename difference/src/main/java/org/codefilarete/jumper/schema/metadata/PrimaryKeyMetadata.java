@@ -31,7 +31,7 @@ public class PrimaryKeyMetadata extends TableNamespaceElementSupport implements 
 		return "PrimaryKey{" +
 				"name='" + name + '\'' +
 				", sourceTable=" + getTableName() +
-				", columns=" + columns.getSurrogate() +
+				", columns=" + columns.getDelegate() +
 				'}';
 	}
 }

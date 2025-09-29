@@ -2,10 +2,12 @@ package org.codefilarete.jumper;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.codefilarete.jumper.ChangeStorage.ChangeSignet;
 import org.codefilarete.jumper.impl.JdbcChangeStorage;
-import org.codefilarete.stalactite.sql.HSQLDBDialect;
+import org.codefilarete.stalactite.sql.Dialect;
+import org.codefilarete.stalactite.sql.HSQLDBDialectBuilder;
 import org.codefilarete.stalactite.sql.SimpleConnectionProvider;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.sql.result.Row;
@@ -31,7 +33,7 @@ public class JdbcChangeStorageTest {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
 		SimpleConnectionProvider connectionProvider = new SimpleConnectionProvider(hsqldbInMemoryDataSource.getConnection());
 		
-		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
+		Dialect hsqldbDialect = new HSQLDBDialectBuilder().build();
 		
 		// declaring mapping of Checksum simple type
 		hsqldbDialect.getColumnBinderRegistry().register(DEFAULT_STORAGE_TABLE.checksum,
@@ -39,7 +41,7 @@ public class JdbcChangeStorageTest {
 		hsqldbDialect.getSqlTypeRegistry().put(DEFAULT_STORAGE_TABLE.checksum, "VARCHAR(255)");
 		
 		// deploying table to database
-		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
+		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect, connectionProvider);
 		ddlDeployer.getDdlGenerator().addTables(DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
@@ -49,11 +51,13 @@ public class JdbcChangeStorageTest {
 		testInstance.persist(new ChangeSignet("dummyId", checksum));
 		
 		// verifications
+		Map<String, ResultSetReader<?>> readers = Maps.forHashMap(String.class, (Class<ResultSetReader<?>>) (Class) ResultSetReader.class)
+				.add("id", DefaultResultSetReaders.STRING_READER)
+				.add(DEFAULT_STORAGE_TABLE.createdAt.getName(), DefaultResultSetReaders.LOCALDATETIME_READER)
+				.add(DEFAULT_STORAGE_TABLE.checksum.getName(), DefaultResultSetReaders.STRING_READER);
 		RowIterator rowIterator = new RowIterator(
 				connectionProvider.giveConnection().prepareStatement("select * from " + DEFAULT_STORAGE_TABLE.getAbsoluteName()).executeQuery(),
-				Maps.asMap("id", (ResultSetReader) DefaultResultSetReaders.STRING_READER)
-				.add(DEFAULT_STORAGE_TABLE.createdAt.getName(), DefaultResultSetReaders.LOCALDATETIME_READER)
-				.add(DEFAULT_STORAGE_TABLE.checksum.getName(), DefaultResultSetReaders.STRING_READER));
+				readers);
 		assertThat(rowIterator.hasNext()).isTrue();
 		Row row = rowIterator.next();
 		assertThat(row.get(DEFAULT_STORAGE_TABLE.id.getName())).isEqualTo("dummyId");

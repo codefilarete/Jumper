@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.codefilarete.jumper.schema.metadata.PreparedCriteria.Operator;
-import org.codefilarete.tool.trace.ModifiableInt;
+import org.codefilarete.tool.trace.MutableInt;
 
 import static org.codefilarete.jumper.schema.metadata.PreparedCriteria.asSQLCriteria;
 
@@ -73,7 +73,7 @@ public class ColumnMetadataReader {
 		columnSelectSQL += " ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, ORDINAL_POSITION";
 		
 		PreparedStatement preparedStatement = metaData.getConnection().prepareStatement(columnSelectSQL);
-		ModifiableInt preparedParameterIndex = new ModifiableInt(0);
+		MutableInt preparedParameterIndex = new MutableInt(0);
 		Stream.of(criteria)
 				.flatMap(preparedCriteria -> preparedCriteria.getValues().stream())
 				.map(String.class::cast)
@@ -86,21 +86,6 @@ public class ColumnMetadataReader {
 				});
 		return preparedStatement.executeQuery();
 	}
-	
-//	Configuration buildConfiguration(DatabaseMetaData metaData) {
-//		final Configuration configuration;
-//		org.mariadb.jdbc.Configuration conf;
-//		boolean noBackslashEscapes;
-//		try {
-//			org.mariadb.jdbc.Connection connection = (org.mariadb.jdbc.Connection) metaData.getConnection();
-//			conf = connection.getContext().getConf();
-//			noBackslashEscapes = (connection.getContext().getServerStatus() & ServerStatus.NO_BACKSLASH_ESCAPES) > 0;
-//		} catch (SQLException e) {
-//			throw new RuntimeException(e);
-//		}
-//		;
-//		return new Configuration(noBackslashEscapes, conf.tinyInt1isBit(), conf.yearIsDateType());
-//	}
 	
 	private String dataTypeClause(String fullTypeColumnName) {
 		return " CASE data_type"

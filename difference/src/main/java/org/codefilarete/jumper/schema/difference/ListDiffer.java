@@ -14,7 +14,7 @@ import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.codefilarete.tool.collection.PairIterator.UntilBothIterator;
 import org.codefilarete.tool.function.Predicates;
-import org.codefilarete.tool.trace.ModifiableInt;
+import org.codefilarete.tool.trace.MutableInt;
 
 import static org.codefilarete.jumper.schema.difference.State.*;
 
@@ -49,13 +49,13 @@ public class ListDiffer<T, I> implements CollectionDiffer<T, List<T>, IndexedDif
 		Map<I, Set<Integer>> beforeIndexesPerId = new HashMap<>();
 		Map<T, Set<Integer>> afterIndexes = new HashMap<>();
 		Map<I, Set<Integer>> afterIndexesPerId = new HashMap<>();
-		ModifiableInt beforeIndex = new ModifiableInt(-1);	// because indexes should start at 0 as List does
+		MutableInt beforeIndex = new MutableInt(-1);	// because indexes should start at 0 as List does
 		before.forEach(o -> {
 			int index = beforeIndex.increment();
 			beforeIndexes.computeIfAbsent(o, k -> new HashSet<>()).add(index);
 			beforeIndexesPerId.computeIfAbsent(idProvider.apply(o), k -> new HashSet<>()).add(index);
 		});
-		ModifiableInt afterIndex = new ModifiableInt(-1);	// because indexes should start at 0 as List does
+		MutableInt afterIndex = new MutableInt(-1);	// because indexes should start at 0 as List does
 		after.forEach(o -> {
 			int index = afterIndex.increment();
 			afterIndexes.computeIfAbsent(o, k -> new HashSet<>()).add(index);

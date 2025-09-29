@@ -5,9 +5,11 @@ import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
 import org.codefilarete.jumper.impl.JdbcUpdateProcessSemaphore;
-import org.codefilarete.stalactite.sql.HSQLDBDialect;
+import org.codefilarete.stalactite.sql.Dialect;
+import org.codefilarete.stalactite.sql.HSQLDBDialectBuilder;
 import org.codefilarete.stalactite.sql.ddl.DDLDeployer;
 import org.codefilarete.stalactite.sql.result.Row;
 import org.codefilarete.stalactite.sql.result.RowIterator;
@@ -31,10 +33,10 @@ class JdbcUpdateProcessSemaphoreTest {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
 		SeparateConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
 		
-		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
+		Dialect hsqldbDialect = new HSQLDBDialectBuilder().build();
 		
 		// deploying table to database
-		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
+		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect, connectionProvider);
 		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessSemaphore.DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
@@ -44,12 +46,13 @@ class JdbcUpdateProcessSemaphoreTest {
 		testInstance.acquireLock("dummy identifier");
 		
 		// verifications
+		Map<String, ResultSetReader<?>> readers = Maps.forHashMap(String.class, (Class<ResultSetReader<?>>) (Class) ResultSetReader.class)
+				.add("id", DefaultResultSetReaders.STRING_READER)
+				.add(DEFAULT_STORAGE_TABLE.createdAt.getName(), new LambdaParameterBinder<>(DefaultParameterBinders.LONG_BINDER, Instant::ofEpochMilli, Instant::toEpochMilli))
+				.add(DEFAULT_STORAGE_TABLE.createdBy.getName(), DefaultResultSetReaders.STRING_READER);
 		RowIterator rowIterator = new RowIterator(
 				connectionProvider.giveConnection().prepareStatement("select * from " + DEFAULT_STORAGE_TABLE.getAbsoluteName()).executeQuery(),
-				Maps.asMap("id", (ResultSetReader) DefaultResultSetReaders.STRING_READER)
-						.add(DEFAULT_STORAGE_TABLE.createdAt.getName(),
-								new LambdaParameterBinder<>(DefaultParameterBinders.LONG_BINDER, Instant::ofEpochMilli, Instant::toEpochMilli))
-						.add(DEFAULT_STORAGE_TABLE.createdBy.getName(), DefaultResultSetReaders.STRING_READER));
+				readers);
 		assertThat(rowIterator.hasNext()).isTrue();
 		Row row = rowIterator.next();
 		assertThat(row.get(DEFAULT_STORAGE_TABLE.id.getName())).isEqualTo("dummy identifier");
@@ -62,10 +65,10 @@ class JdbcUpdateProcessSemaphoreTest {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
 		SeparateConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
 		
-		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
+		Dialect hsqldbDialect = new HSQLDBDialectBuilder().build();
 		
 		// deploying table to database
-		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
+		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect, connectionProvider);
 		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessSemaphore.DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
@@ -82,10 +85,10 @@ class JdbcUpdateProcessSemaphoreTest {
 		HSQLDBInMemoryDataSource hsqldbInMemoryDataSource = new HSQLDBInMemoryDataSource();
 		SeparateConnectionProvider connectionProvider = new DataSourceConnectionProvider(hsqldbInMemoryDataSource);
 		
-		HSQLDBDialect hsqldbDialect = new HSQLDBDialect();
+		Dialect hsqldbDialect = new HSQLDBDialectBuilder().build();
 		
 		// deploying table to database
-		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect.getSqlTypeRegistry(), connectionProvider);
+		DDLDeployer ddlDeployer = new DDLDeployer(hsqldbDialect, connectionProvider);
 		ddlDeployer.getDdlGenerator().addTables(JdbcUpdateProcessSemaphore.DEFAULT_STORAGE_TABLE);
 		ddlDeployer.deployDDL();
 		
@@ -97,12 +100,13 @@ class JdbcUpdateProcessSemaphoreTest {
 		testInstance.releaseLock("dummy identifier");
 		
 		// verifications
+		Map<String, ResultSetReader<?>> readers = Maps.forHashMap(String.class, (Class<ResultSetReader<?>>) (Class) ResultSetReader.class)
+				.add("id", DefaultResultSetReaders.STRING_READER)
+				.add(DEFAULT_STORAGE_TABLE.createdAt.getName(), new LambdaParameterBinder<>(DefaultParameterBinders.LONG_BINDER, Instant::ofEpochMilli, Instant::toEpochMilli))
+				.add(DEFAULT_STORAGE_TABLE.createdBy.getName(), DefaultResultSetReaders.STRING_READER);
 		RowIterator rowIterator = new RowIterator(
 				connectionProvider.giveConnection().prepareStatement("select * from " + DEFAULT_STORAGE_TABLE.getAbsoluteName()).executeQuery(),
-				Maps.asMap("id", (ResultSetReader) DefaultResultSetReaders.STRING_READER)
-						.add(DEFAULT_STORAGE_TABLE.createdAt.getName(),
-								new LambdaParameterBinder<>(DefaultParameterBinders.LONG_BINDER, Instant::ofEpochMilli, Instant::toEpochMilli))
-						.add(DEFAULT_STORAGE_TABLE.createdBy.getName(), DefaultResultSetReaders.STRING_READER));
+				readers);
 		assertThat(rowIterator.hasNext()).withFailMessage(() -> "Expecting no result but found " + rowIterator.next().getContent()).isFalse();
 	}
 }

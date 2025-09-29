@@ -59,27 +59,19 @@ public class TableCreationSupport extends AbstractSupportedChangeSupport<NewTabl
 					}
 					
 					@Override
-					public ColumnOption references(String tableName, String columnName) {
-						// we don't do anything here because it is overwritten below by appropriate redirection to
-						// handle extra options that adds column to the
+					public ColumnOption references(String tableName, String referencedColumName) {
+						table.addForeignKey(tableName).addColumnReference(newColumn.getName(), referencedColumName);
 						return null;
 					}
 					
 					@Override
-					public ColumnOption references(String tableName, String columnName, String foreignKeyName) {
+					public ColumnOption references(String tableName, String referencedColumName, String foreignKeyName) {
+						NewTable.NewForeignKey newForeignKey = table.addForeignKey(tableName);
+						newForeignKey.setName(foreignKeyName);
+						newForeignKey.addColumnReference(newColumn.getName(), referencedColumName);
 						return null;
 					}
 				}, true)
-				.<TableCreationColumnOption, String, String, TableCreationColumnOption>
-						redirect(TableCreationColumnOption::references, (tableName, referencedColumName) -> {
-							table.addForeignKey(tableName).addColumnReference(newColumn.getName(), referencedColumName);
-				})
-				.<TableCreationColumnOption, String, String, String, TableCreationColumnOption>
-						redirect(TableCreationColumnOption::references, (tableName, referencedColumName, foreignKeyColumnName) -> {
-					NewTable.NewForeignKey newForeignKey = table.addForeignKey(tableName);
-					newForeignKey.setName(foreignKeyColumnName);
-					newForeignKey.addColumnReference(newColumn.getName(), referencedColumName);
-				})
 				.fallbackOn(this)
 				.build(TableCreationColumnOption.class);
 	}

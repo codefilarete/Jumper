@@ -18,8 +18,12 @@ import org.codefilarete.stalactite.sql.ddl.structure.Column;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
+import org.codefilarete.stalactite.sql.statement.binder.NameEnumParameterBinder;
 import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader;
+import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader.LambdaResultSetReader;
 import org.codefilarete.tool.bean.Objects;
+
+import static org.codefilarete.stalactite.sql.statement.binder.ResultSetReader.ofMethodReference;
 
 /**
  * A {@link SchemaMetadataReader} based on JDBC {@link DatabaseMetaData} methods to retrieve requested elements.
@@ -296,7 +300,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - {@link DatabaseMetaData#procedureNoResult} : Does not return a return value
 		 * - {@link DatabaseMetaData#procedureReturnsResult} : Returns a return value
 		 */
-		public final ColumnReader<Short> procedureType = new ColumnReader<>(addColumn("PROCEDURE_TYPE", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> procedureType = new ColumnReader<>(addColumn("PROCEDURE_TYPE", short.class), ofMethodReference(ResultSet::getShort));
 		
 		/** The name which uniquely identifies this procedure within its schema */
 		public final ColumnReader<String> specificName = new ColumnReader<>(addColumn("SPECIFIC_NAME", String.class), DefaultResultSetReaders.STRING_READER);
@@ -340,10 +344,10 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - {@link DatabaseMetaData#tableIndexHashed} : this is a hashed index
 		 * - {@link DatabaseMetaData#tableIndexOther} : this is some other style of index
 		 */
-		public final ColumnReader<Short> type = new ColumnReader<>(addColumn("TYPE", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> type = new ColumnReader<>(addColumn("TYPE", short.class), ofMethodReference(ResultSet::getShort));
 
 		/** Column sequence number within index; zero when TYPE is tableIndexStatistic */
-		public final ColumnReader<Short> ordinalPosition = new ColumnReader<>(addColumn("ORDINAL_POSITION", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> ordinalPosition = new ColumnReader<>(addColumn("ORDINAL_POSITION", short.class), ofMethodReference(ResultSet::getShort));
 		
 		/** Column name; null when TYPE is tableIndexStatistic */
 		public final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
@@ -359,7 +363,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - false for descending
 		 * - null for original null cases
 		 */
-		public final ColumnReader<Boolean> ascOrDesc = new ColumnReader<>(addColumn("ASC_OR_DESC", Boolean.class), (rs, col) -> {
+		public final ColumnReader<Boolean> ascOrDesc = new ColumnReader<>(addColumn("ASC_OR_DESC", Boolean.class), new LambdaResultSetReader<>((rs, col) -> {
 			switch (Objects.preventNull(rs.getString(col))) {
 				case "A":
 					return true;
@@ -368,7 +372,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 				default:
 					return null;
 			}
-		});
+		}, boolean.class));
 
 		/** When TYPE is {@link DatabaseMetaData#tableIndexStatistic}, then this is the number of rows in the table; otherwise, it is the number of unique values in the index. */
 		public final ColumnReader<Long> cardinality = new ColumnReader<>(addColumn("CARDINALITY", long.class), DefaultResultSetReaders.LONG_READER);
@@ -427,8 +431,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		public final ColumnReader<String> selfReferencingColName = new ColumnReader<>(addColumn("SELF_REFERENCING_COL_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** Specifies how values in SELF_REFERENCING_COL_NAME are created */
-		public final ColumnReader<Generation> refGeneration = new ColumnReader<>(addColumn("REF_GENERATION", Generation.class),
-				(resultSet, columnName) -> Generation.valueOf(DefaultResultSetReaders.STRING_READER.get(resultSet, columnName)));
+		public final ColumnReader<Generation> refGeneration = new ColumnReader<>(addColumn("REF_GENERATION", Generation.class), new NameEnumParameterBinder<>(Generation.class));
 		
 		public TableMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getTables() ResultSet
@@ -469,7 +472,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		public final ColumnReader<String> fkColumnName = new ColumnReader<>(addColumn("FKCOLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** Sequence number within foreign key( a value of 1 represents the first column of the foreign key, a value of 2 would represent the second column within the foreign key). */
-		public final ColumnReader<Short> sequence = new ColumnReader<>(addColumn("KEY_SEQ", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> sequence = new ColumnReader<>(addColumn("KEY_SEQ", short.class), ofMethodReference(ResultSet::getShort));
 		
 		/**
 		 * What happens to foreign key when parent key is updated:
@@ -479,7 +482,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - {@link DatabaseMetaData#importedKeySetDefault} : change imported key to default values if its parent key has been updated
 		 * - {@link DatabaseMetaData#importedKeyRestrict} : same as {@link DatabaseMetaData#importedKeyNoAction} (for ODBC 2.x compatibility)
 		 */
-		public final ColumnReader<Short> updateRule = new ColumnReader<>(addColumn("UPDATE_RULE", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> updateRule = new ColumnReader<>(addColumn("UPDATE_RULE", short.class), ofMethodReference(ResultSet::getShort));
 		
 		/**
 		 * What happens to the foreign key when parent key is deleted:
@@ -489,7 +492,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - {@link DatabaseMetaData#importedKeySetDefault} : change imported key to default if its parent key has been deleted
 		 * - {@link DatabaseMetaData#importedKeyRestrict} : same as {@link DatabaseMetaData#importedKeyNoAction} (for ODBC 2.x compatibility)
 		 */
-		public final ColumnReader<Short> deleteRule = new ColumnReader<>(addColumn("DELETE_RULE", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> deleteRule = new ColumnReader<>(addColumn("DELETE_RULE", short.class), ofMethodReference(ResultSet::getShort));
 		
 		
 		/** Foreign key name (may be null) */
@@ -504,7 +507,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - {@link DatabaseMetaData#importedKeyInitiallyImmediate} : see SQL92 for definition
 		 * - {@link DatabaseMetaData#importedKeyNotDeferrable} : see SQL92 for definition
 		 */
-		public final ColumnReader<Short> deferrability = new ColumnReader<>(addColumn("DEFERRABILITY", short.class), ResultSet::getShort);
+		public final ColumnReader<Short> deferrability = new ColumnReader<>(addColumn("DEFERRABILITY", short.class), ofMethodReference(ResultSet::getShort));
 		
 		public ExportedKeysMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getExportedKeys() or DatabaseMetaData.getImportedKeys() ResultSet
@@ -565,7 +568,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		public final ColumnReader<String> columnName = new ColumnReader<>(addColumn("COLUMN_NAME", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** SQL type from {@link java.sql.Types} */
-		public final ColumnReader<JDBCType> type = new ColumnReader<>(addColumn("DATA_TYPE", JDBCType.class), (rs, col) -> JDBCType.valueOf(rs.getInt(col)));
+		public final ColumnReader<JDBCType> type = new ColumnReader<>(addColumn("DATA_TYPE", JDBCType.class), new LambdaResultSetReader<>((rs, col) -> JDBCType.valueOf(rs.getInt(col)), JDBCType.class));
 		
 		/** Data source dependent type name, for a User-Defined-Type the type name is fully qualified */
 		public final ColumnReader<String> typeName = new ColumnReader<>(addColumn("TYPE_NAME", String.class), DefaultResultSetReaders.STRING_READER);
@@ -583,7 +586,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		public final ColumnReader<Integer> size = new ColumnReader<>(addColumn("COLUMN_SIZE", Integer.class), DefaultResultSetReaders.INTEGER_READER);
 		
 		/** not used */
-		public final ColumnReader<Object> bufferLength = new ColumnReader<>(addColumn("BUFFER_LENGTH", Object.class), ResultSet::getObject);
+		public final ColumnReader<Object> bufferLength = new ColumnReader<>(addColumn("BUFFER_LENGTH", Object.class), ResultSetReader.ofMethodReference(ResultSet::getObject));
 		
 		/** the number of fractional digits. Null is returned for data types where DECIMAL_DIGITS is not applicable. */
 		public final ColumnReader<Integer> decimalDigits = new ColumnReader<>(addColumn("DECIMAL_DIGITS", Integer.class), DefaultResultSetReaders.INTEGER_READER);
@@ -600,7 +603,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - true if {@link DatabaseMetaData#columnNullable}
 		 * - false otherwise
 		 */
-		public final ColumnReader<Boolean> nullable = new ColumnReader<>(addColumn("NULLABLE", boolean.class), (rs, col) -> rs.getInt(col) == DatabaseMetaData.columnNullable);
+		public final ColumnReader<Boolean> nullable = new ColumnReader<>(addColumn("NULLABLE", boolean.class), new LambdaResultSetReader<>((rs, col) -> rs.getInt(col) == DatabaseMetaData.columnNullable, boolean.class));
 		
 		/** comment describing column (may be null) */
 		public final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
@@ -631,7 +634,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - true if YES
 		 * - false otherwise
 		 */
-		public final ColumnReader<Boolean> isNullable = new ColumnReader<>(addColumn("IS_NULLABLE", boolean.class), (rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)));
+		public final ColumnReader<Boolean> isNullable = new ColumnReader<>(addColumn("IS_NULLABLE", boolean.class), new LambdaResultSetReader<>((rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)), boolean.class));
 		
 		/** catalog of table that is the scope of a reference attribute (null if DATA_TYPE isn't REF) */
 		public final ColumnReader<String> scopeCatalog = new ColumnReader<>(addColumn("SCOPE_CATALOG", String.class), DefaultResultSetReaders.STRING_READER);
@@ -643,7 +646,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		public final ColumnReader<String> scopeTable = new ColumnReader<>(addColumn("SCOPE_TABLE", String.class), DefaultResultSetReaders.STRING_READER);
 		
 		/** source type of a distinct type or user-generated Ref type, SQL type from java.sql.Types (null if DATA_TYPE isn't DISTINCT or user-generated REF) */
-		public final ColumnReader<Short> sourceDataType = new ColumnReader<>(addColumn("SOURCE_DATA_TYPE", Short.class), ResultSet::getShort);
+		public final ColumnReader<Short> sourceDataType = new ColumnReader<>(addColumn("SOURCE_DATA_TYPE", Short.class), ofMethodReference(ResultSet::getShort));
 		
 		/**
 		 * Indicates whether this column is auto incremented, possible original values :
@@ -654,7 +657,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - true if YES
 		 * - false otherwise
 		 */
-		public final ColumnReader<Boolean> isAutoIncrement = new ColumnReader<>(addColumn("IS_AUTOINCREMENT", boolean.class), (rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)));
+		public final ColumnReader<Boolean> isAutoIncrement = new ColumnReader<>(addColumn("IS_AUTOINCREMENT", boolean.class), new LambdaResultSetReader<>((rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)), boolean.class));
 		
 		/**
 		 * Indicates whether this is a generated column, possible original values :
@@ -665,7 +668,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		 * - true if YES
 		 * - false otherwise
 		 */
-		public final ColumnReader<Boolean> isGeneratedColumn = new ColumnReader<>(addColumn("IS_GENERATEDCOLUMN", boolean.class), (rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)));
+		public final ColumnReader<Boolean> isGeneratedColumn = new ColumnReader<>(addColumn("IS_GENERATEDCOLUMN", boolean.class), new LambdaResultSetReader<>((rs, col) -> "yes".equalsIgnoreCase(rs.getString(col)), boolean.class));
 		
 		public ColumnMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getColumns() ResultSet
