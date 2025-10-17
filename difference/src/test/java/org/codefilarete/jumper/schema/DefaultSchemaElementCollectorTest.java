@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiPredicate;
@@ -42,7 +43,7 @@ class DefaultSchemaElementCollectorTest {
 				.withTableNamePattern("%")
 				.collect();
 		
-		Schema expectedResult = new Schema(null);
+		Schema expectedResult = new Schema("PUBLIC.PUBLIC");
 		Table tableA = expectedResult.addTable("A");
 		Column columnA_Id = tableA.addColumn("ID", JDBCType.BIGINT, 64, 0, false, true);
 		Column columnA_name = tableA.addColumn("NAME", JDBCType.VARCHAR, 200, null, false, false);
@@ -63,7 +64,7 @@ class DefaultSchemaElementCollectorTest {
 		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
 		BiPredicate<Column, Column> columnPredicate = Predicates.and(Column::getName, Column::getType, Column::getSize)
 				.and((c1, c2) -> tableNamespacePredicate.test(c1.getTable(), c2.getTable()));
-		java.util.Comparator<Column> columnComparator = Predicates.toComparator(columnPredicate);
+		Comparator<Column> columnComparator = Predicates.toComparator(columnPredicate);
 		
 		// Checking Table columns, primary key, and other simple attributes
 		Map<String, Table> tablePerName = Iterables.map(schema.getTables(), Table::getName);
@@ -111,7 +112,7 @@ class DefaultSchemaElementCollectorTest {
 		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
 		BiPredicate<Column, Column> columnPredicate = Predicates.and(Column::getName, Column::getType, Column::getSize)
 				.and((c1, c2) -> tableNamespacePredicate.test(c1.getTable(), c2.getTable()));
-		java.util.Comparator<Column> columnComparator = Predicates.toComparator(columnPredicate);
+		Comparator<Column> columnComparator = Predicates.toComparator(columnPredicate);
 		
 		// Checking Table columns, primary key, and other simple attributes
 		Map<String, Table> tablePerName = Iterables.map(schema.getTables(), Table::getName);
@@ -149,7 +150,7 @@ class DefaultSchemaElementCollectorTest {
 				.withTableNamePattern("%")
 				.collect();
 	
-		Schema expectedResult = new Schema(null);
+		Schema expectedResult = new Schema("PUBLIC.PUBLIC");
 		Table tableA = expectedResult.addTable("A");
 		Column columnA_Id = tableA.addColumn("ID", JDBCType.BIGINT, 64, 0, false, true);
 		Column columnA_name = tableA.addColumn("NAME", JDBCType.VARCHAR, 200, null, false, false);
@@ -230,7 +231,7 @@ class DefaultSchemaElementCollectorTest {
 				.withTableNamePattern("%");
 		Schema schema = testInstance.collect();
 	
-		Schema expectedResult = new Schema(null);
+		Schema expectedResult = new Schema("PUBLIC.PUBLIC");
 		Table tableA = expectedResult.addTable("A");
 		Column columnA_Id = tableA.addColumn("ID", JDBCType.BIGINT, 64, 0, false, true);
 		Column columnA_name = tableA.addColumn("NAME", JDBCType.VARCHAR, 200, null, false, false);
@@ -248,12 +249,10 @@ class DefaultSchemaElementCollectorTest {
 		indexToto.setUnique(true);
 		indexToto.addColumn(columnA_name, AscOrDesc.ASC);
 		
-		assertThat(schema.getName()).isNull();
-		
 		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
 		BiPredicate<Column, Column> columnPredicate = Predicates.and(Column::getName, Column::getType, Column::getSize)
 				.and((c1, c2) -> tableNamespacePredicate.test(c1.getTable(), c2.getTable()));
-		java.util.Comparator<Column> columnComparator = Predicates.toComparator(columnPredicate);
+		Comparator<Column> columnComparator = Predicates.toComparator(columnPredicate);
 		
 		// Checking Table columns, primary key, and other simple attributes
 		Map<String, Table> tablePerName = Iterables.map(schema.getTables(), Table::getName);

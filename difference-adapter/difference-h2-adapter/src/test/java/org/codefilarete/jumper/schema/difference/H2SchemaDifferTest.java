@@ -18,6 +18,7 @@ import org.codefilarete.reflection.AccessorByMethodReference;
 import org.codefilarete.reflection.AccessorDefinition;
 import org.codefilarete.stalactite.sql.UrlAwareDataSource;
 import org.codefilarete.stalactite.sql.test.H2InMemoryDataSource;
+import org.codefilarete.tool.bean.Randomizer;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +27,8 @@ class H2SchemaDifferTest {
 	
 	@Test
 	void compare() throws SQLException {
-		UrlAwareDataSource dataSource = new H2InMemoryDataSource();
+        String databaseName = Randomizer.INSTANCE.randomHexString(8);
+        UrlAwareDataSource dataSource = new H2InMemoryDataSource(databaseName);
 		Connection connection1 = dataSource.getConnection();
 		connection1.prepareStatement("create schema REFERENCE").execute();
 		connection1.prepareStatement("set schema REFERENCE").execute();
@@ -96,7 +98,7 @@ class H2SchemaDifferTest {
 					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName + ": "
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
-				"Schema.name: Schema{name='REFERENCE'} vs Schema{name='COMPARISON'}",
+                "Schema.name: Schema{name='" + databaseName + ".REFERENCE'} vs Schema{name='" + databaseName + ".COMPARISON'}",
 				"Index.unique: Index{name='TATA', unique=true, columns=LASTNAME} vs Index{name='TATA', unique=false, columns=LASTNAME}",
 				"Column.size: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50} vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}",
 				"Entry.value: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50}=DESC vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}=ASC"

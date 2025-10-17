@@ -94,7 +94,7 @@ class HSQLDBSchemaDifferTest {
 					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName + ": "
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
-				"Schema.name: Schema{name='REFERENCE'} vs Schema{name='COMPARISON'}",
+				"Schema.name: Schema{name='PUBLIC.REFERENCE'} vs Schema{name='PUBLIC.COMPARISON'}",
 				"Index.unique: Index{name='TATA', unique=true, columns=LASTNAME} vs Index{name='TATA', unique=false, columns=LASTNAME}",
 				"Column.size: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50} vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}"
 		);
