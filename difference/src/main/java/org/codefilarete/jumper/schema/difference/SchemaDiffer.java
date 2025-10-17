@@ -73,7 +73,7 @@ public class SchemaDiffer {
 	public void compareAndPrint(Schema schema1, Schema schema2) {
 		Set<AbstractDiff<?>> diffs = comparisonChain.run(schema1, schema2);
 		
-		System.out.println("Added in " + schema1.getName() + " and missing in " + schema2.getName());
+		System.out.println("Added in " + schema2.getName() + " and missing in " + schema1.getName());
 		
 		Map<? extends Class<?>, List<AbstractDiff<?>>> addedPerType = diffs.stream()
 				.filter(d -> d.getState() == State.ADDED)
@@ -97,7 +97,7 @@ public class SchemaDiffer {
 					});
 		});
 		
-		System.out.println("Modifications between " + schema1.getName() + " and " + schema2.getName());
+		System.out.println("Modifications between " + schema2.getName() + " and " + schema1.getName());
 		Map<? extends Class<?>, List<AbstractDiff<?>>> heldPerType = diffs.stream()
 				.filter(d -> d.getState() == State.HELD)
 				.collect(Collectors.groupingBy(diff -> diff.getReplacingInstance().getClass()));
