@@ -99,7 +99,7 @@ class MariaDBSchemaDifferTest extends MariaDBTest {
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
 				"Index.unique: Index{name='tata', unique=true, columns=lastname} vs Index{name='tata', unique=false, columns=lastname}",
-				"Column.size: Column{tableName='C', name='lastname', type='VARCHAR', size=50} vs Column{tableName='C', name='lastname', type='VARCHAR', size=100}"
+				"Column.size: Column{tableName='C', name='lastname', type='VARCHAR', size=50, scale=null, nullable=true} vs Column{tableName='C', name='lastname', type='VARCHAR', size=100, scale=null, nullable=true}"
 		);
 		
 		System.out.println("Missing in " + dataSource.getUrl());

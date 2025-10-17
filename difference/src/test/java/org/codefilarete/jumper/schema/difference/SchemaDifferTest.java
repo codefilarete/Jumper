@@ -170,7 +170,7 @@ class SchemaDifferTest {
 			assertThat(compare)
 					.usingRecursiveFieldByFieldElementComparator(RECURSIVE_COMPARISON_CONFIGURATION)
 					.containsExactlyInAnyOrder(
-							new PropertyDiff<>(Column::getPrecision, expectedColumn, actualColumn));
+							new PropertyDiff<>(Column::getScale, expectedColumn, actualColumn));
 		}
 		
 		@Test

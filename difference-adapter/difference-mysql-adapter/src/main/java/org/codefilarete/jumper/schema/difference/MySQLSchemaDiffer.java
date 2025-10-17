@@ -14,7 +14,7 @@ public class MySQLSchemaDiffer extends SchemaDiffer {
 						.compareOn(Table::getColumns, Column::getName, comparisonChain(Column.class)
 								.compareOn(Column::getType)
 								.compareOn(Column::getSize)
-								.compareOn(Column::getPrecision)
+								.compareOn(Column::getScale)
 								.compareOn(Column::isNullable)
 								.compareOn(Column::isAutoIncrement))
 						.compareOn(Table::getComment))

@@ -101,7 +101,7 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
 				"Index.unique: Index{name='tata', unique=true, columns=lastname} vs Index{name='tata', unique=false, columns=lastname}",
-				"Column.size: Column{tableName='c', name='lastname', type='VARCHAR', size=50} vs Column{tableName='c', name='lastname', type='VARCHAR', size=100}"
+				"Column.size: Column{tableName='c', name='lastname', type='VARCHAR', size=50, scale=0, nullable=true} vs Column{tableName='c', name='lastname', type='VARCHAR', size=100, scale=0, nullable=true}"
 		);
 		
 		System.out.println("Missing in " + dataSource.getUrl());

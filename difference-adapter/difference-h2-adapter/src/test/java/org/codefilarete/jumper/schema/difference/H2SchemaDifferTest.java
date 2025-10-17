@@ -100,8 +100,8 @@ class H2SchemaDifferTest {
 				})).containsExactlyInAnyOrder(
                 "Schema.name: Schema{name='" + databaseName + ".REFERENCE'} vs Schema{name='" + databaseName + ".COMPARISON'}",
 				"Index.unique: Index{name='TATA', unique=true, columns=LASTNAME} vs Index{name='TATA', unique=false, columns=LASTNAME}",
-				"Column.size: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50} vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}",
-				"Entry.value: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50}=DESC vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100}=ASC"
+				"Column.size: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50, scale=0, nullable=true} vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100, scale=0, nullable=true}",
+				"Entry.value: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50, scale=0, nullable=true}=DESC vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100, scale=0, nullable=true}=ASC"
 		);
 		
 		System.out.println("Missing in " + dataSource.getUrl());

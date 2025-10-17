@@ -354,15 +354,15 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				private final String name;
 				private final JDBCType type;
 				private final Integer size;
-				private final Integer precision;
+				private final Integer scale;
 				private final boolean nullable;
 				private final boolean autoIncrement;
 				
-				protected Column(String name, JDBCType type, Integer size, Integer precision, boolean nullable, boolean autoIncrement) {
+				protected Column(String name, JDBCType type, Integer size, Integer scale, boolean nullable, boolean autoIncrement) {
 					this.name = name;
 					this.type = type;
 					this.size = size;
-					this.precision = precision;
+					this.scale = scale;
 					this.nullable = nullable;
 					this.autoIncrement = autoIncrement;
 				}
@@ -389,8 +389,8 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					return size;
 				}
 				
-				public Integer getPrecision() {
-					return precision;
+				public Integer getScale() {
+					return scale;
 				}
 				
 				public boolean isNullable() {
@@ -408,6 +408,8 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 							", name='" + name + '\'' +
 							", type='" + type + '\'' +
 							", size=" + size +
+							", scale=" + scale +
+							", nullable=" + nullable +
 							'}';
 				}
 			}
@@ -558,7 +560,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				return columns;
 			}
 			
-			void addColumn(Column column, AscOrDesc ascOrDesc) {
+			public void addColumn(Column column, AscOrDesc ascOrDesc) {
 				this.columns.put(column, ascOrDesc);
 			}
 			
