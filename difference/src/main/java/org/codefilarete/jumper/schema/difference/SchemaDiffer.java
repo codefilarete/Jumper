@@ -73,7 +73,7 @@ public class SchemaDiffer {
 	public void compareAndPrint(Schema schema1, Schema schema2) {
 		Set<AbstractDiff<?>> diffs = comparisonChain.run(schema1, schema2);
 		
-		System.out.println("Added in " + schema2.getName() + " and missing in " + schema1.getName());
+		System.out.println("Added elements in " + schema2.getName() + " but missing in " + schema1.getName());
 		
 		Map<? extends Class<?>, List<AbstractDiff<?>>> addedPerType = diffs.stream()
 				.filter(d -> d.getState() == State.ADDED)
@@ -97,7 +97,7 @@ public class SchemaDiffer {
 					});
 		});
 		
-		System.out.println("Modifications between " + schema2.getName() + " and " + schema1.getName());
+		System.out.println("Modified elements between " + schema2.getName() + " and " + schema1.getName());
 		Map<? extends Class<?>, List<AbstractDiff<?>>> heldPerType = diffs.stream()
 				.filter(d -> d.getState() == State.HELD)
 				.collect(Collectors.groupingBy(diff -> diff.getReplacingInstance().getClass()));
@@ -118,14 +118,14 @@ public class SchemaDiffer {
 					.forEach(d -> {
 						if (d instanceof PropertyComparator.PropertyDiff) {
 							String propertyName = AccessorDefinition.giveDefinition(new AccessorByMethodReference<>(((PropertyDiff<?, ?>) d).getPropertyAccessor())).getName();
-							System.out.println("\t" + propertyName + ": " + d.getSourceInstance() + " vs " + d.getReplacingInstance());
+							System.out.println("\t" + propertyName + ": " + d.getReplacingInstance() + " vs " + d.getSourceInstance());
 						} else {
 							System.out.println("\t" + d.getReplacingInstance());
 						}
 					});
 		});
 		
-		System.out.println("Missing in " + schema2.getName() + " and added in " + schema1.getName());
+		System.out.println("Missing elements in " + schema2.getName() + " but added in " + schema1.getName());
 		Map<? extends Class<?>, List<AbstractDiff<?>>> removedPerType = diffs.stream()
 				.filter(d -> d.getState() == State.REMOVED)
 				.collect(Collectors.groupingBy(diff -> diff.getSourceInstance().getClass()));
