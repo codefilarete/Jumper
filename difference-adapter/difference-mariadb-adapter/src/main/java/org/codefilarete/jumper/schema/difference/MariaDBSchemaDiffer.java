@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 
@@ -23,10 +24,9 @@ public class MariaDBSchemaDiffer extends SchemaDiffer {
 						.compareOn(Table::getComment))
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
-						// no need to compare on ascendant or descendant direction since MariaDB doesn't support it
-						.compareOnMap(Index::getColumns, Column::getName,
-								// Derby is sensitive to Index direction thus we add comparison on it
-								comparisonChain((Class<Entry<Column, AscOrDesc>>) (Class) Entry.class)
+						.compareOnMap(Index::getColumns, Indexable::getName,
+								// MariaDB is sensitive to Index direction thus we add comparison on it
+								comparisonChain((Class<Entry<Indexable, AscOrDesc>>) (Class) Entry.class)
 										.compareOn(Entry::getValue))
 				);
 	}

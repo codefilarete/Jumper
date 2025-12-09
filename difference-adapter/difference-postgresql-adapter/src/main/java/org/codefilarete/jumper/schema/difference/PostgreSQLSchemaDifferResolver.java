@@ -9,7 +9,7 @@ public class PostgreSQLSchemaDifferResolver {
 	
 	public static class PostgreSQL_13_6_Entry implements SchemaDifferResolver.SchemaDifferResolverEntry {
 		
-		private static final PostgreSQLSchemaDiffer MARIADB_SCHEMA_DIFFER = new PostgreSQLSchemaDiffer();
+		private static final PostgreSQLSchemaDiffer POSTGRESQL_SCHEMA_DIFFER = new PostgreSQLSchemaDiffer();
 		
 		private static final DatabaseSignet POSTGRESQL_13_6_SIGNET = new DatabaseSignet("PostgreSQL", 13, 6);
 		
@@ -20,7 +20,7 @@ public class PostgreSQLSchemaDifferResolver {
 		
 		@Override
 		public PostgreSQLSchemaDiffer getSchemaDiffer() {
-			return MARIADB_SCHEMA_DIFFER;
+			return POSTGRESQL_SCHEMA_DIFFER;
 		}
 	}
 }

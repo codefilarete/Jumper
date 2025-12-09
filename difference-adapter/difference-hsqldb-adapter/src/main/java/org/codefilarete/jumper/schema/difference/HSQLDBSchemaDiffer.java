@@ -2,6 +2,7 @@ package org.codefilarete.jumper.schema.difference;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 
@@ -22,7 +23,7 @@ public class HSQLDBSchemaDiffer extends SchemaDiffer {
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
 						// no need to compare on ascendant or descendant direction since HSQLDB doesn't support it
-						.compareOnMap(Index::getColumns, Column::getName)
+						.compareOnMap(Index::getColumns, Indexable::getName)
 				);
 	}
 }

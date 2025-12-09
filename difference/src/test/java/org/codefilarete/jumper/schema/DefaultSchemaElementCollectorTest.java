@@ -13,6 +13,7 @@ import java.util.function.BiPredicate;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.ForeignKey;
@@ -169,9 +170,9 @@ class DefaultSchemaElementCollectorTest {
 		
 		// Checking columns
 		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
-		BiPredicate<Column, Column> columnPredicate = Predicates.and(Column::getName, Column::getType, Column::getSize)
+		BiPredicate<Indexable, Indexable> columnPredicate = Predicates.and(Indexable::getName)
 				.and((c1, c2) -> tableNamespacePredicate.test(c1.getTable(), c2.getTable()));
-		BiPredicate<Map.Entry<Column, AscOrDesc>, Map.Entry<Column, AscOrDesc>> columnKeyPredicate = (entry1, entry2) -> columnPredicate.test(entry1.getKey(), entry2.getKey());
+		BiPredicate<Map.Entry<Indexable, AscOrDesc>, Map.Entry<Indexable, AscOrDesc>> columnKeyPredicate = (entry1, entry2) -> columnPredicate.test(entry1.getKey(), entry2.getKey());
 		columnKeyPredicate = columnKeyPredicate.and(Predicates.and(Entry::getValue));
 		assertThat(actualIndexToto.getColumns().entrySet())
 				.usingElementComparator(Predicates.toComparator(columnKeyPredicate.and(Predicates.and(Entry::getValue))))
@@ -250,9 +251,9 @@ class DefaultSchemaElementCollectorTest {
 		indexToto.addColumn(columnA_name, AscOrDesc.ASC);
 		
 		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
-		BiPredicate<Column, Column> columnPredicate = Predicates.and(Column::getName, Column::getType, Column::getSize)
+		BiPredicate<Indexable, Indexable> columnPredicate = Predicates.and(Indexable::getName)
 				.and((c1, c2) -> tableNamespacePredicate.test(c1.getTable(), c2.getTable()));
-		Comparator<Column> columnComparator = Predicates.toComparator(columnPredicate);
+		Comparator<Indexable> columnComparator = Predicates.toComparator(columnPredicate);
 		
 		// Checking Table columns, primary key, and other simple attributes
 		Map<String, Table> tablePerName = Iterables.map(schema.getTables(), Table::getName);
@@ -287,7 +288,7 @@ class DefaultSchemaElementCollectorTest {
 				.containsExactlyElementsOf(actualForeignKeyFromBtoA.getTargetColumns());
 		
 		// Checking indexes
-		BiPredicate<Map.Entry<Column, AscOrDesc>, Map.Entry<Column, AscOrDesc>> columnKeyPredicate = (entry1, entry2) -> columnPredicate.test(entry1.getKey(), entry2.getKey());
+		BiPredicate<Map.Entry<Indexable, AscOrDesc>, Map.Entry<Indexable, AscOrDesc>> columnKeyPredicate = (entry1, entry2) -> columnPredicate.test(entry1.getKey(), entry2.getKey());
 		columnKeyPredicate = columnKeyPredicate.and(Predicates.and(Entry::getValue));
 		Map<String, Index> indexPerName = Iterables.map(schema.getIndexes(), Index::getName);
 		Index actualIndexToto = indexPerName.get("TOTO");

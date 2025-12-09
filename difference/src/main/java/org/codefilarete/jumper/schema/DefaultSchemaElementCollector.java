@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
@@ -147,7 +148,22 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 						index.setUnique(indexMetadata.isUnique());
 						indexMetadata.getColumns().forEach(duo -> {
 							AscOrDesc direction = mapBooleanToDirection(duo.getRight());
-							Column column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
+							Indexable column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
+							if (column == null) {
+								// The indexed value is not a column but an expression (a column substring for example) so we create a special object for it
+								Table indexTable = Iterables.find(result.getTables(), table -> table.getName().equals(indexMetadata.getTableName()));
+								column = new Indexable() {
+									@Override
+									public String getName() {
+										return duo.getLeft();
+									}
+									
+									@Override
+									public Table getTable() {
+										return indexTable;
+									}
+								};
+							}
 							index.addColumn(column, direction);
 						});
 					}
@@ -349,7 +365,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 						'}';
 			}
 			
-			public class Column implements SchemaElement, TableElement {
+			public class Column implements SchemaElement, TableElement, Indexable {
 				
 				private final String name;
 				private final JDBCType type;
@@ -377,6 +393,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					return Table.this;
 				}
 				
+				@Override
 				public String getName() {
 					return name;
 				}
@@ -518,7 +535,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			
 			private String filterCondition;
 			
-			private final KeepOrderMap<Column, AscOrDesc> columns = new KeepOrderMap<>();
+			private final KeepOrderMap<Indexable, AscOrDesc> columns = new KeepOrderMap<>();
 			
 			private String indexQualifier;
 			
@@ -556,11 +573,11 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				this.filterCondition = filterCondition;
 			}
 			
-			public KeepOrderMap<Column, AscOrDesc> getColumns() {
+			public KeepOrderMap<Indexable, AscOrDesc> getColumns() {
 				return columns;
 			}
 			
-			public void addColumn(Column column, AscOrDesc ascOrDesc) {
+			public void addColumn(Indexable column, AscOrDesc ascOrDesc) {
 				this.columns.put(column, ascOrDesc);
 			}
 			
@@ -573,9 +590,17 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				return "Index{" +
 						"name='" + name + '\'' +
 						", unique=" + unique +
-						", columns=" + columns.keySet().stream().map(Column::getName).collect(Collectors.joining(", ")) +
+						", columns=" + columns.keySet().stream().map(Indexable::getName).collect(Collectors.joining(", ")) +
 						'}';
 			}
+		}
+		
+		public interface Indexable {
+			
+			String getName();
+			
+			Table getTable();
+			
 		}
 		
 		public enum AscOrDesc {

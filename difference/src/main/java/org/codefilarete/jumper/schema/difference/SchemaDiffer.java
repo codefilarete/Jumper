@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
@@ -62,7 +63,7 @@ public class SchemaDiffer {
 						)
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
-						.compareOnMap(Index::getColumns, Column::getName)
+						.compareOnMap(Index::getColumns, Indexable::getName)
 				);
 	}
 	
