@@ -138,16 +138,16 @@ By default, Jumper analyzes and compares:
 - **Constraints**: Check constraints, unique constraints
 
 ## Project Structure
-jumper/
-├── core/ # Core schema collection functionality
-├── difference/ # Schema comparison engine
-└── difference-adapter/ # Database-specific adapters
-    ├──difference-derby-adapter/
-    ├── difference-h2-adapter/
-    ├── difference-hsqldb-adapter/
-    ├── difference-mariadb-adapter/
-    ├── difference-mysql-adapter/
-    └── difference-postgresql-adapter/
+
+    ├── core/ # Core schema collection functionality
+    ├── difference/ # Schema comparison engine
+    └── difference-adapter/ # Database-specific adapters
+        ├── difference-derby-adapter/
+        ├── difference-h2-adapter/
+        ├── difference-hsqldb-adapter/
+        ├── difference-mariadb-adapter/
+        ├── difference-mysql-adapter/
+        └── difference-postgresql-adapter/
 
 ## Requirements
 
