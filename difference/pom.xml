@@ -28,7 +28,7 @@
 		<!-- for DatabaseSignet -->
 		<dependency>
 			<groupId>org.codefilarete.jumper</groupId>
-			<artifactId>core</artifactId>
+			<artifactId>jumper-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
