@@ -17,7 +17,7 @@
 		<hibernate.version>5.3.20.Final</hibernate.version>
 		<mariadb-java-client.version>3.0.7</mariadb-java-client.version>
 		<liquibase.version>4.11.0</liquibase.version>
-		<testContainer.version>1.17.2</testContainer.version>
+		<testContainers.version>1.21.4</testContainers.version>
 	</properties>
 	
 	<dependencies>
@@ -60,19 +60,19 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
-			<version>${testContainer.version}</version>
+			<version>${testContainers.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>${testContainer.version}</version>
+			<version>${testContainers.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mariadb</artifactId>
-			<version>${testContainer.version}</version>
+			<version>${testContainers.version}</version>
 			<scope>test</scope>
 		</dependency>
 		
