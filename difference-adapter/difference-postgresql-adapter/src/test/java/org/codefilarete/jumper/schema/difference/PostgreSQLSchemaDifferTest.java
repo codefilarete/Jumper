@@ -50,6 +50,7 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 		connection2.prepareStatement("create table A(id BIGSERIAL, name VARCHAR(200) not null, age float, primary key (id))").execute();
 		connection2.prepareStatement("create table B(id BIGINT, aId BIGINT, dummyData VARCHAR(50), primary key (id), constraint fromBtoA foreign key (aId) references A(id))").execute();
 		connection2.prepareStatement("create table C(id BIGINT, aId BIGINT, firstname VARCHAR(50), lastname VARCHAR(100), primary key (id))").execute();
+		connection2.prepareStatement("create table E(firstname VARCHAR(50))").execute();
 		connection2.prepareStatement("create index tata on C(lastname asc)").execute();
 		connection2.prepareStatement("create view TUTU as select a.id, a.name, b.dummyData from A a inner join B b on a.id = b.aId").execute();
 		connection2.commit();
@@ -71,28 +72,14 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 		SchemaDiffer testInstance = new PostgreSQLSchemaDiffer();
 		Set<AbstractDiff<?>> diffs = testInstance.compare(ddlElements1, ddlElements2);
 		
-		System.out.println("----------------------------------------------------------");
+		// Elements added in "COMPARISON" schema
+		assertThat(diffs.stream().filter(d -> d.getState() == State.ADDED)).map(diff -> diff.getReplacingInstance().toString())
+				.containsExactlyInAnyOrder(
+						"Table{name='e'}",
+						"Column{tableName='c', name='firstname', type='VARCHAR', size=50, scale=0, nullable=true}"
+				);
 		
-		System.out.println("Added in " + dataSource.getUrl());
-		Map<String, Map<String, Column>> columnsPerTableNameAndColumnName = ddlElements2.getTables().stream().collect(
-				Collectors.toMap(Table::getName, t -> t.getColumns().stream().collect(
-						Collectors.toMap(Column::getName, Function.identity()))));
-		Column column = columnsPerTableNameAndColumnName.get("c").get("firstname");
-		assertThat(diffs.stream().filter(d -> d.getState() == State.ADDED)
-				.map(AbstractDiff::getReplacingInstance).filter(Column.class::isInstance).map(Column.class::cast))
-				.containsExactly(column);
-		
-		diffs.stream().filter(d -> d.getState() == State.ADDED).forEach(d -> {
-			System.out.println(d.getReplacingInstance());
-		});
-		
-		System.out.println("Modifications between " + dataSource.getUrl() + " and " + dataSource.getUrl());
-		diffs.stream().filter(d -> d.getState() == State.HELD).forEach(d -> {
-			if (d instanceof PropertyComparator.PropertyDiff) {
-				String propertyName = AccessorDefinition.giveDefinition(new AccessorByMethodReference<>(((PropertyDiff<?, ?>) d).getPropertyAccessor())).getName();
-				System.out.println(propertyName + ": " + d.getSourceInstance() + " vs " + d.getReplacingInstance());
-			}
-		});
+		// Modifications between in "REFERENCE" and "COMPARISON" schemas
 		assertThat(diffs.stream().filter(d -> d.getState() == State.HELD).filter(PropertyDiff.class::isInstance).map(PropertyDiff.class::cast)
 				.map(propertyDiff -> {
 					AccessorDefinition accessorDefinition = AccessorDefinition.giveDefinition(new AccessorByMethodReference<>(((PropertyDiff<?, ?>) propertyDiff).getPropertyAccessor()));
@@ -100,25 +87,17 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 					return accessorDefinition.getDeclaringClass().getSimpleName() + "." + propertyName + ": "
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
-				"Index.unique: Index{name='tata', unique=true, columns=lastname} vs Index{name='tata', unique=false, columns=lastname}",
+				"Index.unique: Index{name='tata', table='c', unique=true, columns={'lastname'}} vs Index{name='tata', table='c', unique=false, columns={'lastname'}}",
+				"Entry.value: Column{tableName='c', name='lastname', type='VARCHAR', size=50, scale=0, nullable=true}=DESC vs Column{tableName='c', name='lastname', type='VARCHAR', size=100, scale=0, nullable=true}=ASC",
 				"Column.size: Column{tableName='c', name='lastname', type='VARCHAR', size=50, scale=0, nullable=true} vs Column{tableName='c', name='lastname', type='VARCHAR', size=100, scale=0, nullable=true}"
 		);
 		
-		System.out.println("Missing in " + dataSource.getUrl());
-		Map<String, Table> tablesPerName = ddlElements1.getTables().stream().collect(
-				Collectors.toMap(Table::getName, Function.identity()));
-		assertThat(diffs.stream().filter(d -> d.getState() == State.REMOVED)
-				.map(AbstractDiff::getSourceInstance).filter(Table.class::isInstance).map(Table.class::cast))
-				.containsExactly(tablesPerName.get("d"));
-		Map<String, Index> indexesPerName = ddlElements1.getIndexes().stream().collect(
-				Collectors.toMap(Index::getName, Function.identity()));
-		assertThat(diffs.stream().filter(d -> d.getState() == State.REMOVED)
-				.map(AbstractDiff::getSourceInstance).filter(Index.class::isInstance).map(Index.class::cast))
-				.contains(indexesPerName.get("toto"));
-		
-		diffs.stream().filter(d -> d.getState() == State.REMOVED).forEach(d -> {
-			System.out.println(d.getSourceInstance());
-		});
+		// Missing elements in "COMPARISON" schema
+		assertThat(diffs.stream().filter(d -> d.getState() == State.REMOVED)).map(diff -> diff.getSourceInstance().toString())
+				.containsExactlyInAnyOrder(
+						"Table{name='d'}",
+						"Index{name='toto', table='a', unique=true, columns={'name'}}"
+				);
 	}
 	
 }

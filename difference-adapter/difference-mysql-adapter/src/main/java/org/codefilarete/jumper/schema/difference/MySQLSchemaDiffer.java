@@ -1,6 +1,9 @@
 package org.codefilarete.jumper.schema.difference;
 
+import java.util.Map.Entry;
+
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
@@ -21,8 +24,9 @@ public class MySQLSchemaDiffer extends SchemaDiffer {
 						.compareOn(Table::getComment))
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
-						// no need to compare on ascendant or descendant direction since HSQLDB doesn't support it
-						.compareOnMap(Index::getColumns, Indexable::getName)
+						.compareOnMap(Index::getColumns, Indexable::getName,
+								comparisonChain((Class<Entry<Indexable, AscOrDesc>>) (Class) Entry.class)
+										.compareOn(Entry::getValue))
 				);
 	}
 }

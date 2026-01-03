@@ -589,9 +589,9 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			public String toString() {
 				return "Index{" +
 						"name='" + name + '\'' +
-						", table=" + getTable().getName() +
+						", table='" + getTable().getName() + '\''+
 						", unique=" + unique +
-						", columns=" + columns.keySet().stream().map(Indexable::getName).collect(Collectors.joining(", ")) +
+						", columns={" + columns.keySet().stream().map(Indexable::getName).map(s -> '\'' + s + '\'').collect(Collectors.joining(", ")) + "}" +
 						'}';
 			}
 		}
