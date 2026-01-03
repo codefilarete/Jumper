@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class MySQLTest {
 	
 	@Container
-	protected static final MySQLContainer<?> mysqldb = new MySQLContainer<>(DockerImageName.parse("mysql:5.6"))
+	protected static final MySQLContainer<?> mysqldb = new MySQLContainer<>(DockerImageName.parse("mysql:8.0.44"))
 			.withUsername("root")
 			.withPassword("")
 			.withConnectTimeoutSeconds(20);

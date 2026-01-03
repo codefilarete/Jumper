@@ -13,7 +13,7 @@
 	
 	<properties>
 		<mysql-connector-java.version>8.0.28</mysql-connector-java.version>
-		<testContainers.version>1.17.2</testContainers.version>
+		<testContainers.version>1.21.4</testContainers.version>
 	</properties>
 	
 	<dependencies>
