@@ -49,6 +49,7 @@ class MariaDBSchemaDifferTest extends MariaDBTest {
 		connection2.prepareStatement("create table B(id BIGINT, aId BIGINT, dummyData VARCHAR(50), primary key (id), constraint fromBtoA foreign key (aId) references A(id))").execute();
 		connection2.prepareStatement("create table C(id BIGINT, aId BIGINT, firstname VARCHAR(50), lastname VARCHAR(100), primary key (id))").execute();
 		connection2.prepareStatement("create table E(firstname VARCHAR(50))").execute();
+//		connection1.prepareStatement("create unique index TOTO on A(name desc)").execute();
 		connection2.prepareStatement("create index tata on C(lastname asc)").execute();
 		connection2.prepareStatement("create view TUTU as select a.id, a.name, b.dummyData from A a inner join B b on a.id = b.aId").execute();
 		connection2.commit();
@@ -86,8 +87,7 @@ class MariaDBSchemaDifferTest extends MariaDBTest {
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
 				"Index.unique: Index{name='tata', table='C', unique=true, columns={'lastname'}} vs Index{name='tata', table='C', unique=false, columns={'lastname'}}",
-// the index direction doesn't seem to be kept
-//				"Entry.value: Column{tableName='C', name='lastname', type='VARCHAR', size=50, scale=null, nullable=true}=DESC vs Column{tableName='C', name='lastname', type='VARCHAR', size=100, scale=null, nullable=true}=ASC",
+				"Entry.value: Column{tableName='C', name='lastname', type='VARCHAR', size=50, scale=null, nullable=true}=DESC vs Column{tableName='C', name='lastname', type='VARCHAR', size=100, scale=null, nullable=true}=ASC",
 				"Column.size: Column{tableName='C', name='lastname', type='VARCHAR', size=50, scale=null, nullable=true} vs Column{tableName='C', name='lastname', type='VARCHAR', size=100, scale=null, nullable=true}"
 		);
 		

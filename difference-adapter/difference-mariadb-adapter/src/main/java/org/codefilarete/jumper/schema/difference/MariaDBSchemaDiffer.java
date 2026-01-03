@@ -25,7 +25,7 @@ public class MariaDBSchemaDiffer extends SchemaDiffer {
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
 						.compareOnMap(Index::getColumns, Indexable::getName,
-								// MariaDB is sensitive to Index direction thus we add comparison on it
+								// Starting from MariaDB 10.8, it is sensitive to Index direction thus we add comparison on it
 								comparisonChain((Class<Entry<Indexable, AscOrDesc>>) (Class) Entry.class)
 										.compareOn(Entry::getValue))
 				);

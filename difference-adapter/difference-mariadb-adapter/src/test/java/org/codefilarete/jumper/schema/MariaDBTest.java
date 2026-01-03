@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class MariaDBTest {
 	
 	@Container
-	protected static final MariaDBContainer<?> mariadb = new MariaDBContainer<>(DockerImageName.parse("mariadb:10.4"))
+	protected static final MariaDBContainer<?> mariadb = new MariaDBContainer<>(DockerImageName.parse("mariadb:10.8"))
 			.withUsername("root")
 			.withPassword("")
 			.withConnectTimeoutSeconds(20);
