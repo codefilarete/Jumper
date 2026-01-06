@@ -96,7 +96,8 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 		assertThat(diffs.stream().filter(d -> d.getState() == State.REMOVED)).map(diff -> diff.getSourceInstance().toString())
 				.containsExactlyInAnyOrder(
 						"Table{name='d'}",
-						"Index{name='toto', table='a', unique=true, columns={'name'}}"
+						"Index{name='toto', table='a', unique=true, columns={'name'}}",
+						"ForeignKey{'fromctoa': [c.aid => a.id]}"
 				);
 	}
 	

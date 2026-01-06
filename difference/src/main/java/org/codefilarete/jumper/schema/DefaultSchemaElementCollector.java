@@ -342,8 +342,10 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				return foreignKeys;
 			}
 			
-			public void addForeignKey(String name, List<Column> columns, Table targetTable, List<Column> targetColumns) {
-				this.foreignKeys.add(new ForeignKey(name, columns, targetTable, targetColumns));
+			public ForeignKey addForeignKey(String name, List<Column> columns, Table targetTable, List<Column> targetColumns) {
+				ForeignKey result = new ForeignKey(name, columns, targetTable, targetColumns);
+				this.foreignKeys.add(result);
+				return result;
 			}
 			
 			public String getName() {
@@ -512,7 +514,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 					return "ForeignKey{" +
 							"'" + name + '\'' + ": " +
 							Iterables.collectToList(() -> new PairIterator<>(columns, targetColumns),
-									duo -> duo.getLeft().getName() + "=>" + targetTable.getName() + "." + duo.getRight().getName()).toString() +
+									duo -> getTable().getName() + "." + duo.getLeft().getName() + " => " + targetTable.getName() + "." + duo.getRight().getName()).toString() +
 							'}';
 				}
 			}

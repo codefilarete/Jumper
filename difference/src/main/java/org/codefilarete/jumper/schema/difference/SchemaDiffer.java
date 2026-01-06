@@ -1,5 +1,7 @@
 package org.codefilarete.jumper.schema.difference;
 
+import java.io.Serializable;
+import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -19,13 +22,20 @@ import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.ForeignKey;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View.PseudoColumn;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.SchemaElement;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.TableElement;
+import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.CollectionComparator;
+import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.MapComparator;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.reflection.AccessorByMethodReference;
 import org.codefilarete.reflection.AccessorDefinition;
+import org.codefilarete.reflection.Accessors;
+import org.codefilarete.reflection.PropertyAccessor;
 import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.danekja.java.util.function.serializable.SerializableFunction;
@@ -63,7 +73,20 @@ public class SchemaDiffer {
 						)
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
-						.compareOnMap(Index::getColumns, Indexable::getName)
+						.compareOnMap(Index::getColumns, Indexable::getName))
+				.compareOn(Schema::getViews, View::getName, comparisonChain(View.class)
+						.compareOn(View::getColumns, PseudoColumn::getName, comparisonChain(PseudoColumn.class)
+								.compareOn(PseudoColumn::getType)
+								.compareOn(PseudoColumn::getSize)
+								.compareOn(PseudoColumn::getPrecision)
+								.compareOn(PseudoColumn::isNullable)))
+				.compareOn(schema -> schema.getTables().stream().flatMap(t -> t.getForeignKeys().stream()).collect(Collectors.toSet()),
+						"Foreign keys",
+						fk -> fk.getColumns().stream().map(Column::getName).collect(Collectors.joining(", ")),
+						comparisonChain(ForeignKey.class)
+						.compareOn(ForeignKey::getColumns, Column::getName)
+						.compareOn(ForeignKey::getTargetColumns, Column::getName)
+						.compareOn(ForeignKey::getName)
 				);
 	}
 	
@@ -156,27 +179,41 @@ public class SchemaDiffer {
 	
 	public static class ComparisonChain<T> {
 		
+		private final Class<T> comparedType;
+		
 		private final List<Object> propertiesToCompare = new ArrayList<>();
 		
-		public ComparisonChain(Class<T> ignored) {
+		public ComparisonChain(Class<T> comparedType) {
+			this.comparedType = comparedType;
 		}
 		
-		public <E, C extends Collection<E>> ComparisonChain<T> compareOn(Function<T, C> collectionAccessor, Function<E, ?> keyAccessor) {
+		public Class<T> getComparedType() {
+			return comparedType;
+		}
+		
+		public <E, C extends Collection<E>> ComparisonChain<T> compareOn(SerializableFunction<T, C> collectionAccessor, Function<E, ?> keyAccessor) {
 			return compareOn(collectionAccessor, keyAccessor, null);
 		}
 		
-		public <E, C extends Collection<E>> ComparisonChain<T> compareOn(Function<T, C> collectionAccessor, Function<E, ?> keyAccessor, ComparisonChain<E> deeperComparison) {
+		public <E, C extends Collection<E>> ComparisonChain<T> compareOn(Function<T, C> collectionAccessor, String collectionAccessorDescription, Function<E, ?> keyAccessor, ComparisonChain<E> deeperComparison) {
 			CollectionComparator<T, E, C> collectionComparison = new CollectionComparator<>(collectionAccessor, keyAccessor);
 			this.propertiesToCompare.add(collectionComparison);
 			collectionComparison.next = deeperComparison;
 			return this;
 		}
 		
-		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(Function<T, M> collectionAccessor, Function<K, ?> keyAccessor) {
+		public <E, C extends Collection<E>> ComparisonChain<T> compareOn(SerializableFunction<T, C> collectionAccessor, Function<E, ?> keyAccessor, ComparisonChain<E> deeperComparison) {
+			CollectionComparator<T, E, C> collectionComparison = new CollectionComparator<>(collectionAccessor, keyAccessor);
+			this.propertiesToCompare.add(collectionComparison);
+			collectionComparison.next = deeperComparison;
+			return this;
+		}
+		
+		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(SerializableFunction<T, M> collectionAccessor, Function<K, ?> keyAccessor) {
 			return compareOnMap(collectionAccessor, keyAccessor, null);
 		}
 		
-		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(Function<T, M> collectionAccessor, Function<K, ?> keyAccessor, ComparisonChain<Map.Entry<K, V>> deeperComparison) {
+		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(SerializableFunction<T, M> collectionAccessor, Function<K, ?> keyAccessor, ComparisonChain<Entry<K, V>> deeperComparison) {
 			MapComparator<T, K, V, M> collectionComparison = new MapComparator<>(collectionAccessor, keyAccessor);
 			this.propertiesToCompare.add(collectionComparison);
 			collectionComparison.next = deeperComparison;
@@ -225,7 +262,7 @@ public class SchemaDiffer {
 			
 			private final Function<T, M> mapAccessor;
 			private final Function<K, ?> keyAccessor;
-			private ComparisonChain<Map.Entry<K, V>> next;
+			private ComparisonChain<Entry<K, V>> next;
 			
 			MapComparator(Function<T, M> mapAccessor, Function<K, ?> keyAccessor) {
 				this.mapAccessor = mapAccessor;
@@ -266,10 +303,23 @@ public class SchemaDiffer {
 				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
 				CollectionDiffer<E, C, AbstractDiff<E>> collectionDiffer = null;
 				C collection1 = collectionAccessor.apply(t1);
+				AccessorDefinition collectionAccessorDefinition = null;
+				if (collectionAccessor instanceof SerializableFunction) {
+					PropertyAccessor<T, C> accessor = Accessors.accessor((SerializableFunction<T, C>) collectionAccessor);
+					collectionAccessorDefinition = AccessorDefinition.giveDefinition(accessor);
+				}
 				if (collection1 instanceof Set) {
-					collectionDiffer = (CollectionDiffer) new SetDiffer<>(keyAccessor);
+					SetDiffer<E, ?> setDiffer = new SetDiffer<>(keyAccessor);
+					setDiffer.setCollectionAccessor(collectionAccessorDefinition);
+					collectionDiffer = (CollectionDiffer) setDiffer;
 				} else if (collection1 instanceof List) {
-					collectionDiffer = (CollectionDiffer) new ListDiffer<>(keyAccessor);
+					ListDiffer<E, ?> listDiffer = new ListDiffer<>(keyAccessor);
+					listDiffer.setCollectionAccessor(collectionAccessorDefinition);
+					collectionDiffer = (CollectionDiffer) listDiffer;
+				} else if (collection1 instanceof Queue) {
+					QueueDiffer<E, ?> queueDiffer = new QueueDiffer<>(keyAccessor);
+					queueDiffer.setCollectionAccessor(collectionAccessorDefinition);
+					collectionDiffer = (CollectionDiffer) queueDiffer;
 				}
 				C collection2 = collectionAccessor.apply(t2);
 				KeepOrderSet<AbstractDiff<E>> collectionPresences = collectionDiffer.diff(collection1, collection2);

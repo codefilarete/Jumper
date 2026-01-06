@@ -2,6 +2,8 @@ package org.codefilarete.jumper.schema.difference;
 
 import java.util.Set;
 
+import org.codefilarete.reflection.AccessorDefinition;
+
 /**
  * A difference of a comparison made by {@link ListDiffer#diffSet(Set, Set)}
  *
@@ -13,6 +15,8 @@ import java.util.Set;
  */
 public class Diff<C> extends AbstractDiff<C> {
 	
+	private AccessorDefinition collectionAccessor;
+	
 	/**
 	 * Constructor without given index (minimal constructor).
 	 * 
@@ -22,5 +26,9 @@ public class Diff<C> extends AbstractDiff<C> {
 	 */
 	public Diff(State state, C sourceInstance, C replacingInstance) {
 		super(state, sourceInstance, replacingInstance);
+	}
+	
+	public void setCollectionAccessor(AccessorDefinition collectionAccessor) {
+		this.collectionAccessor = collectionAccessor;
 	}
 }

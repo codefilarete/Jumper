@@ -2,6 +2,7 @@ package org.codefilarete.jumper.schema.difference;
 
 import java.sql.JDBCType;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
@@ -9,7 +10,9 @@ import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.ForeignKey;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.reflection.AccessorDefinition;
 import org.codefilarete.reflection.Accessors;
@@ -53,9 +56,13 @@ class SchemaDifferTest {
 		Table extraTable = schema2.addTable("ExtraTable");
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
 		
+		Diff<Table> expectedDiff1 = new Diff<>(State.REMOVED, missingTable, null);
+		Diff<Table> expectedDiff2 = new Diff<>(State.ADDED, null, extraTable);
+		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(Schema.class, "tables", Set.class)));
+		
 		assertThat(compare)
 				.usingRecursiveFieldByFieldElementComparator()	// because Diff class doesn't implement equals() and we don't want it to
-				.containsExactlyInAnyOrder(new Diff<>(State.REMOVED, missingTable, null), new Diff<>(State.ADDED, null, extraTable));
+				.containsExactlyInAnyOrder(expectedDiff1, expectedDiff2);
 	}
 	
 	@Test
@@ -71,11 +78,13 @@ class SchemaDifferTest {
 		Column extraColumn = dummyTable2.addColumn("extraColumn", JDBCType.BIGINT, 42, 12, true, true);
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
 		
+		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.REMOVED, missingColumn, null, Arrays.asHashSet(1), Arrays.asHashSet());
+		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.ADDED, null, extraColumn, Arrays.asHashSet(), Arrays.asHashSet(1));
+		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(Table.class, "columns", List.class)));
+		
 		assertThat(compare)
 				.usingRecursiveFieldByFieldElementComparator()	// because Diff class doesn't implement equals() and we don't want it to
-				.containsExactlyInAnyOrder(
-						new IndexedDiff<>(State.REMOVED, missingColumn, null, Arrays.asHashSet(1), Arrays.asHashSet()),
-						new IndexedDiff<>(State.ADDED, null, extraColumn, Arrays.asHashSet(), Arrays.asHashSet(1)));
+				.containsExactlyInAnyOrder(expectedDiff1, expectedDiff2);
 	}
 	
 	@Test
@@ -112,11 +121,76 @@ class SchemaDifferTest {
 		PrimaryKey primaryKey2 = dummyTable2.setPrimaryKey("PRIMARY", Arrays.asList(otherDummyColumn));
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
 		
+		
+		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.REMOVED, dummyColumn1, null, Arrays.asHashSet(0), Arrays.asHashSet());
+		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.ADDED, null, otherDummyColumn, Arrays.asHashSet(), Arrays.asHashSet(0));
+		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(PrimaryKey.class, "columns", List.class)));
+		
 		assertThat(compare)
 				.usingRecursiveFieldByFieldElementComparator(RECURSIVE_COMPARISON_CONFIGURATION)	// because Diff class doesn't implement equals() and we don't want it to
+				.containsExactlyInAnyOrder(expectedDiff1, expectedDiff2);
+	}
+	
+	@Test
+	void compare_foreignKeys_missing() {
+		SchemaDiffer testInstance = new SchemaDiffer();
+		Schema schema1 = new Schema("schema1");
+		ForeignKey myForeignKey;
+		{
+			Table dummyTable1 = schema1.addTable("DummyTable1");
+			Column dummyColumn1 = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			Table dummyTable2 = schema1.addTable("DummyTable2");
+			Column dummyColumn2 = dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			myForeignKey = dummyTable1.addForeignKey("my_foreignKey", Arrays.asList(dummyColumn1), dummyTable2, Arrays.asList(dummyColumn2));
+		}
+		Schema schema2 = new Schema("schema2");
+		{
+			Table dummyTable1 = schema2.addTable("DummyTable1");
+			Column dummyColumn1 = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			Table dummyTable2 = schema2.addTable("DummyTable2");
+			Column dummyColumn2 = dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		}
+		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
+		
+		assertThat(compare)
+				.usingRecursiveFieldByFieldElementComparator()	// because Diff class doesn't implement equals() and we don't want it to
 				.containsExactlyInAnyOrder(
-						new IndexedDiff<>(State.REMOVED, dummyColumn1, null, Arrays.asHashSet(0), Arrays.asHashSet()),
-						new IndexedDiff<>(State.ADDED, null, otherDummyColumn, Arrays.asHashSet(), Arrays.asHashSet(0)));
+						new Diff<>(State.REMOVED, myForeignKey, null));
+	}
+	
+	@Test
+	void compare_foreignKeys_differing() {
+		SchemaDiffer testInstance = new SchemaDiffer();
+		Schema schema1 = new Schema("schema1");
+		Column dummyColumn2;
+		{
+			Table dummyTable1 = schema1.addTable("DummyTable1");
+			Column dummyColumn1 = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			Table dummyTable2 = schema1.addTable("DummyTable2");
+			dummyColumn2 = dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			ForeignKey myForeignKey1 = dummyTable1.addForeignKey("my_foreignKey", Arrays.asList(dummyColumn1), dummyTable2, Arrays.asList(dummyColumn2));
+		}
+		Schema schema2 = new Schema("schema2");
+		Column yetAnotherDummyColumn2;
+		{
+			Table dummyTable1 = schema2.addTable("DummyTable1");
+			Column dummyColumn1 = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			Table dummyTable2 = schema2.addTable("DummyTable2");
+			dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			yetAnotherDummyColumn2 = dummyTable2.addColumn("yetAnotherDummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+			ForeignKey myForeignKey2 = dummyTable1.addForeignKey("my_foreignKey", Arrays.asList(dummyColumn1), dummyTable2, Arrays.asList(yetAnotherDummyColumn2));
+		}
+		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
+		
+		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.ADDED, null, yetAnotherDummyColumn2, Arrays.asHashSet(), Arrays.asHashSet(0));
+		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.REMOVED, dummyColumn2, null, Arrays.asHashSet(0), Arrays.asHashSet());
+		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(ForeignKey.class, "targetColumns", List.class)));
+		IndexedDiff<Column> expectedDiff3 = new IndexedDiff<>(State.ADDED, null, yetAnotherDummyColumn2, Arrays.asHashSet(), Arrays.asHashSet(1));
+		Arrays.asSet(expectedDiff3).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(Table.class, "columns", List.class)));
+		
+		assertThat(compare)
+				.usingRecursiveFieldByFieldElementComparator()	// because Diff class doesn't implement equals() and we don't want it to
+				.containsExactlyInAnyOrder(expectedDiff1, expectedDiff2, expectedDiff3);
 	}
 	
 	@Nested
@@ -219,9 +293,13 @@ class SchemaDifferTest {
 		Index extraIndex = schema2.addIndex("ExtraIndex");
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
 		
+		Diff<Index> expectedDiff1 = new Diff<>(State.REMOVED, missingIndex, null);
+		Diff<Index> expectedDiff2 = new Diff<>(State.ADDED, null, extraIndex);
+		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(Schema.class, "indexes", Set.class)));
+		
 		assertThat(compare)
 				.usingRecursiveFieldByFieldElementComparator()	// because Diff class doesn't implement equals() and we don't want it to
-				.containsExactlyInAnyOrder(new Diff<>(State.REMOVED, missingIndex, null), new Diff<>(State.ADDED, null, extraIndex));
+				.containsExactlyInAnyOrder(expectedDiff1, expectedDiff2);
 	}
 	
 	@Test
@@ -229,15 +307,20 @@ class SchemaDifferTest {
 		SchemaDiffer testInstance = new SchemaDiffer();
 		Schema schema1 = new Schema("schema1");
 		schema1.addView("DummyView");
-		Index missingView = schema1.addIndex("MissingView");
+		View missingView = schema1.addView("MissingView");
 		Schema schema2 = new Schema("schema2");
 		schema2.addView("DummyView");
-		Index extraView = schema2.addIndex("ExtraView");
+		View extraView = schema2.addView("ExtraView");
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
+		
+		
+		Diff<View> expectedDiff1 = new Diff<>(State.REMOVED, missingView, null);
+		Diff<View> expectedDiff2 = new Diff<>(State.ADDED, null, extraView);
+		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(Schema.class, "views", Set.class)));
 		
 		assertThat(compare)
 				.usingRecursiveFieldByFieldElementComparator()	// because Diff class doesn't implement equals() and we don't want it to
-				.containsExactlyInAnyOrder(new Diff<>(State.REMOVED, missingView, null), new Diff<>(State.ADDED, null, extraView));
+				.containsExactlyInAnyOrder(expectedDiff1, expectedDiff2);
 	}
 	
 }

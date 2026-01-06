@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.codefilarete.reflection.AccessorDefinition;
+
 /**
  * A specialized version of {@link AbstractDiff} for indexed {@link java.util.Collection} because it keeps indexes.
  * Result of a comparison made by {@link ListDiffer#diffList(List, List)}.
@@ -16,6 +18,8 @@ public class IndexedDiff<C> extends AbstractDiff<C> {
 	private final Set<Integer> sourceIndexes;
 	
 	private final Set<Integer> replacerIndexes;
+	
+	private AccessorDefinition collectionAccessor;
 	
 	/**
 	 * Constructor without given index (minimal constructor).
@@ -54,6 +58,10 @@ public class IndexedDiff<C> extends AbstractDiff<C> {
 		return this;
 	}
 	
+	public void setCollectionAccessor(AccessorDefinition collectionAccessor) {
+		this.collectionAccessor = collectionAccessor;
+	}
+	
 	/**
 	 * Implemented for the {@link ListDiffer#diffList(List, List)} method algorithm
 	 * 
@@ -65,16 +73,17 @@ public class IndexedDiff<C> extends AbstractDiff<C> {
 		if (this == o) return true;
 		if (!(o instanceof IndexedDiff)) return false;
 		IndexedDiff that = (IndexedDiff) o;
-		return Objects.equals(getSourceInstance(), that.getSourceInstance())
+		return collectionAccessor.equals(that.collectionAccessor)
+				&& Objects.equals(getSourceInstance(), that.getSourceInstance())
 				&& Objects.equals(getReplacingInstance(), that.getReplacingInstance())
  		;
 	}
 	
 	/**
-	 * @return a hash of source and replacing instances, based on same principle as {@link #equals(Object)}
+	 * @return a hash of source, replacing instances and collection accessor, based on same principle as {@link #equals(Object)}
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(getSourceInstance(), getReplacingInstance());
+		return Objects.hash(collectionAccessor, getSourceInstance(), getReplacingInstance());
 	}
 }

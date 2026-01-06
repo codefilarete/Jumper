@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
+import org.codefilarete.reflection.AccessorDefinition;
 import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.bean.Objects;
 import org.codefilarete.tool.collection.Iterables;
@@ -19,7 +20,7 @@ import org.codefilarete.tool.trace.MutableInt;
 import static org.codefilarete.jumper.schema.difference.State.*;
 
 /**
- * A class to compute the differences between 2 collections of objects: addition, removal or held
+ * A class to compute the differences between 2 collections of objects: addition, removal, or held
  *
  * @param <T> bean type
  * @author Guillaume Mary
@@ -28,10 +29,15 @@ public class QueueDiffer<T, I> implements CollectionDiffer<T, Queue<T>, IndexedD
 	
 	private final Function<T, I> idProvider;
 	private final BiPredicate<T, T> elementPredicate;
+	private AccessorDefinition collectionAccessor;
 	
 	public QueueDiffer(Function<T, I> idProvider) {
 		this.idProvider = idProvider;
 		this.elementPredicate = (t1, t2) -> Objects.equals(this.idProvider.apply(t1), this.idProvider.apply(t2));
+	}
+	
+	public void setCollectionAccessor(AccessorDefinition collectionAccessor) {
+		this.collectionAccessor = collectionAccessor;
 	}
 	
 	@Override
@@ -105,6 +111,8 @@ public class QueueDiffer<T, I> implements CollectionDiffer<T, Queue<T>, IndexedD
 				result.add(added);
 			}
 		});
+		
+		result.forEach(diff -> diff.setCollectionAccessor(collectionAccessor));
 		
 		return result;
 	}

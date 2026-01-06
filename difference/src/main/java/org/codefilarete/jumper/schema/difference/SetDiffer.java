@@ -6,13 +6,14 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.codefilarete.reflection.AccessorDefinition;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.collection.KeepOrderSet;
 
 import static org.codefilarete.jumper.schema.difference.State.*;
 
 /**
- * A class to compute the differences between 2 collections of objects: addition, removal or held
+ * A class to compute the differences between 2 collections of objects: addition, removal, or held
  *
  * @param <T> bean type
  * @param <I> the type of the payload onto comparison will be done
@@ -21,9 +22,14 @@ import static org.codefilarete.jumper.schema.difference.State.*;
 public class SetDiffer<T, I> implements CollectionDiffer<T, Set<T>, Diff<T>> {
 	
 	private final Function<T, I> idProvider;
+	private AccessorDefinition collectionAccessor;
 	
 	public SetDiffer(Function<T, I> idProvider) {
 		this.idProvider = idProvider;
+	}
+	
+	public void setCollectionAccessor(AccessorDefinition collectionAccessor) {
+		this.collectionAccessor = collectionAccessor;
 	}
 	
 	/**
@@ -54,6 +60,9 @@ public class SetDiffer<T, I> implements CollectionDiffer<T, Set<T>, Diff<T>> {
 		for (Entry<I, T> identifiedEntry : addedElements.entrySet()) {
 			result.add(new Diff<>(ADDED, null, identifiedEntry.getValue()));
 		}
+		
+		result.forEach(diff -> diff.setCollectionAccessor(collectionAccessor));
+		
 		return result;
 	}
 }
