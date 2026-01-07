@@ -13,6 +13,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import org.codefilarete.jumper.schema.metadata.PreparedCriteria.Equal;
 import org.codefilarete.jumper.schema.metadata.PreparedCriteria.Like;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
@@ -124,10 +125,11 @@ public class MariaDBMetadataReader extends DefaultMetadataReader implements Sequ
 	}
 	
 	@Override
-	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern) {
+	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern, Boolean unique) {
 		try (ResultSet tableResultSet = indexMetadataReader.giveMetaData(
 				Nullable.nullable(schema).map(Like::new).get(),
-				Nullable.nullable(tablePattern).map(Like::new).get())) {
+				Nullable.nullable(tablePattern).map(Like::new).get(),
+				Nullable.nullable(unique).map(Equal::new).get())) {
 			Map<String, IndexMetadata> cache = new HashMap<>();
 			ResultSetIterator<IndexMetadata> resultSetIterator = new ResultSetIterator<IndexMetadata>(tableResultSet) {
 				@Override

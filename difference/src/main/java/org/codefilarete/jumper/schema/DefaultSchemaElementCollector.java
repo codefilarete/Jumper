@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,13 +26,15 @@ import org.codefilarete.jumper.schema.metadata.ColumnMetadata;
 import org.codefilarete.jumper.schema.metadata.DefaultMetadataReader;
 import org.codefilarete.jumper.schema.metadata.ForeignKeyMetadata;
 import org.codefilarete.jumper.schema.metadata.IndexMetadata;
-import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.PrimaryKeyMetadata;
+import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
 import org.codefilarete.jumper.schema.metadata.TableMetadata;
+import org.codefilarete.jumper.schema.metadata.UniqueConstraintMetadata;
 import org.codefilarete.jumper.schema.metadata.ViewMetadata;
 import org.codefilarete.tool.Duo;
 import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
+import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.Iterables;
 import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
@@ -135,8 +138,41 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 							sourceColumns, tablePerName.get(row.getTargetTable().getTableName()), targetColumns);
 		});
 		
+		Set<UniqueConstraintMetadata> uniqueConstraintsMetadata = metadataReader.giveUniqueConstraints(catalog, schema, tableNamePattern);
+		Map<String, List<UniqueConstraintMetadata>> constraintPerTableName = uniqueConstraintsMetadata.stream().collect(Collectors.groupingBy(UniqueConstraintMetadata::getTableName));
+		tablePerName.keySet().forEach(tableName -> {
+			List<UniqueConstraintMetadata> tableIndexes = constraintPerTableName.get(tableName);
+			if (tableIndexes != null) {
+				tableIndexes.forEach(indexMetadata -> {
+					boolean addIndex = shouldAddUniqueConstraint(result, indexMetadata);
+					if (addIndex) {
+						KeepOrderSet<Indexable> constraintColumns = indexMetadata.getColumns().stream().map(columnName -> {
+							Indexable column = columnCache.get(new Duo<>(indexMetadata.getTableName(), columnName));
+							if (column == null) {
+								// The indexed value is not a column but an expression (a column substring for example) so we create a special object for it
+								Table indexTable = Iterables.find(result.getTables(), table -> table.getName().equals(indexMetadata.getTableName()));
+								column = new Indexable() {
+									@Override
+									public String getName() {
+										return columnName;
+									}
+									
+									@Override
+									public Table getTable() {
+										return indexTable;
+									}
+								};
+							}
+							return column;
+						}).collect(Collectors.toCollection(KeepOrderSet::new));
+						tablePerName.get(tableName).addUniqueConstraint(indexMetadata.getName(), constraintColumns);
+					}
+				});
+			}
+		});
+		
 		// Collecting indexes
-		Set<IndexMetadata> indexesMetadata = metadataReader.giveIndexes(catalog, schema, tableNamePattern);
+		Set<IndexMetadata> indexesMetadata = metadataReader.giveIndexes(catalog, schema, tableNamePattern, null);
 		Map<String, List<IndexMetadata>> indexPerTableName = indexesMetadata.stream().collect(Collectors.groupingBy(IndexMetadata::getTableName));
 		tablePerName.keySet().forEach(tableName -> {
 			List<IndexMetadata> tableIndexes = indexPerTableName.get(tableName);
@@ -218,6 +254,17 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			direction = AscOrDesc.DESC;
 		}
 		return direction;
+	}
+	
+	protected boolean shouldAddUniqueConstraint(Schema result, UniqueConstraintMetadata uniqueConstraintMetadata) {
+		// we don't take into account constraint that matches primaryKey names and unique index names because some database vendors
+		// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
+		// as they are highly tied to primaryKey presence (can't be deleted without removing primaryKey)
+		Optional<String> matchingPkName = result.getTables().stream().map(t -> nullable(t.getPrimaryKey()).map(PrimaryKey::getName).getOr((String) null))
+				.filter(pkName -> uniqueConstraintMetadata.getName().equals(pkName)).findFirst();
+		Optional<String> matchingIndexName = result.getIndexes().stream().filter(Index::isUnique).map(Index::getName)
+				.filter(indexName -> uniqueConstraintMetadata.getName().equals(indexName)).findFirst();
+		return !matchingPkName.isPresent() && !matchingIndexName.isPresent();
 	}
 	
 	protected boolean shouldAddIndex(Schema result, IndexMetadata indexMetadata) {
@@ -309,6 +356,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			private PrimaryKey primaryKey;
 			private final Set<ForeignKey> foreignKeys = new HashSet<>();
 			private String comment;
+			private final Set<UniqueConstraint> uniqueConstraints = new HashSet<>();
 			
 			protected Table(String name) {
 				this.name = name;
@@ -345,6 +393,28 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			public ForeignKey addForeignKey(String name, List<Column> columns, Table targetTable, List<Column> targetColumns) {
 				ForeignKey result = new ForeignKey(name, columns, targetTable, targetColumns);
 				this.foreignKeys.add(result);
+				return result;
+			}
+			
+			public Set<UniqueConstraint> getUniqueConstraints() {
+				return uniqueConstraints;
+			}
+			
+			public UniqueConstraint addUniqueConstraint(String name, Indexable column, Indexable... moreColumns) {
+				UniqueConstraint result = new UniqueConstraint(name, Arrays.cat(new Indexable[] { column }, moreColumns));
+				this.uniqueConstraints.add(result);
+				return result;
+			}
+			
+			public UniqueConstraint addUniqueConstraint(String name, LinkedHashSet<Indexable> columns) {
+				UniqueConstraint result = new UniqueConstraint(name, new KeepOrderSet<>(columns));
+				this.uniqueConstraints.add(result);
+				return result;
+			}
+			
+			public UniqueConstraint addUniqueConstraint(String name, KeepOrderSet<Indexable> columns) {
+				UniqueConstraint result = new UniqueConstraint(name, columns);
+				this.uniqueConstraints.add(result);
 				return result;
 			}
 			
@@ -515,6 +585,48 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 							"'" + name + '\'' + ": " +
 							Iterables.collectToList(() -> new PairIterator<>(columns, targetColumns),
 									duo -> getTable().getName() + "." + duo.getLeft().getName() + " => " + targetTable.getName() + "." + duo.getRight().getName()).toString() +
+							'}';
+				}
+			}
+			
+			public class UniqueConstraint implements SchemaElement, TableElement {
+				
+				private final String name;
+				private final KeepOrderSet<Indexable> columns;
+				
+				protected UniqueConstraint(String name, Indexable... columns) {
+					this(name, new KeepOrderSet<>(columns));
+				}
+				
+				protected UniqueConstraint(String name, KeepOrderSet<Indexable> columns) {
+					this.name = name;
+					this.columns = columns;
+				}
+				
+				@Override
+				public Schema getSchema() {
+					return Schema.this;
+				}
+				
+				@Override
+				public Table getTable() {
+					return Table.this;
+				}
+				
+				public String getName() {
+					return name;
+				}
+				
+				public KeepOrderSet<Indexable> getColumns() {
+					return columns;
+				}
+				
+				@Override
+				public String toString() {
+					return "UniqueConstraint{" +
+							"name = '" + name + '\'' + ", " +
+							"table = '" + getTable().getName() + '\'' + ": " +
+							columns.stream().map(Indexable::getName).collect(Collectors.joining(", ")) +
 							'}';
 				}
 			}

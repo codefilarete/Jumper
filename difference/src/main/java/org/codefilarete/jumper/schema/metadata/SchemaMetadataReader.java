@@ -36,7 +36,9 @@ public interface SchemaMetadataReader {
 	
 	Set<ViewMetadata> giveViews(String catalog, String schema, String tableNamePattern);
 	
-	Set<IndexMetadata> giveIndexes(String catalog, String schema, String tableNamePattern);
+	Set<UniqueConstraintMetadata> giveUniqueConstraints(String catalog, String schema, String tablePattern);
+	
+	Set<IndexMetadata> giveIndexes(String catalog, String schema, String tableNamePattern, Boolean unique);
 	
 	Set<ProcedureMetadata> giveProcedures(String catalog, String schema, String procedurePatternName);
 	

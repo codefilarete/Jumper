@@ -65,7 +65,7 @@ public class PreparedCriteria {
 		
 	}
 	
-	public static class Equal<V extends String> extends Operator<V> {
+	public static class Equal<V> extends Operator<V> {
 		
 		public Equal(V value) {
 			super(value);

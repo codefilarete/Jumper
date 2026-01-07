@@ -20,45 +20,32 @@ import static org.codefilarete.jumper.schema.metadata.PreparedCriteria.asSQLCrit
  *
  * @author Guillaume Mary
  */
-public class TableMetadataReader {
+public class TableMetadataReader extends AbstractMetadataReader {
 	
-	private final DatabaseMetaData metaData;
+	private static final String INDEX_SELECT_SQL_BASE = "SELECT NULL TABLE_CAT, TABLE_SCHEMA  TABLE_SCHEM,  TABLE_NAME,"
+			+ " IF(TABLE_TYPE='BASE TABLE' or TABLE_TYPE='SYSTEM VERSIONED', 'TABLE', TABLE_TYPE) as TABLE_TYPE,"
+			+ " TABLE_COMMENT REMARKS, NULL TYPE_CAT, NULL TYPE_SCHEM, NULL TYPE_NAME, NULL SELF_REFERENCING_COL_NAME, "
+			+ " NULL REF_GENERATION"
+			+ " FROM INFORMATION_SCHEMA.TABLES";
 	
 	public TableMetadataReader(DatabaseMetaData metaData) {
-		this.metaData = metaData;
+		super(metaData);
 	}
 	
 	public ResultSet giveMetaData(Operator schema, Operator tableNamePattern) throws SQLException {
-		String indexSelectSQL = "SELECT NULL TABLE_CAT, TABLE_SCHEMA  TABLE_SCHEM,  TABLE_NAME,"
-				+ " IF(TABLE_TYPE='BASE TABLE' or TABLE_TYPE='SYSTEM VERSIONED', 'TABLE', TABLE_TYPE) as TABLE_TYPE,"
-				+ " TABLE_COMMENT REMARKS, NULL TYPE_CAT, NULL TYPE_SCHEM, NULL TYPE_NAME, NULL SELF_REFERENCING_COL_NAME, "
-				+ " NULL REF_GENERATION"
-				+ " FROM INFORMATION_SCHEMA.TABLES";
+		StringBuilder indexSelectSQL = new StringBuilder(INDEX_SELECT_SQL_BASE);
 		
 		
 		PreparedCriteria[] criteria = Stream.of(
 						asSQLCriteria("TABLE_SCHEMA", schema),
 						asSQLCriteria("TABLE_NAME", tableNamePattern))
 				.filter(Objects::nonNull).toArray(PreparedCriteria[]::new);
-		indexSelectSQL += " WHERE " + Stream.of(criteria)
+		indexSelectSQL.append(" WHERE ").append(Stream.of(criteria)
 				.map(PreparedCriteria::getCriteriaSegment)
-				.collect(Collectors.joining(" AND "));
-		indexSelectSQL += " ORDER BY TABLE_TYPE, TABLE_SCHEMA, TABLE_NAME";
+				.collect(Collectors.joining(" AND ")));
+		indexSelectSQL.append(" ORDER BY TABLE_TYPE, TABLE_SCHEMA, TABLE_NAME");
 		
-		
-		PreparedStatement preparedStatement = metaData.getConnection().prepareStatement(indexSelectSQL);
-		MutableInt preparedParameterIndex = new MutableInt(0);
-		Stream.of(criteria)
-				.flatMap(preparedCriteria -> preparedCriteria.getValues().stream())
-				.map(String.class::cast)
-				.forEach(value -> {
-					try {
-						preparedStatement.setString(preparedParameterIndex.increment(), value);
-					} catch (SQLException e) {
-						throw new RuntimeException(e);
-					}
-				});
-		return preparedStatement.executeQuery();
+		return executeQuery(indexSelectSQL, criteria);
 	}
 }
 

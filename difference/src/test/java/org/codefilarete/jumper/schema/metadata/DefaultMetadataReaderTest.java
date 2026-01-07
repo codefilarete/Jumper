@@ -84,7 +84,7 @@ class DefaultMetadataReaderTest {
 	@Test
 	void giveIndexes() throws SQLException {
 		DefaultMetadataReader testInstance = new DefaultMetadataReader(dataSource.getConnection().getMetaData());
-		Set<IndexMetadata> ddlElements = testInstance.giveIndexes(null, null, "TOTO");
+		Set<IndexMetadata> ddlElements = testInstance.giveIndexes(null, null, "TOTO", true);
 		ddlElements.forEach(t -> {
 			System.out.println(t.getName());
 //			System.out.println(t.getName() + ": " + t.getType());

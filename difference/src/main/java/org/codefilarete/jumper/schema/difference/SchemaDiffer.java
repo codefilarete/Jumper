@@ -1,18 +1,18 @@
 package org.codefilarete.jumper.schema.difference;
 
-import java.io.Serializable;
-import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,12 +24,11 @@ import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.ForeignKey;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.UniqueConstraint;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View.PseudoColumn;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.SchemaElement;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.TableElement;
-import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.CollectionComparator;
-import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.MapComparator;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.reflection.AccessorByMethodReference;
@@ -82,11 +81,18 @@ public class SchemaDiffer {
 								.compareOn(PseudoColumn::isNullable)))
 				.compareOn(schema -> schema.getTables().stream().flatMap(t -> t.getForeignKeys().stream()).collect(Collectors.toSet()),
 						"Foreign keys",
+						// We uses the foreign keys columns as a key of identifier because we consider them more important than the foreign key name
 						fk -> fk.getColumns().stream().map(Column::getName).collect(Collectors.joining(", ")),
 						comparisonChain(ForeignKey.class)
 						.compareOn(ForeignKey::getColumns, Column::getName)
 						.compareOn(ForeignKey::getTargetColumns, Column::getName)
-						.compareOn(ForeignKey::getName)
+						.compareOn(ForeignKey::getName))
+				.compareOn(schema -> schema.getTables().stream().flatMap(t -> t.getUniqueConstraints().stream()).collect(Collectors.toSet()),
+						"Unique Constraints",
+						uk -> uk.getColumns().stream().map(Indexable::getName).collect(Collectors.joining(", ")),
+						comparisonChain(UniqueConstraint.class)
+								.compareOn(UniqueConstraint::getColumns, Indexable::getName)
+								.compareOn(UniqueConstraint::getName)
 				);
 	}
 	
@@ -301,14 +307,25 @@ public class SchemaDiffer {
 			
 			Set<AbstractDiff<?>> compare(T t1, T t2) {
 				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
-				CollectionDiffer<E, C, AbstractDiff<E>> collectionDiffer = null;
 				C collection1 = collectionAccessor.apply(t1);
 				AccessorDefinition collectionAccessorDefinition = null;
 				if (collectionAccessor instanceof SerializableFunction) {
 					PropertyAccessor<T, C> accessor = Accessors.accessor((SerializableFunction<T, C>) collectionAccessor);
 					collectionAccessorDefinition = AccessorDefinition.giveDefinition(accessor);
 				}
-				if (collection1 instanceof Set) {
+				C collection2 = collectionAccessor.apply(t2);
+				
+				CollectionDiffer<E, Collection<E>, AbstractDiff<E>> collectionDiffer = null;
+				Collection<E> collectionToCompare1 = collection1;
+				Collection<E> collectionToCompare2 = collection2;
+				if (collection1 instanceof LinkedHashSet || collection1 instanceof TreeSet || collection1 instanceof KeepOrderSet) {
+					// to respect the order of the Set, we uses a ListDiffer (that keep track of indexes), hence we have to transform the Sets to Lists
+					collectionToCompare1 = new ArrayList<>(collection1);
+					collectionToCompare2 = new ArrayList<>(collection2);
+					ListDiffer<E, ?> setDiffer = new ListDiffer<>(keyAccessor);
+					setDiffer.setCollectionAccessor(collectionAccessorDefinition);
+					collectionDiffer = (CollectionDiffer) setDiffer;
+				} else if (collection1 instanceof Set) {
 					SetDiffer<E, ?> setDiffer = new SetDiffer<>(keyAccessor);
 					setDiffer.setCollectionAccessor(collectionAccessorDefinition);
 					collectionDiffer = (CollectionDiffer) setDiffer;
@@ -321,8 +338,7 @@ public class SchemaDiffer {
 					queueDiffer.setCollectionAccessor(collectionAccessorDefinition);
 					collectionDiffer = (CollectionDiffer) queueDiffer;
 				}
-				C collection2 = collectionAccessor.apply(t2);
-				KeepOrderSet<AbstractDiff<E>> collectionPresences = collectionDiffer.diff(collection1, collection2);
+				KeepOrderSet<AbstractDiff<E>> collectionPresences = collectionDiffer.diff(collectionToCompare1, collectionToCompare2);
 				
 				result.addAll(collectionPresences.stream()
 						.filter(d -> d.getState() != State.HELD).collect(Collectors.toList()));

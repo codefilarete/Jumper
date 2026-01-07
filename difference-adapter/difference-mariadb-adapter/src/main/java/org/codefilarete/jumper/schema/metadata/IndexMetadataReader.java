@@ -1,5 +1,6 @@
 package org.codefilarete.jumper.schema.metadata;
 
+import javax.annotation.Nullable;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,12 +39,16 @@ public class IndexMetadataReader extends AbstractMetadataReader {
 		super(metaData);
 	}
 	
-	ResultSet giveMetaData(Operator schema, Operator tableNamePattern) throws SQLException {
+	ResultSet giveMetaData(@Nullable Operator<String> schema,
+						   @Nullable Operator<String> tableNamePattern,
+						   @Nullable Operator<Boolean> unique)
+			throws SQLException {
 		StringBuilder indexSelectSQL = new StringBuilder(INDEX_SELECT_SQL_BASE);
 		
 		PreparedCriteria[] criteria = Stream.of(
 				asSQLCriteria("TABLE_SCHEMA", schema),
-				asSQLCriteria("TABLE_NAME", tableNamePattern))
+				asSQLCriteria("TABLE_NAME", tableNamePattern),
+				asSQLCriteria("NON_UNIQUE", unique))
 				.filter(Objects::nonNull).toArray(PreparedCriteria[]::new);
 		indexSelectSQL.append(" WHERE ").append(Stream.of(criteria)
 				.map(PreparedCriteria::getCriteriaSegment)

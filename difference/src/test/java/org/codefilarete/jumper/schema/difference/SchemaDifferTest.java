@@ -12,6 +12,7 @@ import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.ForeignKey;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.PrimaryKey;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.UniqueConstraint;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.View;
 import org.codefilarete.jumper.schema.difference.SchemaDiffer.ComparisonChain.PropertyComparator.PropertyDiff;
 import org.codefilarete.reflection.AccessorDefinition;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.codefilarete.tool.collection.Arrays.asHashSet;
 
 class SchemaDifferTest {
 	
@@ -66,6 +68,54 @@ class SchemaDifferTest {
 	}
 	
 	@Test
+	void compare_schemasWithAnExtraUniqueConstraint_returnTheExtraUniqueConstraint() {
+		SchemaDiffer testInstance = new SchemaDiffer();
+		Schema schema1 = new Schema("schema1");
+		Table dummyTable1 = schema1.addTable("DummyTable");
+		Column dummyColumn1 = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		Column otherDummyColumn1 = dummyTable1.addColumn("otherDummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		Schema schema2 = new Schema("schema2");
+		Table dummyTable2 = schema2.addTable("DummyTable");
+		Column dummyColumn2 = dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		Column otherDummyColumn2 = dummyTable2.addColumn("otherDummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		UniqueConstraint uniqueConstraint = dummyTable2.addUniqueConstraint("my_constraint", dummyColumn2);
+		
+		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
+		
+		assertThat(compare)
+				.usingRecursiveFieldByFieldElementComparator(RECURSIVE_COMPARISON_CONFIGURATION)	// because Diff class doesn't implement equals() and we don't want it to
+				.containsExactlyInAnyOrder(
+						new Diff<>(State.ADDED, null, uniqueConstraint)
+				);
+	}
+	
+	@Test
+	void compare_schemasWithAnUniqueConstraint_differingOnColumn_returnUniqueConstraints() {
+		SchemaDiffer testInstance = new SchemaDiffer();
+		Schema schema1 = new Schema("schema1");
+		Table dummyTable1 = schema1.addTable("DummyTable");
+		Column dummyColumn1 = dummyTable1.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		Column otherDummyColumn1 = dummyTable1.addColumn("otherDummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		UniqueConstraint uniqueConstraint1 = dummyTable1.addUniqueConstraint("my_constraint", dummyColumn1, otherDummyColumn1);
+		
+		Schema schema2 = new Schema("schema2");
+		Table dummyTable2 = schema2.addTable("DummyTable");
+		Column dummyColumn2 = dummyTable2.addColumn("dummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		Column otherDummyColumn2 = dummyTable2.addColumn("otherDummyColumn", JDBCType.BIGINT, 42, 12, true, true);
+		UniqueConstraint uniqueConstraint2 = dummyTable2.addUniqueConstraint("my_constraint", dummyColumn2);
+		
+		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
+		
+		assertThat(compare)
+				.usingRecursiveFieldByFieldElementComparator(RECURSIVE_COMPARISON_CONFIGURATION)	// because Diff class doesn't implement equals() and we don't want it to
+				.containsExactlyInAnyOrder(
+						// from a unique constraint columns point of view (the key in the SchemaDiffer), the unique constraints are very different
+						new Diff<>(State.REMOVED, uniqueConstraint1, null),
+						new Diff<>(State.ADDED, null, uniqueConstraint2)
+				);
+	}
+	
+	@Test
 	void compare_tablesWithColumnDifference_returnsColumnDifferences() {
 		SchemaDiffer testInstance = new SchemaDiffer();
 		Schema schema1 = new Schema("schema1");
@@ -78,8 +128,8 @@ class SchemaDifferTest {
 		Column extraColumn = dummyTable2.addColumn("extraColumn", JDBCType.BIGINT, 42, 12, true, true);
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
 		
-		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.REMOVED, missingColumn, null, Arrays.asHashSet(1), Arrays.asHashSet());
-		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.ADDED, null, extraColumn, Arrays.asHashSet(), Arrays.asHashSet(1));
+		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.REMOVED, missingColumn, null, asHashSet(1), asHashSet());
+		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.ADDED, null, extraColumn, asHashSet(), asHashSet(1));
 		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(Table.class, "columns", List.class)));
 		
 		assertThat(compare)
@@ -122,8 +172,8 @@ class SchemaDifferTest {
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
 		
 		
-		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.REMOVED, dummyColumn1, null, Arrays.asHashSet(0), Arrays.asHashSet());
-		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.ADDED, null, otherDummyColumn, Arrays.asHashSet(), Arrays.asHashSet(0));
+		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.REMOVED, dummyColumn1, null, asHashSet(0), asHashSet());
+		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.ADDED, null, otherDummyColumn, asHashSet(), asHashSet(0));
 		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(PrimaryKey.class, "columns", List.class)));
 		
 		assertThat(compare)
@@ -182,10 +232,10 @@ class SchemaDifferTest {
 		}
 		Set<AbstractDiff<?>> compare = testInstance.compare(schema1, schema2);
 		
-		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.ADDED, null, yetAnotherDummyColumn2, Arrays.asHashSet(), Arrays.asHashSet(0));
-		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.REMOVED, dummyColumn2, null, Arrays.asHashSet(0), Arrays.asHashSet());
+		IndexedDiff<Column> expectedDiff1 = new IndexedDiff<>(State.ADDED, null, yetAnotherDummyColumn2, asHashSet(), asHashSet(0));
+		IndexedDiff<Column> expectedDiff2 = new IndexedDiff<>(State.REMOVED, dummyColumn2, null, asHashSet(0), asHashSet());
 		Arrays.asSet(expectedDiff1, expectedDiff2).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(ForeignKey.class, "targetColumns", List.class)));
-		IndexedDiff<Column> expectedDiff3 = new IndexedDiff<>(State.ADDED, null, yetAnotherDummyColumn2, Arrays.asHashSet(), Arrays.asHashSet(1));
+		IndexedDiff<Column> expectedDiff3 = new IndexedDiff<>(State.ADDED, null, yetAnotherDummyColumn2, asHashSet(), asHashSet(1));
 		Arrays.asSet(expectedDiff3).forEach(diff -> diff.setCollectionAccessor(new AccessorDefinition(Table.class, "columns", List.class)));
 		
 		assertThat(compare)

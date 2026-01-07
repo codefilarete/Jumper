@@ -223,10 +223,41 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 	}
 	
 	@Override
-	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern) {
+	public Set<UniqueConstraintMetadata> giveUniqueConstraints(String catalog, String schema, String tablePattern) {
 		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
 		return tableMetadata.stream().flatMap(tableMetadatum -> {
-			try (ResultSet tableResultSet = metaData.getIndexInfo(catalog, schema, tableMetadatum.getName(), false, false)) {
+			try (ResultSet tableResultSet = metaData.getIndexInfo(catalog, schema, tableMetadatum.getName(), true, false)) {
+				Map<String, UniqueConstraintMetadata> cache = new HashMap<>();
+				ResultSetIterator<UniqueConstraintMetadata> resultSetIterator = new ResultSetIterator<UniqueConstraintMetadata>(tableResultSet) {
+					@Override
+					public UniqueConstraintMetadata convert(ResultSet resultSet) {
+						String name = IndexMetaDataPseudoTable.INSTANCE.indexName.giveValue(resultSet);
+						UniqueConstraintMetadata result = cache.computeIfAbsent(name, k -> {
+							UniqueConstraintMetadata newInstance = new UniqueConstraintMetadata(
+									IndexMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+									IndexMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+									IndexMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
+							);
+							IndexMetaDataPseudoTable.INSTANCE.indexName.apply(resultSet, newInstance::setName);
+							return newInstance;
+						});
+						result.addColumn(IndexMetaDataPseudoTable.INSTANCE.columnName.giveValue(resultSet));
+						return result;
+					}
+				};
+				return resultSetIterator.convert().stream();
+				
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}).collect(Collectors.toSet());
+	}
+	
+	@Override
+	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern, Boolean unique) {
+		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
+		return tableMetadata.stream().flatMap(tableMetadatum -> {
+			try (ResultSet tableResultSet = metaData.getIndexInfo(catalog, schema, tableMetadatum.getName(), Objects.preventNull(unique, false), false)) {
 				Map<String, IndexMetadata> cache = new HashMap<>();
 				ResultSetIterator<IndexMetadata> resultSetIterator = new ResultSetIterator<IndexMetadata>(tableResultSet) {
 					@Override
