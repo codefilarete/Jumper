@@ -17,7 +17,14 @@
 			<artifactId>difference</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
+        <dependency>
+            <groupId>org.codefilarete.jumper</groupId>
+            <artifactId>difference</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
 			<groupId>org.codefilarete.stalactite</groupId>
 			<artifactId>sql-derby-adapter</artifactId>
 			<version>${stalactite.version}</version>

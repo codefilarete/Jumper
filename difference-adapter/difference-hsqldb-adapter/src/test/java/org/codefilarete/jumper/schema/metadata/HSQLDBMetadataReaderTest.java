@@ -5,14 +5,27 @@ import java.sql.SQLException;
 import java.util.Set;
 
 import org.codefilarete.jumper.schema.metadata.ProcedureMetadata.ProcedureType;
+import org.codefilarete.stalactite.sql.test.HSQLDBInMemoryDataSource;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class HSQLDBSequenceMetadataReaderTest extends DefaultMetadataReaderTest {
+class HSQLDBMetadataReaderTest extends MetadataReaderTest {
+	
+	@BeforeEach
+	@Override
+	void createDataSource() {
+		dataSource = new HSQLDBInMemoryDataSource();
+	}
+	
+	@Override
+	protected String getDefaultCatalog() {
+		return "PUBLIC";
+	}
 	
 	protected DefaultMetadataReader buildTestInstance() throws SQLException {
-		return new HSQLDBSequenceMetadataReader(dataSource.getConnection().getMetaData());
+		return new HSQLDBMetadataReader(dataSource.getConnection().getMetaData());
 	}
 	
 	@Test

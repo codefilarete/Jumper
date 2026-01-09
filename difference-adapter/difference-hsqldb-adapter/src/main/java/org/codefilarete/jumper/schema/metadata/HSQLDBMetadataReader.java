@@ -15,13 +15,13 @@ import org.hsqldb.jdbc.JDBCConnection;
 import org.hsqldb.persist.HsqlDatabaseProperties;
 import org.hsqldb.types.Type;
 
-public class HSQLDBSequenceMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
+public class HSQLDBMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
 	
 	private static final String SELSTAR = "SELECT * FROM INFORMATION_SCHEMA.";
 	
 	private boolean useSchemaDefault;
 	
-	public HSQLDBSequenceMetadataReader(DatabaseMetaData metaData) {
+	public HSQLDBMetadataReader(DatabaseMetaData metaData) {
 		super(metaData);
 		try {
 			useSchemaDefault = ((JDBCConnection) metaData.getConnection()).getConnProperties().isPropertyTrue(HsqlDatabaseProperties.url_default_schema,
