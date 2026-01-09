@@ -57,16 +57,6 @@ public class MySQLSchemaElementCollector extends DefaultSchemaElementCollector {
 		return new MySQLSchema(Strings.preventEmpty(schemaName, null));
 	}
 	
-	@Override
-	protected boolean shouldAddIndex(Schema result, IndexMetadata indexMetadata) {
-		// we don't consider adding index related to primary key to schema since they highly linked to it
-		if (indexMetadata.getName().equals("PRIMARY")) {
-			return false;
-		} else {
-			return super.shouldAddIndex(result, indexMetadata);
-		}
-	}
-	
 	public static class MySQLSchema extends Schema {
 		
 		private final Set<Sequence> sequences = new HashSet<>();

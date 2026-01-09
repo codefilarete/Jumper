@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -48,9 +49,9 @@ public class MySQLMetadataReader extends DefaultMetadataReader implements Sequen
 				public TableMetadata convert(ResultSet resultSet) {
 					TableMetadata result = new TableMetadata(
 							TableMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
-							TableMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet)
+							TableMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+							TableMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
 					);
-					TableMetaDataPseudoTable.INSTANCE.tableName.apply(resultSet, result::setName);
 					TableMetaDataPseudoTable.INSTANCE.remarks.apply(resultSet, result::setRemarks);
 					return result;
 				}
@@ -121,7 +122,10 @@ public class MySQLMetadataReader extends DefaultMetadataReader implements Sequen
 					return result;
 				}
 			};
-			return new HashSet<>(resultSetIterator.convert());
+			List<IndexMetadata> result = resultSetIterator.convert();
+			// we don't consider adding index related to primary key to schema since they highly linked to it
+			result.removeIf(index -> index.getName().equals("PRIMARY"));
+			return new HashSet<>(result);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

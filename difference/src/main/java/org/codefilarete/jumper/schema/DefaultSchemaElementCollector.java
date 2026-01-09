@@ -114,7 +114,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			columnCache.put(new Duo<>(table.getName(), row.getName()), column);
 		});
 		
-		Set<PrimaryKeyMetadata> primaryKeyMetadata = metadataReader.givePrimaryKey(catalog, schema, tableNamePattern);
+		Set<PrimaryKeyMetadata> primaryKeyMetadata = metadataReader.givePrimaryKeys(catalog, schema, tableNamePattern);
 		primaryKeyMetadata.forEach(primaryKeyMetadatum -> {
 			List<Column> primaryKeyColumns = new ArrayList<>();
 			primaryKeyMetadatum.getColumns().forEach(columnName -> {
@@ -178,31 +178,28 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			List<IndexMetadata> tableIndexes = indexPerTableName.get(tableName);
 			if (tableIndexes != null) {
 				tableIndexes.forEach(indexMetadata -> {
-					boolean addIndex = shouldAddIndex(result, indexMetadata);
-					if (addIndex) {
-						Index index = result.addIndex(indexMetadata.getName());
-						index.setUnique(indexMetadata.isUnique());
-						indexMetadata.getColumns().forEach(duo -> {
-							AscOrDesc direction = mapBooleanToDirection(duo.getRight());
-							Indexable column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
-							if (column == null) {
-								// The indexed value is not a column but an expression (a column substring for example) so we create a special object for it
-								Table indexTable = Iterables.find(result.getTables(), table -> table.getName().equals(indexMetadata.getTableName()));
-								column = new Indexable() {
-									@Override
-									public String getName() {
-										return duo.getLeft();
-									}
-									
-									@Override
-									public Table getTable() {
-										return indexTable;
-									}
-								};
-							}
-							index.addColumn(column, direction);
-						});
-					}
+					Index index = result.addIndex(indexMetadata.getName());
+					index.setUnique(indexMetadata.isUnique());
+					indexMetadata.getColumns().forEach(duo -> {
+						AscOrDesc direction = mapBooleanToDirection(duo.getRight());
+						Indexable column = columnCache.get(new Duo<>(indexMetadata.getTableName(), duo.getLeft()));
+						if (column == null) {
+							// The indexed value is not a column but an expression (a column substring for example) so we create a special object for it
+							Table indexTable = Iterables.find(result.getTables(), table -> table.getName().equals(indexMetadata.getTableName()));
+							column = new Indexable() {
+								@Override
+								public String getName() {
+									return duo.getLeft();
+								}
+								
+								@Override
+								public Table getTable() {
+									return indexTable;
+								}
+							};
+						}
+						index.addColumn(column, direction);
+					});
 				});
 			}
 		});
@@ -265,15 +262,6 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 		Optional<String> matchingIndexName = result.getIndexes().stream().filter(Index::isUnique).map(Index::getName)
 				.filter(indexName -> uniqueConstraintMetadata.getName().equals(indexName)).findFirst();
 		return !matchingPkName.isPresent() && !matchingIndexName.isPresent();
-	}
-	
-	protected boolean shouldAddIndex(Schema result, IndexMetadata indexMetadata) {
-		// we don't take into account indexes that matches primaryKey names because some database vendors
-		// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
-		// as they are highly tied to primaryKey presence (can't be deleted without removing primaryKey)
-		Optional<String> matchingPkName = result.getTables().stream().map(t -> nullable(t.getPrimaryKey()).map(PrimaryKey::getName).getOr((String) null))
-				.filter(pkName -> indexMetadata.getName().equals(pkName)).findFirst();
-		return !matchingPkName.isPresent();
 	}
 	
 	protected Schema createSchema(String schemaName) {

@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.codefilarete.stalactite.sql.ddl.structure.Column;
@@ -22,8 +23,11 @@ import org.codefilarete.stalactite.sql.statement.binder.NameEnumParameterBinder;
 import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader;
 import org.codefilarete.stalactite.sql.statement.binder.ResultSetReader.LambdaResultSetReader;
 import org.codefilarete.tool.bean.Objects;
+import org.codefilarete.tool.collection.Iterables;
+import org.codefilarete.tool.collection.KeepOrderSet;
 
 import static org.codefilarete.stalactite.sql.statement.binder.ResultSetReader.ofMethodReference;
+import static org.codefilarete.tool.function.Predicates.not;
 
 /**
  * A {@link SchemaMetadataReader} based on JDBC {@link DatabaseMetaData} methods to retrieve requested elements.
@@ -50,8 +54,8 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 				@Override
 				public ColumnMetadata convert(ResultSet resultSet) {
 					ColumnMetadata result = new ColumnMetadata(
-							ColumnMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
 							ColumnMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+							ColumnMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
 							ColumnMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
 					);
 					ColumnMetaDataPseudoTable.INSTANCE.columnName.apply(resultSet, result::setName);
@@ -147,7 +151,7 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 	}
 	
 	@Override
-	public Set<PrimaryKeyMetadata> givePrimaryKey(String catalog, String schema, String tablePattern) {
+	public Set<PrimaryKeyMetadata> givePrimaryKeys(String catalog, String schema, String tablePattern) {
 		// DatabaseMetaData.getPrimaryKeys() is not expected to support table pattern, therefore we have to list
 		// tables before iterating over them to pick up their keys.
 		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
@@ -189,9 +193,9 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 				public TableMetadata convert(ResultSet resultSet) {
 					TableMetadata result = new TableMetadata(
 							TableMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
-							TableMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet)
+							TableMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+							TableMetaDataPseudoTable.INSTANCE.tableName.giveValue(resultSet)
 					);
-					TableMetaDataPseudoTable.INSTANCE.tableName.apply(resultSet, result::setName);
 					TableMetaDataPseudoTable.INSTANCE.remarks.apply(resultSet, result::setRemarks);
 					return result;
 				}
@@ -253,16 +257,36 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		}).collect(Collectors.toSet());
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Implementation based on {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)}.
+	 *
+	 * @param catalog the catalog name; must match the catalog name as it is stored in the database;
+	 * "" retrieves those without a catalog; null means that the catalog name should not
+	 * be used to narrow the search
+	 * @param schema the schema name; must match the schema name as it is stored in the database;
+	 * "" retrieves those without a schema; null means that the schema name should not
+	 * be used to narrow the search
+	 * @param tablePattern a table name pattern; must match the table name as it is stored in the database
+	 * @param unique when true, return only indices for unique values; when false or null, return indices
+	 * regardless of whether unique or not
+	 * @return a set of {@link IndexMetadata} for the matching tables
+	 */
 	@Override
 	public Set<IndexMetadata> giveIndexes(String catalog, String schema, String tablePattern, Boolean unique) {
 		Set<TableMetadata> tableMetadata = giveTables(catalog, schema, tablePattern);
-		return tableMetadata.stream().flatMap(tableMetadatum -> {
-			try (ResultSet tableResultSet = metaData.getIndexInfo(catalog, schema, tableMetadatum.getName(), Objects.preventNull(unique, false), false)) {
+		Set<IndexMetadata> foundIndexes = tableMetadata.stream().flatMap(tableMetadatum -> {
+			// Note : from the getIndexInfo() spec, if false then all indexes are returned => see at bottom of this method for result finalization
+			boolean uniqueFlag = Objects.preventNull(unique, false);
+			// Iterates index info; converts each row to IndexMetadata
+			try (ResultSet tableResultSet = metaData.getIndexInfo(catalog, schema, tableMetadatum.getName(), uniqueFlag, false)) {
 				Map<String, IndexMetadata> cache = new HashMap<>();
 				ResultSetIterator<IndexMetadata> resultSetIterator = new ResultSetIterator<IndexMetadata>(tableResultSet) {
 					@Override
 					public IndexMetadata convert(ResultSet resultSet) {
 						String name = IndexMetaDataPseudoTable.INSTANCE.indexName.giveValue(resultSet);
+						// Lazily instantiates index metadata from result set
 						IndexMetadata result = cache.computeIfAbsent(name, k -> {
 							IndexMetadata newInstance = new IndexMetadata(
 									IndexMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
@@ -286,6 +310,20 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 				throw new RuntimeException(e);
 			}
 		}).collect(Collectors.toSet());
+		
+		if (unique == null || unique) {
+			// we don't take into account indexes that matches primaryKey names because many database vendors
+			// create one unique index per primaryKey to implement it, so those indexes are considered "noise"
+			// as they are highly tied to primaryKey presence (can't be deleted without removing primaryKey)
+			Set<PrimaryKeyMetadata> primaryKeyMetadata = givePrimaryKeys(catalog, schema, tablePattern);
+			Set<String> pkNames = Iterables.collect(primaryKeyMetadata, PrimaryKeyMetadata::getName, HashSet::new);
+			foundIndexes.removeIf(index -> pkNames.contains(index.getName()));
+			return foundIndexes;
+		} else {
+			// only non-unique indexes must be returned
+			// because there's no way to get them through the DatabaseMetaData, we filter them from the previous result
+			return Iterables.collect(foundIndexes, not(IndexMetadata::isUnique), Function.identity(), KeepOrderSet::new);
+		}
 	}
 	
 	@Override
@@ -294,14 +332,15 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 			ResultSetIterator<ProcedureMetadata> resultSetIterator = new ResultSetIterator<ProcedureMetadata>(tableResultSet) {
 				@Override
 				public ProcedureMetadata convert(ResultSet resultSet) {
-					return new ProcedureMetadata(
+					ProcedureMetadata result = new ProcedureMetadata(
 							ProcedureMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
 							ProcedureMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
-							ProcedureMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet),
-							ProcedureMetaDataPseudoTable.INSTANCE.remarks.giveValue(resultSet),
-							ProcedureMetaDataPseudoTable.INSTANCE.procedureType.giveValue(resultSet),
-							ProcedureMetaDataPseudoTable.INSTANCE.specificName.giveValue(resultSet)
+							ProcedureMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
 					);
+					ProcedureMetaDataPseudoTable.INSTANCE.remarks.apply(resultSet, result::setRemarks);
+					ProcedureMetaDataPseudoTable.INSTANCE.procedureType.apply(resultSet, procedureType -> result.setType(ProcedureMetadata.ProcedureType.valueOf(procedureType)));
+					ProcedureMetaDataPseudoTable.INSTANCE.specificName.apply(resultSet, result::setSpecificName);
+					return result;
 				}
 			};
 			return new HashSet<>(resultSetIterator.convert());

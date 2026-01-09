@@ -4,17 +4,28 @@ import org.codefilarete.jumper.schema.metadata.MetadataElement.SchemaNamespaceEl
 
 public class ProcedureMetadata extends SchemaNamespaceElementSupport implements MetadataElement {
 	
-	private final String name;
-	private final String remarks;
-	private final short type;
-	private final String specificName;
+	/**
+	 * kind of procedure
+	 * @author Guillaume Mary
+	 */
+	public enum ProcedureType {
+		ROUTINE,	// Cannot determine if a return value will be returned
+		PROCEDURE,	// Does not return a return value
+		FUNCTION;	// Returns a return value
+		
+		public static ProcedureType valueOf(short resultSetValue) {
+			return values()[resultSetValue];
+		}
+	}
 	
-	public ProcedureMetadata(String catalog, String schema, String name, String remarks, short type, String specificName) {
+	private final String name;
+	private String remarks;
+	private ProcedureType type;
+	private String specificName;
+	
+	public ProcedureMetadata(String catalog, String schema, String name) {
 		super(catalog, schema);
 		this.name = name;
-		this.remarks = remarks;
-		this.type = type;
-		this.specificName = specificName;
 	}
 	
 	public String getName() {
@@ -25,11 +36,33 @@ public class ProcedureMetadata extends SchemaNamespaceElementSupport implements 
 		return remarks;
 	}
 	
-	public short getType() {
+	public void setRemarks(String remarks) {
+		this.remarks = remarks;
+	}
+	
+	public ProcedureType getType() {
 		return type;
+	}
+	
+	public void setType(ProcedureType type) {
+		this.type = type;
 	}
 	
 	public String getSpecificName() {
 		return specificName;
+	}
+	
+	public void setSpecificName(String specificName) {
+		this.specificName = specificName;
+	}
+	
+	@Override
+	public String toString() {
+		return "ProcedureMetadata{" +
+				"name='" + name + '\'' +
+				", remarks='" + remarks + '\'' +
+				", type=" + type +
+				", specificName='" + specificName + '\'' +
+				'}';
 	}
 }

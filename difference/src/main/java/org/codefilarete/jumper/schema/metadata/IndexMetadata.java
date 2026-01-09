@@ -93,4 +93,19 @@ public class IndexMetadata extends TableNamespaceElementSupport implements Metad
 	void setFilterCondition(String filterCondition) {
 		this.filterCondition = filterCondition;
 	}
+	
+	@Override
+	public String toString() {
+		return "IndexMetadata{" +
+				"name='" + name + '\'' +
+				", type=" + type +
+				", unique=" + unique +
+				", indexQualifier='" + indexQualifier + '\'' +
+				", ordinalPosition=" + ordinalPosition +
+				", columns=" + columns +
+				", cardinality=" + cardinality +
+				", pages=" + pages +
+				", filterCondition='" + filterCondition + '\'' +
+				'}';
+	}
 }

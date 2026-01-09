@@ -4,7 +4,7 @@ import org.codefilarete.jumper.schema.metadata.MetadataElement.SchemaNamespaceEl
 
 public class TableMetadata extends SchemaNamespaceElementSupport implements MetadataElement {
 	
-	private String name;
+	private final String name;
 	private String type;
 	private String remarks;
 	private String typeCatalog;
@@ -13,16 +13,13 @@ public class TableMetadata extends SchemaNamespaceElementSupport implements Meta
 	private String selfReferencingColName;
 	private String refGeneration;
 	
-	public TableMetadata(String catalog, String schema) {
+	public TableMetadata(String catalog, String schema, String name) {
 		super(catalog, schema);
+		this.name = name;
 	}
 	
 	public String getName() {
 		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
 	}
 	
 	public String getType() {
@@ -79,5 +76,19 @@ public class TableMetadata extends SchemaNamespaceElementSupport implements Meta
 	
 	public void setRefGeneration(String refGeneration) {
 		this.refGeneration = refGeneration;
+	}
+	
+	@Override
+	public String toString() {
+		return "TableMetadata{" +
+				"name='" + name + '\'' +
+				", type='" + type + '\'' +
+				", remarks='" + remarks + '\'' +
+				", typeCatalog='" + typeCatalog + '\'' +
+				", typeSchema='" + typeSchema + '\'' +
+				", typeName='" + typeName + '\'' +
+				", selfReferencingColName='" + selfReferencingColName + '\'' +
+				", refGeneration='" + refGeneration + '\'' +
+				'}';
 	}
 }
