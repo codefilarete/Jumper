@@ -112,7 +112,6 @@ abstract class MetadataReaderTest {
 		columnMetadata1.setName("ID");
 		columnMetadata1.setNullable(true);
 		columnMetadata1.setSqlType(JDBCType.DECIMAL);
-		columnMetadata1.setVendorType("DECIMAL");
 		columnMetadata1.setSize(10);
 		columnMetadata1.setPrecision(2);
 		columnMetadata1.setPosition(1);
@@ -120,12 +119,14 @@ abstract class MetadataReaderTest {
 		columnMetadata2.setName("NAME");
 		columnMetadata2.setNullable(true);
 		columnMetadata2.setSqlType(JDBCType.VARCHAR);
-		columnMetadata2.setVendorType("VARCHAR");
 		columnMetadata2.setSize(200);
 		columnMetadata2.setPrecision(null);
 		columnMetadata2.setPosition(2);
 		
-		assertThat(ddlElements).usingRecursiveFieldByFieldElementComparator().containsExactlyInAnyOrder(columnMetadata1, columnMetadata2);
+		assertThat(ddlElements)
+				// we ignore vendorType because it depends too much on vendors and is not important info
+				.usingRecursiveFieldByFieldElementComparatorIgnoringFields("vendorType")
+				.containsExactlyInAnyOrder(columnMetadata1, columnMetadata2);
 	}
 	
 	/**

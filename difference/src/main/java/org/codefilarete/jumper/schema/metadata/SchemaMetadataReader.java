@@ -66,6 +66,9 @@ public interface SchemaMetadataReader {
 	 */
 	Set<IndexMetadata> giveIndexes(@Nullable String catalog, @Nullable String schema, @Nullable String tableNamePattern, @Nullable Boolean unique);
 	
+	/**
+	 * Gives procedures from metadata, including functions
+	 */
 	Set<ProcedureMetadata> giveProcedures(String catalog, String schema, String procedurePatternName);
 	
 }

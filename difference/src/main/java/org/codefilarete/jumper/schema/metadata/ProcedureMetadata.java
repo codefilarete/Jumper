@@ -1,5 +1,7 @@
 package org.codefilarete.jumper.schema.metadata;
 
+import java.sql.DatabaseMetaData;
+
 import org.codefilarete.jumper.schema.metadata.MetadataElement.SchemaNamespaceElementSupport;
 
 public class ProcedureMetadata extends SchemaNamespaceElementSupport implements MetadataElement {
@@ -9,12 +11,24 @@ public class ProcedureMetadata extends SchemaNamespaceElementSupport implements 
 	 * @author Guillaume Mary
 	 */
 	public enum ProcedureType {
-		ROUTINE,	// Cannot determine if a return value will be returned
-		PROCEDURE,	// Does not return a return value
-		FUNCTION;	// Returns a return value
+		ROUTINE(DatabaseMetaData.procedureResultUnknown),	// Cannot determine if a return value will be returned
+		PROCEDURE(DatabaseMetaData.procedureNoResult),	// Does not return a return value
+		FUNCTION(DatabaseMetaData.procedureReturnsResult);	// Returns a return value
+		
+		private final int jdbcValue;
+		
+		ProcedureType(int jdbcValue) {
+			this.jdbcValue = jdbcValue;
+		}
+		
+		public int getJdbcValue() {
+			return jdbcValue;
+		}
+		
+		private static final ProcedureType[] VALUES_PER_JDBC_VALUE_ORDER = new ProcedureType[] { ROUTINE, PROCEDURE, FUNCTION };
 		
 		public static ProcedureType valueOf(short resultSetValue) {
-			return values()[resultSetValue];
+			return VALUES_PER_JDBC_VALUE_ORDER[resultSetValue];
 		}
 	}
 	

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Set;
 
+import org.codefilarete.jumper.schema.metadata.ProcedureMetadata.ProcedureType;
 import org.codefilarete.stalactite.sql.test.DerbyInMemoryDataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,8 +49,30 @@ public class DerbyMetadataReaderTest extends MetadataReaderTest {
 		assertThat(ddlElements).usingRecursiveFieldByFieldElementComparator().containsExactlyInAnyOrder(expectedMetadata);
 	}
 	
+	@Test
 	@Override
 	void giveProcedures() throws SQLException {
-	
+		Connection connection = dataSource.getConnection();
+		connection.createStatement().execute("create schema " + METADATA_READER_TEST_SCHEMA);
+		
+		connection.createStatement().execute("CREATE PROCEDURE " + METADATA_READER_TEST_SCHEMA + ".DOSOMETHING()" +
+				" PARAMETER STYLE JAVA LANGUAGE JAVA EXTERNAL NAME 'java.lang.System.gc'");
+		connection.createStatement().execute("CREATE FUNCTION " + METADATA_READER_TEST_SCHEMA + ".DOSOMETHING2()" +
+				" RETURNS DOUBLE PARAMETER STYLE JAVA NO SQL LANGUAGE JAVA EXTERNAL NAME 'java.lang.Math.random'");
+		
+		SchemaMetadataReader testInstance = buildTestInstance();
+		Set<ProcedureMetadata> ddlElements = testInstance.giveProcedures(null, METADATA_READER_TEST_SCHEMA.toUpperCase(), "%");
+		
+		ProcedureMetadata expectedMetadata1 = new ProcedureMetadata(getDefaultCatalog(), METADATA_READER_TEST_SCHEMA.toUpperCase(), "DOSOMETHING");
+		expectedMetadata1.setType(ProcedureType.PROCEDURE);
+		expectedMetadata1.setRemarks("java.lang.System.gc");
+		ProcedureMetadata expectedMetadata2 = new ProcedureMetadata(getDefaultCatalog(), METADATA_READER_TEST_SCHEMA.toUpperCase(), "DOSOMETHING2");
+		expectedMetadata2.setType(ProcedureType.FUNCTION);
+		expectedMetadata2.setRemarks("java.lang.Math.random");
+		
+		assertThat(ddlElements)
+				// we ignore specificName because it depends too random
+				.usingRecursiveFieldByFieldElementComparatorIgnoringFields("specificName")
+				.containsExactlyInAnyOrder(expectedMetadata1, expectedMetadata2);
 	}
 }

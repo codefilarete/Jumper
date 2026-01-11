@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.codefilarete.jumper.schema.metadata.ProcedureMetadata.ProcedureType;
 import org.codefilarete.stalactite.sql.ddl.structure.Column;
 import org.codefilarete.stalactite.sql.ddl.structure.Table;
 import org.codefilarete.stalactite.sql.result.ResultSetIterator;
@@ -328,25 +329,55 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 	
 	@Override
 	public Set<ProcedureMetadata> giveProcedures(String catalog, String schema, String procedurePatternName) {
+		Set<ProcedureMetadata> result = new HashSet<>();
 		try (ResultSet tableResultSet = metaData.getProcedures(catalog, schema, procedurePatternName)) {
 			ResultSetIterator<ProcedureMetadata> resultSetIterator = new ResultSetIterator<ProcedureMetadata>(tableResultSet) {
 				@Override
 				public ProcedureMetadata convert(ResultSet resultSet) {
-					ProcedureMetadata result = new ProcedureMetadata(
-							ProcedureMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
-							ProcedureMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
-							ProcedureMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
-					);
-					ProcedureMetaDataPseudoTable.INSTANCE.remarks.apply(resultSet, result::setRemarks);
-					ProcedureMetaDataPseudoTable.INSTANCE.procedureType.apply(resultSet, procedureType -> result.setType(ProcedureMetadata.ProcedureType.valueOf(procedureType)));
-					ProcedureMetaDataPseudoTable.INSTANCE.specificName.apply(resultSet, result::setSpecificName);
-					return result;
+					return convertToProcedureToMetadata(resultSet);
 				}
 			};
-			return new HashSet<>(resultSetIterator.convert());
+			result.addAll(resultSetIterator.convert());
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+		
+		try (ResultSet tableResultSet = metaData.getFunctions(catalog, schema, procedurePatternName)) {
+			ResultSetIterator<ProcedureMetadata> resultSetIterator = new ResultSetIterator<ProcedureMetadata>(tableResultSet) {
+				@Override
+				public ProcedureMetadata convert(ResultSet resultSet) {
+					return convertToFunctionToMetadata(resultSet);
+				}
+			};
+			result.addAll(resultSetIterator.convert());
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		return result;
+	}
+	
+	protected ProcedureMetadata convertToProcedureToMetadata(ResultSet resultSet) {
+		ProcedureMetadata result = new ProcedureMetadata(
+				ProcedureMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+				ProcedureMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+				ProcedureMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
+		);
+		ProcedureMetaDataPseudoTable.INSTANCE.remarks.apply(resultSet, result::setRemarks);
+		ProcedureMetaDataPseudoTable.INSTANCE.procedureType.apply(resultSet, procedureType -> result.setType(ProcedureType.PROCEDURE));
+		ProcedureMetaDataPseudoTable.INSTANCE.specificName.apply(resultSet, result::setSpecificName);
+		return result;
+	}
+	
+	protected ProcedureMetadata convertToFunctionToMetadata(ResultSet resultSet) {
+		ProcedureMetadata result = new ProcedureMetadata(
+				FunctionMetaDataPseudoTable.INSTANCE.catalog.giveValue(resultSet),
+				FunctionMetaDataPseudoTable.INSTANCE.schema.giveValue(resultSet),
+				FunctionMetaDataPseudoTable.INSTANCE.name.giveValue(resultSet)
+		);
+		FunctionMetaDataPseudoTable.INSTANCE.remarks.apply(resultSet, result::setRemarks);
+		FunctionMetaDataPseudoTable.INSTANCE.procedureType.apply(resultSet, procedureType -> result.setType(ProcedureType.FUNCTION));
+		FunctionMetaDataPseudoTable.INSTANCE.specificName.apply(resultSet, result::setSpecificName);
+		return result;
 	}
 	
 	/**
@@ -383,6 +414,43 @@ public class DefaultMetadataReader implements SchemaMetadataReader {
 		public ProcedureMetaDataPseudoTable() {
 			// This table has no real name, it's made to map DatabaseMetaData.getProcedures() ResultSet
 			super("ProcedureMetaData");
+		}
+	}
+	
+	/**
+	 * Pseudo table representing columns given by {@link DatabaseMetaData#getProcedures(String, String, String)}
+	 * @author Guillaume Mary
+	 */
+	public static class FunctionMetaDataPseudoTable extends Table<FunctionMetaDataPseudoTable> {
+		
+		public static final FunctionMetaDataPseudoTable INSTANCE = new FunctionMetaDataPseudoTable();
+		
+		/** Procedure catalog (may be null) */
+		public final ColumnReader<String> catalog = new ColumnReader<>(addColumn("FUNCTION_CAT", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Procedure schema (may be null) */
+		public final ColumnReader<String> schema = new ColumnReader<>(addColumn("FUNCTION_SCHEM", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Procedure name */
+		public final ColumnReader<String> name = new ColumnReader<>(addColumn("FUNCTION_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/** Explanatory comment on the procedure */
+		public final ColumnReader<String> remarks = new ColumnReader<>(addColumn("REMARKS", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		/**
+		 * Kind of procedure:
+		 * - {@link DatabaseMetaData#procedureResultUnknown} : Cannot determine if a return value will be returned
+		 * - {@link DatabaseMetaData#procedureNoResult} : Does not return a return value
+		 * - {@link DatabaseMetaData#procedureReturnsResult} : Returns a return value
+		 */
+		public final ColumnReader<Short> procedureType = new ColumnReader<>(addColumn("FUNCTION_TYPE", short.class), ofMethodReference(ResultSet::getShort));
+		
+		/** The name which uniquely identifies this procedure within its schema */
+		public final ColumnReader<String> specificName = new ColumnReader<>(addColumn("SPECIFIC_NAME", String.class), DefaultResultSetReaders.STRING_READER);
+		
+		public FunctionMetaDataPseudoTable() {
+			// This table has no real name, it's made to map DatabaseMetaData.getProcedures() ResultSet
+			super("FunctionMetaData");
 		}
 	}
 	
