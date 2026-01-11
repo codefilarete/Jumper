@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index.IndexedColumn;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
@@ -72,7 +72,8 @@ public class SchemaDiffer {
 						)
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
-						.compareOnMap(Index::getColumns, Indexable::getName))
+						.compareOn(Index::getColumns, indexedColumn -> indexedColumn.getColumn().getName(), comparisonChain(IndexedColumn.class)
+								.compareOn(IndexedColumn::getDirection)))
 				.compareOn(Schema::getViews, View::getName, comparisonChain(View.class)
 						.compareOn(View::getColumns, PseudoColumn::getName, comparisonChain(PseudoColumn.class)
 								.compareOn(PseudoColumn::getType)
@@ -215,17 +216,6 @@ public class SchemaDiffer {
 			return this;
 		}
 		
-		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(SerializableFunction<T, M> collectionAccessor, Function<K, ?> keyAccessor) {
-			return compareOnMap(collectionAccessor, keyAccessor, null);
-		}
-		
-		public <K, V, M extends Map<K, V>> ComparisonChain<T> compareOnMap(SerializableFunction<T, M> collectionAccessor, Function<K, ?> keyAccessor, ComparisonChain<Entry<K, V>> deeperComparison) {
-			MapComparator<T, K, V, M> collectionComparison = new MapComparator<>(collectionAccessor, keyAccessor);
-			this.propertiesToCompare.add(collectionComparison);
-			collectionComparison.next = deeperComparison;
-			return this;
-		}
-		
 		public <O> ComparisonChain<T> compareOn(SerializableFunction<T, O> propertyAccessor) {
 			this.propertiesToCompare.add(new PropertyComparator<>(propertyAccessor, Objects::equals));
 			return this;
@@ -250,8 +240,6 @@ public class SchemaDiffer {
 				propertiesToCompare.forEach(p -> {
 					if (p instanceof ComparisonChain.CollectionComparator) {
 						result.addAll(((CollectionComparator) p).compare(t1, t2));
-					} else if (p instanceof ComparisonChain.MapComparator) {
-						result.addAll(((MapComparator) p).compare(t1, t2));
 					} else if (p instanceof ComparisonChain.PropertyComparator) {
 						PropertyComparator<T, ?> propertyComparator = (PropertyComparator<T, ?>) p;
 						Set<AbstractDiff<?>> diffs = propertyComparator.compare(t1, t2);
@@ -260,36 +248,6 @@ public class SchemaDiffer {
 						}
 					}
 				});
-				return result;
-			}
-		}
-		
-		static class MapComparator<T, K, V, M extends Map<K, V>> {
-			
-			private final Function<T, M> mapAccessor;
-			private final Function<K, ?> keyAccessor;
-			private ComparisonChain<Entry<K, V>> next;
-			
-			MapComparator(Function<T, M> mapAccessor, Function<K, ?> keyAccessor) {
-				this.mapAccessor = mapAccessor;
-				this.keyAccessor = keyAccessor;
-			}
-			
-			Set<AbstractDiff<?>> compare(T t1, T t2) {
-				Set<AbstractDiff<?>> result = new KeepOrderSet<>();
-				MapDiffer<K, V, ?> mapDiffer = new MapDiffer<>(keyAccessor);
-				KeepOrderSet<Diff<Entry<K, V>>> mapPresences = mapDiffer.diff(this.mapAccessor.apply(t1), this.mapAccessor.apply(t2));
-				
-				result.addAll(mapPresences.stream()
-						.filter(d -> d.getState() != State.HELD).collect(Collectors.toList()));
-				if (next != null) {
-					List<AbstractDiff<?>> collect = mapPresences.stream()
-							.filter(d -> d.getState() == State.HELD)
-							.map(d -> next.run(d.getSourceInstance(), d.getReplacingInstance()))
-							.flatMap(Set<AbstractDiff<?>>::stream)
-							.collect(Collectors.toList());
-					result.addAll(collect);
-				}
 				return result;
 			}
 		}

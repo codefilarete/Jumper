@@ -1,11 +1,8 @@
 package org.codefilarete.jumper.schema.difference;
 
-import java.util.Map.Entry;
-
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
-import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
-import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index.IndexedColumn;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 
@@ -24,10 +21,9 @@ public class MariaDBSchemaDiffer extends SchemaDiffer {
 						.compareOn(Table::getComment))
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
-						.compareOnMap(Index::getColumns, Indexable::getName,
+						.compareOn(Index::getColumns, indexedColumn -> indexedColumn.getColumn().getName(), comparisonChain(IndexedColumn.class)
 								// Starting from MariaDB 10.8, it is sensitive to Index direction thus we add comparison on it
-								comparisonChain((Class<Entry<Indexable, AscOrDesc>>) (Class) Entry.class)
-										.compareOn(Entry::getValue))
-				);
+								.compareOn(IndexedColumn::getDirection)))
+				;
 	}
 }

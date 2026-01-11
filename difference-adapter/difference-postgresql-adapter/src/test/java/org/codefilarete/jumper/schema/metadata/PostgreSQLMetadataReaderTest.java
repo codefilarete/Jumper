@@ -8,14 +8,14 @@ import org.codefilarete.jumper.schema.PostgreSQLDataSource;
 import org.codefilarete.jumper.schema.PostgreSQLTest;
 import org.junit.jupiter.api.Test;
 
-class PostgreSQLSequenceMetadataReaderTest extends PostgreSQLTest {
+class PostgreSQLMetadataReaderTest extends PostgreSQLTest {
 	
 	@Test
 	void giveSequences() throws SQLException {
 		
 		DataSource dataSource = new PostgreSQLDataSource(postgresql);
 		
-		PostgreSQLSequenceMetadataReader testInstance = new PostgreSQLSequenceMetadataReader(dataSource.getConnection().getMetaData());
+		PostgreSQLMetadataReader testInstance = new PostgreSQLMetadataReader(dataSource.getConnection().getMetaData());
 		Set<SequenceMetadata> ddlElements = testInstance.giveSequences(null, null);
 		ddlElements.forEach(t -> {
 			System.out.println(t.getName());

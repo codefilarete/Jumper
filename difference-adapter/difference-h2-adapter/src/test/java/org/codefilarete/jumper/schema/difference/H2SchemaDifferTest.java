@@ -88,7 +88,7 @@ class H2SchemaDifferTest {
                 "Schema.name: Schema{name='" + databaseName + ".REFERENCE'} vs Schema{name='" + databaseName + ".COMPARISON'}",
 				"Index.unique: Index{name='TATA', table='C', unique=true, columns={'LASTNAME'}} vs Index{name='TATA', table='C', unique=false, columns={'LASTNAME'}}",
 				"Column.size: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50, scale=0, nullable=true} vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100, scale=0, nullable=true}",
-				"Entry.value: Column{tableName='C', name='LASTNAME', type='VARCHAR', size=50, scale=0, nullable=true}=DESC vs Column{tableName='C', name='LASTNAME', type='VARCHAR', size=100, scale=0, nullable=true}=ASC"
+				"IndexedColumn.direction: IndexedColumn{index=TATA, column=LASTNAME, direction=DESC} vs IndexedColumn{index=TATA, column=LASTNAME, direction=ASC}"
 		);
 		
 		// Missing elements in "COMPARISON" schema

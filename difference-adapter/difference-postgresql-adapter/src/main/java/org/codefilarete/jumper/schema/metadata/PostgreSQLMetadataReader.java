@@ -12,9 +12,9 @@ import org.codefilarete.stalactite.sql.result.ResultSetIterator;
 import org.codefilarete.stalactite.sql.statement.binder.DefaultResultSetReaders;
 import org.codefilarete.tool.Strings;
 
-public class PostgreSQLSequenceMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
+public class PostgreSQLMetadataReader extends DefaultMetadataReader implements SequenceMetadataReader {
 	
-	public PostgreSQLSequenceMetadataReader(DatabaseMetaData metaData) {
+	public PostgreSQLMetadataReader(DatabaseMetaData metaData) {
 		super(metaData);
 	}
 	

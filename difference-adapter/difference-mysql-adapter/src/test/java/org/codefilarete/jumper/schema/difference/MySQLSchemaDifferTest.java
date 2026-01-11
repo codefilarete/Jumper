@@ -88,7 +88,7 @@ class MySQLSchemaDifferTest extends MySQLTest {
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
 				"Index.unique: Index{name='tata', table='C', unique=true, columns={'lastname'}} vs Index{name='tata', table='C', unique=false, columns={'lastname'}}",
-				"Entry.value: Column{tableName='C', name='lastname', type='VARCHAR', size=50, scale=null, nullable=true}=DESC vs Column{tableName='C', name='lastname', type='VARCHAR', size=100, scale=null, nullable=true}=ASC",
+				"IndexedColumn.direction: IndexedColumn{index=tata, column=lastname, direction=DESC} vs IndexedColumn{index=tata, column=lastname, direction=ASC}",
 				"Column.size: Column{tableName='C', name='lastname', type='VARCHAR', size=50, scale=null, nullable=true} vs Column{tableName='C', name='lastname', type='VARCHAR', size=100, scale=null, nullable=true}"
 		);
 		

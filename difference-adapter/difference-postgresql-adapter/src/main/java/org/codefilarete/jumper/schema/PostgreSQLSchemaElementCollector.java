@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codefilarete.jumper.schema.metadata.SchemaMetadataReader;
-import org.codefilarete.jumper.schema.metadata.PostgreSQLSequenceMetadataReader;
+import org.codefilarete.jumper.schema.metadata.PostgreSQLMetadataReader;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadata;
 import org.codefilarete.jumper.schema.metadata.SequenceMetadataReader;
 import org.codefilarete.tool.Strings;
@@ -13,7 +13,7 @@ import org.codefilarete.tool.Strings;
 public class PostgreSQLSchemaElementCollector extends DefaultSchemaElementCollector {
 	
 	public PostgreSQLSchemaElementCollector(DatabaseMetaData databaseMetaData) {
-		this(new PostgreSQLSequenceMetadataReader(databaseMetaData));
+		this(new PostgreSQLMetadataReader(databaseMetaData));
 	}
 	
 	public PostgreSQLSchemaElementCollector(SchemaMetadataReader metadataReader) {

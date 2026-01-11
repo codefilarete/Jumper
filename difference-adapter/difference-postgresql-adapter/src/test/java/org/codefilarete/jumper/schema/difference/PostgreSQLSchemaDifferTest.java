@@ -70,6 +70,7 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 		Schema ddlElements2 = schemaElementCollector.collect();
 		
 		SchemaDiffer testInstance = new PostgreSQLSchemaDiffer();
+		testInstance.compareAndPrint(ddlElements1, ddlElements2);
 		Set<AbstractDiff<?>> diffs = testInstance.compare(ddlElements1, ddlElements2);
 		
 		// Elements added in "COMPARISON" schema
@@ -88,7 +89,7 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 							+ propertyDiff.getSourceInstance() + " vs " + propertyDiff.getReplacingInstance();
 				})).containsExactlyInAnyOrder(
 				"Index.unique: Index{name='tata', table='c', unique=true, columns={'lastname'}} vs Index{name='tata', table='c', unique=false, columns={'lastname'}}",
-				"Entry.value: Column{tableName='c', name='lastname', type='VARCHAR', size=50, scale=0, nullable=true}=DESC vs Column{tableName='c', name='lastname', type='VARCHAR', size=100, scale=0, nullable=true}=ASC",
+				"IndexedColumn.direction: IndexedColumn{index=tata, column=lastname, direction=DESC} vs IndexedColumn{index=tata, column=lastname, direction=ASC}",
 				"Column.size: Column{tableName='c', name='lastname', type='VARCHAR', size=50, scale=0, nullable=true} vs Column{tableName='c', name='lastname', type='VARCHAR', size=100, scale=0, nullable=true}"
 		);
 		
@@ -97,7 +98,9 @@ class PostgreSQLSchemaDifferTest extends PostgreSQLTest {
 				.containsExactlyInAnyOrder(
 						"Table{name='d'}",
 						"Index{name='toto', table='a', unique=true, columns={'name'}}",
-						"ForeignKey{'fromctoa': [c.aid => a.id]}"
+						"ForeignKey{'fromctoa': [c.aid => a.id]}",
+						"UniqueConstraint{name = 'toto', table = 'a': name}",
+						"UniqueConstraint{name = 'tata', table = 'c': lastname}"
 				);
 	}
 	

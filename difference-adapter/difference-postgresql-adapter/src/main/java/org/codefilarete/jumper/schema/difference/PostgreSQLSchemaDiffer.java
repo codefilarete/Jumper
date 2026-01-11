@@ -1,15 +1,15 @@
 package org.codefilarete.jumper.schema.difference;
 
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
-import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index.IndexedColumn;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.ForeignKey;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.UniqueConstraint;
 
 public class PostgreSQLSchemaDiffer extends SchemaDiffer {
 	
@@ -26,17 +26,22 @@ public class PostgreSQLSchemaDiffer extends SchemaDiffer {
 						.compareOn(Table::getComment))
 				.compareOn(Schema::getIndexes, Index::getName, comparisonChain(Index.class)
 						.compareOn(Index::isUnique)
-						.compareOnMap(Index::getColumns, Indexable::getName,
+						.compareOn(Index::getColumns, indexedColumn -> indexedColumn.getColumn().getName(), comparisonChain(IndexedColumn.class)
 								// PostgreSQL is sensitive to Index direction thus we add comparison on it
-								comparisonChain((Class<Entry<Indexable, AscOrDesc>>) (Class) Entry.class)
-										.compareOn(Entry::getValue)))
+								.compareOn(IndexedColumn::getDirection)))
 				.compareOn(schema -> schema.getTables().stream().flatMap(t -> t.getForeignKeys().stream()).collect(Collectors.toSet()),
 						"Foreign keys",
 						fk -> fk.getColumns().stream().map(c -> c.getTable().getName()+ "." + c.getName()).collect(Collectors.joining(", ")),
 						comparisonChain(ForeignKey.class)
 								.compareOn(ForeignKey::getColumns, Column::getName)
 								.compareOn(ForeignKey::getTargetColumns, Column::getName)
-								.compareOn(ForeignKey::getName)
-				);
+								.compareOn(ForeignKey::getName))
+				.compareOn(schema -> schema.getTables().stream().flatMap(t -> t.getUniqueConstraints().stream()).collect(Collectors.toSet()),
+						"Unique Constraints",
+						uk -> uk.getColumns().stream().map(c -> c.getTable().getName()+ "." + c.getName()).collect(Collectors.joining(", ")),
+						comparisonChain(UniqueConstraint.class)
+								.compareOn(UniqueConstraint::getColumns, Indexable::getName)
+								.compareOn(UniqueConstraint::getName))
+				;
 	}
 }

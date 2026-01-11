@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -15,6 +14,7 @@ import java.util.stream.Collectors;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.AscOrDesc;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index;
+import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Index.IndexedColumn;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Indexable;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table;
 import org.codefilarete.jumper.schema.DefaultSchemaElementCollector.Schema.Table.Column;
@@ -165,7 +165,7 @@ class DefaultSchemaElementCollectorTest {
 		
 		Index indexToto = expectedResult.new Index("TOTO");
 		indexToto.setUnique(true);
-		indexToto.addColumn(columnA_name, AscOrDesc.ASC);
+		IndexedColumn indexedColumn = indexToto.addColumn(columnA_name, AscOrDesc.ASC);
 		
 		// Checking indexes
 		Map<String, Index> indexPerName = Iterables.map(schema.getIndexes(), Index::getName);
@@ -174,14 +174,9 @@ class DefaultSchemaElementCollectorTest {
 		assertThat(actualIndexToto.isUnique()).isEqualTo(indexToto.isUnique());
 		
 		// Checking columns
-		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
-		BiPredicate<Indexable, Indexable> columnPredicate = Predicates.and(Indexable::getName)
-				.and((c1, c2) -> tableNamespacePredicate.test(c1.getTable(), c2.getTable()));
-		BiPredicate<Map.Entry<Indexable, AscOrDesc>, Map.Entry<Indexable, AscOrDesc>> columnKeyPredicate = (entry1, entry2) -> columnPredicate.test(entry1.getKey(), entry2.getKey());
-		columnKeyPredicate = columnKeyPredicate.and(Predicates.and(Entry::getValue));
-		assertThat(actualIndexToto.getColumns().entrySet())
-				.usingElementComparator(Predicates.toComparator(columnKeyPredicate.and(Predicates.and(Entry::getValue))))
-				.containsExactlyElementsOf(indexToto.getColumns().entrySet());
+		assertThat(actualIndexToto.getColumns())
+				.usingRecursiveFieldByFieldElementComparator()
+				.containsExactly(indexedColumn);
 	}
 	
 	@Test
@@ -285,7 +280,7 @@ class DefaultSchemaElementCollectorTest {
 		
 		Index indexToto = expectedResult.new Index("TOTO");
 		indexToto.setUnique(true);
-		indexToto.addColumn(columnA_name, AscOrDesc.ASC);
+		IndexedColumn indexedColumn = indexToto.addColumn(columnA_name, AscOrDesc.ASC);
 		
 		BiPredicate<Table, Table> tableNamespacePredicate = Predicates.and(Table::getName, table -> table.getSchema().getName());
 		BiPredicate<Indexable, Indexable> columnPredicate = Predicates.and(Indexable::getName)
@@ -325,14 +320,12 @@ class DefaultSchemaElementCollectorTest {
 				.containsExactlyElementsOf(actualForeignKeyFromBtoA.getTargetColumns());
 		
 		// Checking indexes
-		BiPredicate<Map.Entry<Indexable, AscOrDesc>, Map.Entry<Indexable, AscOrDesc>> columnKeyPredicate = (entry1, entry2) -> columnPredicate.test(entry1.getKey(), entry2.getKey());
-		columnKeyPredicate = columnKeyPredicate.and(Predicates.and(Entry::getValue));
 		Map<String, Index> indexPerName = Iterables.map(schema.getIndexes(), Index::getName);
 		Index actualIndexToto = indexPerName.get("TOTO");
 		assertThat(actualIndexToto.getName()).isEqualTo(indexToto.getName());
 		assertThat(actualIndexToto.isUnique()).isEqualTo(indexToto.isUnique());
-		assertThat(actualIndexToto.getColumns().entrySet())
-				.usingElementComparator(Predicates.toComparator(columnKeyPredicate.and(Predicates.and(Entry::getValue))))
-				.containsExactlyElementsOf(indexToto.getColumns().entrySet());
+		assertThat(actualIndexToto.getColumns())
+				.usingRecursiveFieldByFieldElementComparator()
+				.containsExactly(indexedColumn);
 	}
 }

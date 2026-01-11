@@ -36,7 +36,6 @@ import org.codefilarete.tool.StringAppender;
 import org.codefilarete.tool.Strings;
 import org.codefilarete.tool.collection.Arrays;
 import org.codefilarete.tool.collection.Iterables;
-import org.codefilarete.tool.collection.KeepOrderMap;
 import org.codefilarete.tool.collection.KeepOrderSet;
 import org.codefilarete.tool.collection.PairIterator;
 
@@ -637,9 +636,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			
 			private String filterCondition;
 			
-			private final KeepOrderMap<Indexable, AscOrDesc> columns = new KeepOrderMap<>();
-			
-			private String indexQualifier;
+			private final KeepOrderSet<IndexedColumn> columns = new KeepOrderSet<>();
 			
 			protected Index(String name) {
 				this.name = name;
@@ -652,7 +649,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 			
 			@Override
 			public Table getTable() {
-				return Iterables.first(columns.keySet()).getTable();
+				return Iterables.first(columns).getColumn().getTable();
 			}
 			
 			public String getName() {
@@ -675,16 +672,47 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 				this.filterCondition = filterCondition;
 			}
 			
-			public KeepOrderMap<Indexable, AscOrDesc> getColumns() {
+			public Set<IndexedColumn> getColumns() {
 				return columns;
 			}
 			
-			public void addColumn(Indexable column, AscOrDesc ascOrDesc) {
-				this.columns.put(column, ascOrDesc);
+			public IndexedColumn addColumn(Indexable column, AscOrDesc ascOrDesc) {
+				IndexedColumn result = new IndexedColumn(column, ascOrDesc);
+				this.columns.add(result);
+				return result;
 			}
 			
-			public void setIndexQualifier(String indexQualifier) {
-				this.indexQualifier = indexQualifier;
+			public class IndexedColumn implements SchemaElement {
+				
+				private final Indexable column;
+				private final AscOrDesc direction;
+				
+				public IndexedColumn(Indexable column, AscOrDesc direction) {
+					this.column = column;
+					this.direction = direction;
+				}
+				
+				public Indexable getColumn() {
+					return column;
+				}
+				
+				public AscOrDesc getDirection() {
+					return direction;
+				}
+				
+				@Override
+				public Schema getSchema() {
+					return Index.this.getSchema();
+				}
+				
+				@Override
+				public String toString() {
+					return "IndexedColumn{" +
+							"index=" + Index.this.getName() +
+							", column=" + column.getName() +
+							", direction=" + direction +
+							'}';
+				}
 			}
 			
 			@Override
@@ -693,7 +721,7 @@ public class DefaultSchemaElementCollector extends SchemaElementCollector {
 						"name='" + name + '\'' +
 						", table='" + getTable().getName() + '\''+
 						", unique=" + unique +
-						", columns={" + columns.keySet().stream().map(Indexable::getName).map(s -> '\'' + s + '\'').collect(Collectors.joining(", ")) + "}" +
+						", columns={" + columns.stream().map(indexedColumn -> indexedColumn.getColumn().getName()).map(s -> '\'' + s + '\'').collect(Collectors.joining(", ")) + "}" +
 						'}';
 			}
 		}
